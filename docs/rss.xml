@@ -1,5 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 02 Jul 2024 06:06:28 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>k8s dashbord的token创建，用于登录</title><link>https://longxiucai.github.io/post/k8s%20dashbord-de-token-chuang-jian-%EF%BC%8C-yong-yu-deng-lu.html</link><description>```&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 02 Jul 2024 06:10:16 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>linux家目录下的中文目录修改为英文</title><link>https://longxiucai.github.io/post/linux-jia-mu-lu-xia-de-zhong-wen-mu-lu-xiu-gai-wei-ying-wen.html</link><description>1. 将这些目录修改为英文名，如：  mv 桌面 Desktop &#13;
+&#13;
+2. 修改配置文件`~/.config/user-dirs.dirs`，将对应的路径改为英文名（要和1中修改的英文名对应）&#13;
+&#13;
+配置文件修改后的内容如下：&#13;
+```&#13;
+XDG_DESKTOP_DIR='$HOME/Desktop'&#13;
+XDG_DOWNLOAD_DIR='$HOME/Download'&#13;
+XDG_TEMPLATES_DIR='$HOME/Template'&#13;
+XDG_PUBLICSHARE_DIR='$HOME/Public'&#13;
+XDG_DOCUMENTS_DIR='$HOME/Document'&#13;
+XDG_MUSIC_DIR='$HOME/Music'&#13;
+XDG_PICTURES_DIR='$HOME/Picture'&#13;
+XDG_VIDEOS_DIR='$HOME/Video'&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/linux-jia-mu-lu-xia-de-zhong-wen-mu-lu-xiu-gai-wei-ying-wen.html</guid><pubDate>Tue, 02 Jul 2024 06:09:53 +0000</pubDate></item><item><title>k8s dashbord的token创建，用于登录</title><link>https://longxiucai.github.io/post/k8s%20dashbord-de-token-chuang-jian-%EF%BC%8C-yong-yu-deng-lu.html</link><description>```&#13;
 kubectl create serviceaccount cluster-admin-dashboard-sa&#13;
 kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa&#13;
 kubectl describe secrets $(kubectl get secret | grep cluster-admin-dashboard-sa |cut -d ' ' -f1)|grep 'token:'&#13;
