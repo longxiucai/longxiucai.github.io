@@ -1,5 +1,18 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 02 Jul 2024 05:40:51 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>临时修改initrd.img</title><link>https://longxiucai.github.io/post/lin-shi-xiu-gai-initrd.img.html</link><description>## 解压&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 02 Jul 2024 05:44:12 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>网桥配置脚本</title><link>https://longxiucai.github.io/post/wang-qiao-pei-zhi-jiao-ben.html</link><description>#!/bin/bash&#13;
+ifname=ens3&#13;
+brname=bridge0&#13;
+ip=172.20.43.11/24&#13;
+gateway=172.20.43.253&#13;
+dns='172.20.191.2,114.114.114.114'&#13;
+nmcli connection add ifname $brname type bridge con-name $brname&#13;
+nmcli connection delete ${ifname}&#13;
+nmcli connection add type bridge-slave ifname ${ifname} master $brname&#13;
+nmcli connection modify $brname ipv4.addresses $ip&#13;
+nmcli connection modify $brname ipv4.gateway $gateway&#13;
+nmcli connection modify $brname ipv4.dns $dns&#13;
+nmcli connection modify $brname ipv4.method manual&#13;
+nmcli connection up $brname。</description><guid isPermaLink="true">https://longxiucai.github.io/post/wang-qiao-pei-zhi-jiao-ben.html</guid><pubDate>Tue, 02 Jul 2024 05:43:51 +0000</pubDate></item><item><title>临时修改initrd.img</title><link>https://longxiucai.github.io/post/lin-shi-xiu-gai-initrd.img.html</link><description>## 解压&#13;
 mkdir tmpdir&#13;
 cd tmpdir&#13;
 xzcat -d ../initrd.img | cpio -idum   #解压img输出到当前所在目录&#13;
