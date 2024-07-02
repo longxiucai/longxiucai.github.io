@@ -1,5 +1,17 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 02 Jul 2024 05:37:18 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>正则表达式</title><link>https://longxiucai.github.io/post/zheng-ze-biao-da-shi.html</link><description>## 元字符说明&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 02 Jul 2024 05:40:51 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>临时修改initrd.img</title><link>https://longxiucai.github.io/post/lin-shi-xiu-gai-initrd.img.html</link><description>## 解压&#13;
+mkdir tmpdir&#13;
+cd tmpdir&#13;
+xzcat -d ../initrd.img | cpio -idum   #解压img输出到当前所在目录&#13;
+&#13;
+## 修改&#13;
+....&#13;
+&#13;
+## 重新打包&#13;
+find . | cpio -oH newc | xz --check=crc32 -9 &gt; ../initrd.img&#13;
+&#13;
+cpio -H参数说明：&#13;
+* bin 过时的二进制格式。</description><guid isPermaLink="true">https://longxiucai.github.io/post/lin-shi-xiu-gai-initrd.img.html</guid><pubDate>Tue, 02 Jul 2024 05:40:28 +0000</pubDate></item><item><title>正则表达式</title><link>https://longxiucai.github.io/post/zheng-ze-biao-da-shi.html</link><description>## 元字符说明&#13;
 &#13;
     元字符:  |&#13;
     匹配规则:匹配|两边任意一个正则表达式&#13;
