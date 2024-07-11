@@ -1,5 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 02 Jul 2024 09:18:17 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>redis一主一从集群脑裂现象模拟</title><link>https://longxiucai.github.io/post/redis-yi-zhu-yi-cong-ji-qun-nao-lie-xian-xiang-mo-ni.html</link><description># 一主一从redis脑裂现象模拟&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Thu, 11 Jul 2024 09:00:46 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>docker manifest合并不同架构镜像push</title><link>https://longxiucai.github.io/post/docker%20manifest-he-bing-bu-tong-jia-gou-jing-xiang-push.html</link><description>1、镜像仓库中有2个架构的镜像且tag不一致，没有则push上去&#13;
+```&#13;
+docker push  harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-arm64&#13;
+docker push  harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-amd64&#13;
+```&#13;
+2、创建manifest&#13;
+```&#13;
+docker manifest create harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine \&#13;
+--amend harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-amd64 \&#13;
+--amend harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-arm64&#13;
+```&#13;
+3、push manifest&#13;
+```&#13;
+ docker manifest push harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine   &#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/docker%20manifest-he-bing-bu-tong-jia-gou-jing-xiang-push.html</guid><pubDate>Thu, 11 Jul 2024 09:00:21 +0000</pubDate></item><item><title>redis一主一从集群脑裂现象模拟</title><link>https://longxiucai.github.io/post/redis-yi-zhu-yi-cong-ji-qun-nao-lie-xian-xiang-mo-ni.html</link><description># 一主一从redis脑裂现象模拟&#13;
 主节点A:10.42.186.32  从节点B:10.42.186.33&#13;
 &#13;
 1. 网络隔离&#13;
