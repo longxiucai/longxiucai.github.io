@@ -1,3 +1,11 @@
+源码：https://github.com/vectordotdev/vector
+
+helm repo:   https://helm.vector.dev/
+
+repo chart: https://github.com/vectordotdev/helm-charts/tree/develop
+
+文档： https://vector.dev/docs/
+
 # 验证与测试方法
 1、当前目录中创建vector.yaml文件，文件名必须为vector.yaml
 2、执行命令验证

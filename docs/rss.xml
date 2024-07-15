@@ -1,5 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 15 Jul 2024 08:13:42 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>日志工具vector自定义日志解析与过滤，包含vrl语法解释与http后端demo（go编写）</title><link>https://longxiucai.github.io/post/ri-zhi-gong-ju-vector-zi-ding-yi-ri-zhi-jie-xi-yu-guo-lv-%EF%BC%8C-bao-han-vrl-yu-fa-jie-shi-yu-http-hou-duan-demo%EF%BC%88go-bian-xie-%EF%BC%89.html</link><description># 验证与测试方法&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 15 Jul 2024 08:14:43 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>日志工具vector自定义日志解析与过滤，包含vrl语法解释与http后端demo（go编写）</title><link>https://longxiucai.github.io/post/ri-zhi-gong-ju-vector-zi-ding-yi-ri-zhi-jie-xi-yu-guo-lv-%EF%BC%8C-bao-han-vrl-yu-fa-jie-shi-yu-http-hou-duan-demo%EF%BC%88go-bian-xie-%EF%BC%89.html</link><description>源码：https://github.com/vectordotdev/vector&#13;
+&#13;
+helm repo:   https://helm.vector.dev/&#13;
+&#13;
+repo chart: https://github.com/vectordotdev/helm-charts/tree/develop&#13;
+&#13;
+文档： https://vector.dev/docs/&#13;
+&#13;
+# 验证与测试方法&#13;
 1、当前目录中创建vector.yaml文件，文件名必须为vector.yaml&#13;
 2、执行命令验证&#13;
 ```&#13;

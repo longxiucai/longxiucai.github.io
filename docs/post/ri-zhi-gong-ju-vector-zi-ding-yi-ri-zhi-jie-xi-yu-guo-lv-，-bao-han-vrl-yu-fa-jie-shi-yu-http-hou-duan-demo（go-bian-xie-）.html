@@ -9,7 +9,15 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="# 验证与测试方法
+<meta name="description" content="源码：https://github.com/vectordotdev/vector
+
+helm repo:   https://helm.vector.dev/
+
+repo chart: https://github.com/vectordotdev/helm-charts/tree/develop
+
+文档： https://vector.dev/docs/
+
+# 验证与测试方法
 1、当前目录中创建vector.yaml文件，文件名必须为vector.yaml
 2、执行命令验证
 ```
@@ -77,7 +85,15 @@ sinks:
 ## transforms配置说明
 1、**parse_ingress**使用正则表达式解析日志的timestamp、log_level、file_path、message、structured_data，然后将structured_data再次通过key-value的方式解析。">
 <meta property="og:title" content="日志工具vector自定义日志解析与过滤，包含vrl语法解释与http后端demo（go编写）">
-<meta property="og:description" content="# 验证与测试方法
+<meta property="og:description" content="源码：https://github.com/vectordotdev/vector
+
+helm repo:   https://helm.vector.dev/
+
+repo chart: https://github.com/vectordotdev/helm-charts/tree/develop
+
+文档： https://vector.dev/docs/
+
+# 验证与测试方法
 1、当前目录中创建vector.yaml文件，文件名必须为vector.yaml
 2、执行命令验证
 ```
@@ -202,7 +218,11 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><h1>验证与测试方法</h1>
+<div class="markdown-body" id="postBody"><p>源码：<a href="https://github.com/vectordotdev/vector">https://github.com/vectordotdev/vector</a></p>
+<p>helm repo:   <a href="https://helm.vector.dev/" rel="nofollow">https://helm.vector.dev/</a></p>
+<p>repo chart: <a href="https://github.com/vectordotdev/helm-charts/tree/develop">https://github.com/vectordotdev/helm-charts/tree/develop</a></p>
+<p>文档： <a href="https://vector.dev/docs/" rel="nofollow">https://vector.dev/docs/</a></p>
+<h1>验证与测试方法</h1>
 <p>1、当前目录中创建vector.yaml文件，文件名必须为vector.yaml<br>
 2、执行命令验证</p>
 <pre class="notranslate"><code class="notranslate">alias vector='nerdctl run -it -v $(pwd)/:/etc/vector/ -v /var/log/:/var/log/ --rm harbor.kylincloudnative.com/docker.io/timberio/vector:0.39.0-alpine'
