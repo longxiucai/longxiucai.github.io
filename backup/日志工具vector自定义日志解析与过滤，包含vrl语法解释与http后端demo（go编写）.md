@@ -118,19 +118,24 @@ type LogData struct {
 func pushTest() {
     router := gin.Default()
     router.POST("/push", func(c *gin.Context) {
-        body, err := c.GetRawData()
-        if err != nil {
-            c.String(500, "Error reading request body")
-            return
-        }
-        var LogData []LogData
-        json.Unmarshal(body, &LogData)
-        // Respond with a message including the received data
-        responseMessage := fmt.Sprintf("Hello, this is a POST response. Post data: %s", string(body))
-        for _, ld := range LogData {
-            fmt.Printf("%+v\n", ld)
-        }
-        c.String(200, responseMessage)
+		var LogData []LogData
+
+		// 使用GetRawData获取原始数据
+		// body, err := c.GetRawData()
+		// json.Unmarshal(body, &LogData)
+
+		// 使用bind
+		err := c.Bind(&LogData)
+		if err != nil {
+			c.String(500, "Error reading request body")
+			return
+		}
+		// Respond with a message including the received data
+		// responseMessage := fmt.Sprintf("Hello, this is a POST response. Post data: %s", string(body))
+		for _, ld := range LogData {
+			fmt.Printf("%+v\n", ld)
+		}
+		c.String(200, "ok")
     })
     router.Run(":8080")
 }
