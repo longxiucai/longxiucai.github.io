@@ -1,5 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 23 Jul 2024 01:36:07 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>记录一次pod网络问题，dns min参数对网络影响</title><link>https://longxiucai.github.io/post/ji-lu-yi-ci-pod-wang-luo-wen-ti-%EF%BC%8Cdns%20min-can-shu-dui-wang-luo-ying-xiang.html</link><description>## 问题现象&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 23 Jul 2024 01:46:17 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>在线可视化正则表达式</title><link>https://longxiucai.github.io/post/zai-xian-ke-shi-hua-zheng-ze-biao-da-shi.html</link><description># 原项目&#13;
+https://github.com/gskinner/regexr/&#13;
+https://regexr.com/&#13;
+&#13;
+# 中文翻译项目&#13;
+http://github.com/skys215/regexr/&#13;
+https://regexr-cn.com/。</description><guid isPermaLink="true">https://longxiucai.github.io/post/zai-xian-ke-shi-hua-zheng-ze-biao-da-shi.html</guid><pubDate>Tue, 23 Jul 2024 01:45:51 +0000</pubDate></item><item><title>记录一次pod网络问题，dns min参数对网络影响</title><link>https://longxiucai.github.io/post/ji-lu-yi-ci-pod-wang-luo-wen-ti-%EF%BC%8Cdns%20min-can-shu-dui-wang-luo-ying-xiang.html</link><description>## 问题现象&#13;
 容器内执行程序报错，程序需要连接指定的svc&#13;
 ![现象](https://github.com/user-attachments/assets/6eaf7525-06c1-4b75-b0b3-e042572224e2)&#13;
 &#13;
