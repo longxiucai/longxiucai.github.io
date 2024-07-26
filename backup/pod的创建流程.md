@@ -9,9 +9,18 @@
 8. **状态报告**：Kubelet 启动容器后，将 Pod 的状态报告给 API Server，API Server 更新 etcd 中的状态信息。
 9. **网络配置**：网络插件为 Pod 分配 IP，并配置网络规则。
 # 流程
-```
-User → Kubectl/API Request → API Server → Authentication & Authorization → Etcd (Persist State) 
-→ controller-manager → Create/Update Pod → Scheduler → Select Node → Update Pod Spec 
-→ Node's Kubelet → Container Runtime → Start Containers 
-→ Kubelet Reports Status → API Server → Update Etcd
+```mermaid
+graph TD;
+    A[用户提交高级资源定义] -->|通过 kubectl apply -f deployment.yaml 或 API 请求| B[API Server 接收和验证]
+    B --> C[持久化到 etcd]
+    C --> D[controller-manager 监视和处理]
+    D --> E[创建或更新 Pod]
+    E -->|通过 API Server 并存储到 etcd| F[调度器选择节点]
+    F --> G[选择合适节点并更新 Pod 定义中的节点信息]
+    G --> H[Kubelet 接收和执行]
+    H --> I[使用容器运行时启动容器]
+    I --> J[状态报告]
+    J -->|Kubelet 将 Pod 的状态报告给 API Server| K[API Server 更新 etcd 中的状态信息]
+    I --> L[网络配置]
+    L -->|网络插件为 Pod 分配 IP，并配置网络规则| K
 ```

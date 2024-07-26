@@ -19,7 +19,7 @@
 <meta property="og:url" content="https://longxiucai.github.io/post/pod-de-chuang-jian-liu-cheng.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
 <title>pod的创建流程</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -87,11 +87,19 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li><strong>网络配置</strong>：网络插件为 Pod 分配 IP，并配置网络规则。</li>
 </ol>
 <h1>流程</h1>
-<pre class="notranslate"><code class="notranslate">User → Kubectl/API Request → API Server → Authentication &amp; Authorization → Etcd (Persist State) 
-→ controller-manager → Create/Update Pod → Scheduler → Select Node → Update Pod Spec 
-→ Node's Kubelet → Container Runtime → Start Containers 
-→ Kubelet Reports Status → API Server → Update Etcd
-</code></pre></div>
+<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">graph</span> <span class="pl-ent">TD</span><span class="pl-sg">;</span>
+    <span class="pl-ent">A</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>用户提交高级资源定义<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">通过 kubectl apply -f deployment.yaml 或 API 请求</span><span class="pl-k">|</span> <span class="pl-ent">B</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>API Server 接收和验证<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>持久化到 etcd<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">D</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>controller-manager 监视和处理<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">D</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">E</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>创建或更新 Pod<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">E</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">通过 API Server 并存储到 etcd</span><span class="pl-k">|</span> <span class="pl-ent">F</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>调度器选择节点<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">F</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">G</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>选择合适节点并更新 Pod 定义中的节点信息<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">H</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>Kubelet 接收和执行<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">H</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">I</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>使用容器运行时启动容器<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">I</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">J</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>状态报告<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">J</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">Kubelet 将 Pod 的状态报告给 API Server</span><span class="pl-k">|</span> <span class="pl-ent">K</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>API Server 更新 etcd 中的状态信息<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">I</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">L</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>网络配置<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">L</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">网络插件为 Pod 分配 IP，并配置网络规则</span><span class="pl-k">|</span> <span class="pl-ent">K</span></pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
