@@ -1,4 +1,7 @@
-## 进入grub界面按e，找到如下行，并且删除圈出来的部分
+## 进入grub界面按`e`
+![](https://github.com/user-attachments/assets/fe06fe3f-5a37-4176-ad5c-ae4e55a2d665)
+
+## 找到如下行，并且删除圈出来的部分
 找到`linux`开头的行，删除`ro`与`rhgb`，rhgb不删除可能会报错无法进入救援模式
 ![](https://github.com/user-attachments/assets/629f57e0-482e-4499-a04c-fef6f450c1be)
 
