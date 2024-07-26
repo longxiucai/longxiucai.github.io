@@ -1,4 +1,7 @@
-## 进入grub界面按`e`
+## 需要iso来当本地yum源的需提前添加cd-rom并选择好对应的iso文件
+![](https://github.com/user-attachments/assets/b6940c91-1798-4f32-aa79-2d2b59bf371d)
+
+## 重启之后在grub界面按`e`
 ![](https://github.com/user-attachments/assets/fe06fe3f-5a37-4176-ad5c-ae4e55a2d665)
 
 ## 找到如下行，并且删除圈出来的部分
