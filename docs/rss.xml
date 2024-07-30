@@ -1,5 +1,25 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Fri, 26 Jul 2024 06:44:24 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>使用hugo搭建静态网页</title><link>https://longxiucai.github.io/post/shi-yong-hugo-da-jian-jing-tai-wang-ye.html</link><description>Hugo官方主页：https://gohugo.io/&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 30 Jul 2024 06:46:29 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>记录maxcale找不到主的异常</title><link>https://longxiucai.github.io/post/ji-lu-maxcale-zhao-bu-dao-zhu-de-yi-chang.html</link><description>### 问题现象&#13;
+maxcale的pod中查看如下图所示&#13;
+![微信图片_20240730141907](https://github.com/user-attachments/assets/40abae26-c65a-48fa-b714-fd4a0cf5023a)&#13;
+&#13;
+### 排查&#13;
+1.查看日志，可以知道没有找到master，有只读错误&#13;
+![微信图片_20240730142747](https://github.com/user-attachments/assets/ae1d81e5-9f0b-44f9-8ab0-152ac1da6f72)&#13;
+&#13;
+2.查看monitor，发现3个节点都是只读&#13;
+```&#13;
+maxctrl list monitors&#13;
+maxctrl show monitor MariaDB-Monitor&#13;
+```&#13;
+![微信图片_20240730143048](https://github.com/user-attachments/assets/2fc22344-bd6a-4bda-922a-642614f8bcbc)&#13;
+&#13;
+### 解决问题&#13;
+* 手动修改主节点，关闭只读&#13;
+```&#13;
+SET GLOBAL read_only = OFF;&#13;
+```&#13;
+此时删除maxcale的pod，重新拉起之后，发现依然没有找到主节点。</description><guid isPermaLink="true">https://longxiucai.github.io/post/ji-lu-maxcale-zhao-bu-dao-zhu-de-yi-chang.html</guid><pubDate>Tue, 30 Jul 2024 06:46:05 +0000</pubDate></item><item><title>使用hugo搭建静态网页</title><link>https://longxiucai.github.io/post/shi-yong-hugo-da-jian-jing-tai-wang-ye.html</link><description>Hugo官方主页：https://gohugo.io/&#13;
 Hugo二进制下载地址：https://github.com/spf13/hugo/releases&#13;
 &#13;
 1、下载之后执行下面命令会在当前目录创建test文件夹&#13;
