@@ -204,7 +204,7 @@ func (s *Student) String() string {
 为什么？
 > [!TIP]
 > 类型 `T` 只有接受者是 `T` 的方法；而类型 `*T` 拥有接受者是 `T` 和 `*T` 的方法。语法上 `T` 能直接调 `*T` 的方法仅仅是 Go 的语法糖。
-> 所以， `Student` 结构体定义了接受者类型是值类型的 `String()` 方法时，通过
+所以， `Student` 结构体定义了接受者类型是值类型的 `String()` 方法时，通过
 ```
 fmt.Println(s)
 fmt.Println(&s)
