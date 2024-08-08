@@ -10,9 +10,9 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="我们知道，Go 语言中不允许隐式类型转换，也就是说 = 两边，不允许出现类型不相同的变量。">
+<meta name="description" content="我们知道，Go 语言中不允许隐式类型转换，也就是说 `=` 两边，不允许出现类型不相同的变量。">
 <meta property="og:title" content="【go】接口-类型转换与断言">
-<meta property="og:description" content="我们知道，Go 语言中不允许隐式类型转换，也就是说 = 两边，不允许出现类型不相同的变量。">
+<meta property="og:description" content="我们知道，Go 语言中不允许隐式类型转换，也就是说 `=` 两边，不允许出现类型不相同的变量。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://longxiucai.github.io/post/38.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
@@ -72,7 +72,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p>我们知道，Go 语言中不允许隐式类型转换，也就是说 = 两边，不允许出现类型不相同的变量。<br>
+<div class="markdown-body" id="postBody"><p>我们知道，Go 语言中不允许隐式类型转换，也就是说 <code class="notranslate">=</code> 两边，不允许出现类型不相同的变量。<br>
 类型转换、类型断言本质都是把一个类型转换成另外一个类型。不同之处在于，类型断言是对接口变量进行的操作。</p>
 <h1>类型转换</h1>
 <p>对于类型转换而言，转换前后的两个类型要相互兼容才行。类型转换的语法为：</p>
@@ -103,7 +103,8 @@ func main() {
 <h1>断言</h1>
 <p>前面说过，因为空接口 <code class="notranslate">interface{}</code> 没有定义任何函数，因此 Go 中所有类型都实现了空接口。当一个函数的形参是 <code class="notranslate">interface{}</code>，那么在函数中，需要对形参进行断言，从而得到它的真实类型。</p>
 <p>断言的语法为：</p>
-<pre class="notranslate"><code class="notranslate">&lt;目标类型的值&gt;，&lt;布尔参数&gt; := &lt;表达式&gt;.( 目标类型 ) // 安全类型断言 &lt;目标类型的值&gt; := &lt;表达式&gt;.( 目标类型 )　　//非安全类型断言
+<pre class="notranslate"><code class="notranslate">&lt;目标类型的值&gt;，&lt;布尔参数&gt; := &lt;表达式&gt;.( 目标类型 ) // 安全类型断言 
+&lt;目标类型的值&gt; := &lt;表达式&gt;.( 目标类型 )　　//非安全类型断言
 </code></pre>
 <p>类型转换和类型断言有些相似，不同之处，在于类型断言是对接口进行的操作。<br>
 还是来看一个简短的例子：</p>
