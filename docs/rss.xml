@@ -1,5 +1,23 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Fri, 16 Aug 2024 03:39:11 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>git使用手册</title><link>https://longxiucai.github.io/post/45.html</link><description># Git 速查表&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Fri, 16 Aug 2024 08:50:49 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>gitlab软件包发布【cicd】</title><link>https://longxiucai.github.io/post/46.html</link><description>以go程序为例，build.sh编译输出物料为`_output`目录，然后将其打包为`软件名称-分支名称-日期.tar`，然后通过api来发布&#13;
+官方文档参考： https://docs.gitlab.com/ee/user/packages/generic_packages/index.html#publish-a-generic-package-by-using-&#13;
+```yaml1&#13;
+stages:&#13;
+  - build-and-uploads&#13;
+&#13;
+build_job:&#13;
+  stage: build&#13;
+  script:&#13;
+    - bash build.sh aarch64&#13;
+    - bash build.sh x86_64&#13;
+    - mv _output installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d)&#13;
+    - tar -cf installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d).tar installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d)/&#13;
+    - |&#13;
+      curl --header 'JOB-TOKEN: $CI_JOB_TOKEN' --upload-file installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d).tar '${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/installer-apiserver-output/$CI_COMMIT_REF_NAME/installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d).tar'&#13;
+```&#13;
+然后即可在页面查看：&#13;
+![1723798006765](https://github.com/user-attachments/assets/92ac40ef-c330-40e5-82ce-2144e66e3008)&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/46.html</guid><pubDate>Fri, 16 Aug 2024 08:50:10 +0000</pubDate></item><item><title>git使用手册</title><link>https://longxiucai.github.io/post/45.html</link><description># Git 速查表&#13;
 &#13;
 ## 创建&#13;
 &#13;
