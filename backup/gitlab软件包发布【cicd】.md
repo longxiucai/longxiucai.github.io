@@ -5,7 +5,7 @@ stages:
   - build-and-uploads
 
 build_job:
-  stage: build
+  stage: build-and-uploads
   script:
     - bash build.sh aarch64
     - bash build.sh x86_64
