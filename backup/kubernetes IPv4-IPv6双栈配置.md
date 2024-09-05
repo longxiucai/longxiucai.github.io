@@ -40,7 +40,6 @@ clusterCIDR: 10.119.0.0/22,fc00::/48
 ## kubelet
 1. 修改kubelet的启动命令，不同环境可能不同，根据kubelet.service配置来实际修改。本文测试环境修改/var/lib/kubelet/kubeadm-flags.env后面增加`--node-ip=<IPv4 IP>,<IPv6 IP>`
 2. 重启kubelet服务，`systemctl restart kubelet`
-此时，节点
 ## Kubernetes 平台的 Pod 网络 CIDR 范围
 `kubectl edit configmap/kubeadm-config -n kube-system`修改`ClusterConfiguration`中`podSubnet`，增加<IPv6 IP>
 ```
