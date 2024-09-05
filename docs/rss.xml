@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Thu, 05 Sep 2024 07:32:28 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>kubernetes IPv4/IPv6双栈配置</title><link>https://longxiucai.github.io/post/48.html</link><description>calico参考：https://docs.tigera.io/calico/latest/networking/ipam/ipv6#enable-dual-stack&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Thu, 05 Sep 2024 07:48:55 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>kubernetes IPv4/IPv6双栈配置</title><link>https://longxiucai.github.io/post/48.html</link><description>calico参考：https://docs.tigera.io/calico/latest/networking/ipam/ipv6#enable-dual-stack&#13;
 k8s参考：https://kubernetes.io/docs/concepts/services-networking/dual-stack/#configure-ipv4-ipv6-dual-stack&#13;
 &#13;
 # 先决条件&#13;
 1. 内核参数`net.ipv6.conf.all.forwarding`需要设置为1&#13;
 2. 集群节点之间ipv6需要连通&#13;
-3. Kubernetes 1.20 版本或更高版本&#13;
+3. Kubernetes 1.20 版本或更高版本（低版本参考版本文档修改k8s配置）&#13;
 4. 支持双协议栈的[网络插件](https://kubernetes.io/zh-cn/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)。</description><guid isPermaLink="true">https://longxiucai.github.io/post/48.html</guid><pubDate>Thu, 05 Sep 2024 07:31:58 +0000</pubDate></item><item><title>动态规划-01背包</title><link>https://longxiucai.github.io/post/47.html</link><description>### 01 背包问题&#13;
 &#13;
 - **物品价值**: `5, 10, 3, 6, 3`&#13;
