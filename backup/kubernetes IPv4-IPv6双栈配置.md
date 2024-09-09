@@ -4,7 +4,7 @@ k8s参考：https://kubernetes.io/docs/concepts/services-networking/dual-stack/#
 # 先决条件
 1. 内核参数`net.ipv6.conf.all.forwarding`需要设置为1
 2. 集群节点之间ipv6需要连通
-3. Kubernetes 1.20 版本或更高版本（低版本参考版本文档修改k8s配置）
+3. Kubernetes 1.20 版本或更高版本（低版本参考版本文档修改k8s配置，如[v1.19](https://github.com/kubernetes/website/blob/release-1.19/content/zh/docs/concepts/services-networking/dual-stack.md)）
 4. 支持双协议栈的[网络插件](https://kubernetes.io/zh-cn/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)。
 
 # 节点配置
