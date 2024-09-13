@@ -101,13 +101,17 @@ systemctl restart docker
 <ol>
 <li>修改~/.docker/daemon.json增加</li>
 </ol>
-<pre class="notranslate"><code class="notranslate">  "registry-mirrors": [
-    "https://xxxxxx.mirror.aliyuncs.com"
-  ],
-  "proxies": {
-    "http-proxy": "http://&lt;user&gt;:&lt;password&gt;@&lt;domain&gt;:&lt;port&gt;",
-    "https-proxy": "http://&lt;user&gt;:&lt;password&gt;@&lt;domain&gt;:&lt;port&gt;"
-  }
+<pre class="notranslate"><code class="notranslate">	"registry-mirrors": [
+		"https://xxxxxx.mirror.aliyuncs.com"
+	],
+	"proxies": {
+		"http-proxy": {
+			"httpProxy": "http://127.0.0.1:7890"
+		},
+		"https-proxy": {
+			"httpsProxy": "http://127.0.0.1:7890"
+		}
+	},
 </code></pre>
 <ol start="2">
 <li>restart</li>

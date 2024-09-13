@@ -17,12 +17,16 @@ systemctl restart docker
 # deb装的docker desktop
 1. 修改~/.docker/daemon.json增加
 ```
-  "registry-mirrors": [
-    "https://xxxxxx.mirror.aliyuncs.com"
-  ],
-  "proxies": {
-    "http-proxy": "http://<user>:<password>@<domain>:<port>",
-    "https-proxy": "http://<user>:<password>@<domain>:<port>"
-  }
+	"registry-mirrors": [
+		"https://xxxxxx.mirror.aliyuncs.com"
+	],
+	"proxies": {
+		"http-proxy": {
+			"httpProxy": "http://127.0.0.1:7890"
+		},
+		"https-proxy": {
+			"httpsProxy": "http://127.0.0.1:7890"
+		}
+	},
 ```
 2. restart
