@@ -84,7 +84,41 @@ ssh -q -o StrictHostKeyChecking=no 'root@10.20.30.40' '$(typeset -f cleanup_old_
 # 输出写速率
 dd if=/dev/zero of=.tmp.test bs=1M count=100 2>&1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?\s+[A-Za-z]+/s'
 # 不要单位
-dd if=/dev/zero of=.tmp.test bs=1M count=100 2>&1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'。">
+dd if=/dev/zero of=.tmp.test bs=1M count=100 2>&1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'
+```
+9. alertmanager告警接口，产生告警
+```
+curl -X POST http://172.20.41.32:30300/api/v2/alerts \
+  -H 'Content-Type: application/json' \
+  -d '[
+    {
+      'labels': {
+        'alertname': '系统连续崩溃，已经出现雪崩状况！',
+        'dev': 'sda1',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：这个系统雪崩了，快处理！',
+        'summary': '请检查实例示例1'
+      }
+    },
+    {
+      'labels': {
+        'alertname': '管理系统损坏',
+        'dev': 'sda2',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：电子商务管理系统中订单，仓库模块已经雪崩，快处理！',
+        'summary': '请检查实例示例1',
+        'runbook': '以下链接http://192.168.5.128:9093/api/v2/alerts应该是可点击的'
+      }
+    }
+  ]'
+
+```。">
 <meta property="og:title" content="运维常用命令/脚本">
 <meta property="og:description" content="1. 获取kubernetes cluster master节点ip地址
 ```
@@ -160,7 +194,41 @@ ssh -q -o StrictHostKeyChecking=no 'root@10.20.30.40' '$(typeset -f cleanup_old_
 # 输出写速率
 dd if=/dev/zero of=.tmp.test bs=1M count=100 2>&1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?\s+[A-Za-z]+/s'
 # 不要单位
-dd if=/dev/zero of=.tmp.test bs=1M count=100 2>&1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'。">
+dd if=/dev/zero of=.tmp.test bs=1M count=100 2>&1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'
+```
+9. alertmanager告警接口，产生告警
+```
+curl -X POST http://172.20.41.32:30300/api/v2/alerts \
+  -H 'Content-Type: application/json' \
+  -d '[
+    {
+      'labels': {
+        'alertname': '系统连续崩溃，已经出现雪崩状况！',
+        'dev': 'sda1',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：这个系统雪崩了，快处理！',
+        'summary': '请检查实例示例1'
+      }
+    },
+    {
+      'labels': {
+        'alertname': '管理系统损坏',
+        'dev': 'sda2',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：电子商务管理系统中订单，仓库模块已经雪崩，快处理！',
+        'summary': '请检查实例示例1',
+        'runbook': '以下链接http://192.168.5.128:9093/api/v2/alerts应该是可点击的'
+      }
+    }
+  ]'
+
+```。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://longxiucai.github.io/post/52.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
@@ -306,6 +374,40 @@ cleanup_old_files /opt/test 5
 dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?\s+[A-Za-z]+/s'
 # 不要单位
 dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'
+</code></pre>
+<ol start="9">
+<li>alertmanager告警接口，产生告警</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">curl -X POST http://172.20.41.32:30300/api/v2/alerts \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "labels": {
+        "alertname": "系统连续崩溃，已经出现雪崩状况！",
+        "dev": "sda1",
+        "instance": "实例1",
+        "msgtype": "testing"
+      },
+      "annotations": {
+        "info": "程序员小王提示您：这个系统雪崩了，快处理！",
+        "summary": "请检查实例示例1"
+      }
+    },
+    {
+      "labels": {
+        "alertname": "管理系统损坏",
+        "dev": "sda2",
+        "instance": "实例1",
+        "msgtype": "testing"
+      },
+      "annotations": {
+        "info": "程序员小王提示您：电子商务管理系统中订单，仓库模块已经雪崩，快处理！",
+        "summary": "请检查实例示例1",
+        "runbook": "以下链接http://192.168.5.128:9093/api/v2/alerts应该是可点击的"
+      }
+    }
+  ]'
+
 </code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
