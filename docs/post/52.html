@@ -118,7 +118,25 @@ curl -X POST http://172.20.41.32:30300/api/v2/alerts \
     }
   ]'
 
-```。">
+```
+10. 集群中全部容器运行date命令检查时区（date命令不存在的情况下报错）
+```
+kubectl get pods -A -o 'jsonpath={range .items[*]}{.metadata.namespace}{'\t'}{.metadata.name}{'\t'}{range .spec.containers[*]}{.name}{'\t'}{end}{'\n'}{end}' | while IFS=$'\t' read -r namespace pod containers; do
+    for container in $containers; do
+        if [[ -z '$container' ]]; then
+            echo -e '$namespace,$pod,No container found,-'
+            continue
+        fi
+        output=$(kubectl exec -n '$namespace' '$pod' -c '$container' -- date 2>&1)
+        echo -e '$namespace,$pod,$container,$output'
+    done
+done
+```
+11. 去除重复行
+```
+awk '!a[$0]++' /path/to/file
+```
+。">
 <meta property="og:title" content="运维常用命令/脚本">
 <meta property="og:description" content="1. 获取kubernetes cluster master节点ip地址
 ```
@@ -228,7 +246,25 @@ curl -X POST http://172.20.41.32:30300/api/v2/alerts \
     }
   ]'
 
-```。">
+```
+10. 集群中全部容器运行date命令检查时区（date命令不存在的情况下报错）
+```
+kubectl get pods -A -o 'jsonpath={range .items[*]}{.metadata.namespace}{'\t'}{.metadata.name}{'\t'}{range .spec.containers[*]}{.name}{'\t'}{end}{'\n'}{end}' | while IFS=$'\t' read -r namespace pod containers; do
+    for container in $containers; do
+        if [[ -z '$container' ]]; then
+            echo -e '$namespace,$pod,No container found,-'
+            continue
+        fi
+        output=$(kubectl exec -n '$namespace' '$pod' -c '$container' -- date 2>&1)
+        echo -e '$namespace,$pod,$container,$output'
+    done
+done
+```
+11. 去除重复行
+```
+awk '!a[$0]++' /path/to/file
+```
+。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://longxiucai.github.io/post/52.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
@@ -408,6 +444,25 @@ dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}'
     }
   ]'
 
+</code></pre>
+<ol start="10">
+<li>集群中全部容器运行date命令检查时区（date命令不存在的情况下报错）</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">kubectl get pods -A -o 'jsonpath={range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{range .spec.containers[*]}{.name}{"\t"}{end}{"\n"}{end}' | while IFS=$'\t' read -r namespace pod containers; do
+    for container in $containers; do
+        if [[ -z "$container" ]]; then
+            echo -e "$namespace,$pod,No container found,-"
+            continue
+        fi
+        output=$(kubectl exec -n "$namespace" "$pod" -c "$container" -- date 2&gt;&amp;1)
+        echo -e "$namespace,$pod,$container,$output"
+    done
+done
+</code></pre>
+<ol start="11">
+<li>去除重复行</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">awk '!a[$0]++' /path/to/file
 </code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
