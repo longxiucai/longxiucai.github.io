@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 30 Dec 2024 02:20:41 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>运维常用命令/脚本</title><link>https://longxiucai.github.io/post/52.html</link><description>1. 获取kubernetes cluster master节点ip地址&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Fri, 03 Jan 2025 08:59:59 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>运维常用命令/脚本</title><link>https://longxiucai.github.io/post/52.html</link><description>1. 获取kubernetes cluster master节点ip地址&#13;
 ```&#13;
 kubectl get nodes --selector=node-role.kubernetes.io/control-plane='' -o=jsonpath='{.items[*].status.addresses[?(@.type=='InternalIP')].address}'&#13;
 &#13;
@@ -125,7 +125,7 @@ done&#13;
 ```&#13;
 awk '!a[$0]++' /path/to/file&#13;
 ```&#13;
-。</description><guid isPermaLink="true">https://longxiucai.github.io/post/52.html</guid><pubDate>Tue, 10 Dec 2024 07:49:40 +0000</pubDate></item><item><title>calico network policy只开通pod间tcp流量</title><link>https://longxiucai.github.io/post/51.html</link><description># 资源文件&#13;
+12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。</description><guid isPermaLink="true">https://longxiucai.github.io/post/52.html</guid><pubDate>Tue, 10 Dec 2024 07:49:40 +0000</pubDate></item><item><title>calico network policy只开通pod间tcp流量</title><link>https://longxiucai.github.io/post/51.html</link><description># 资源文件&#13;
 ```&#13;
 apiVersion: v1&#13;
 kind: Pod&#13;

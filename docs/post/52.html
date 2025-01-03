@@ -136,7 +136,7 @@ done
 ```
 awk '!a[$0]++' /path/to/file
 ```
-。">
+12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。">
 <meta property="og:title" content="运维常用命令/脚本">
 <meta property="og:description" content="1. 获取kubernetes cluster master节点ip地址
 ```
@@ -264,7 +264,7 @@ done
 ```
 awk '!a[$0]++' /path/to/file
 ```
-。">
+12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://longxiucai.github.io/post/52.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
@@ -463,6 +463,37 @@ done
 <li>去除重复行</li>
 </ol>
 <pre class="notranslate"><code class="notranslate">awk '!a[$0]++' /path/to/file
+</code></pre>
+<ol start="12">
+<li>拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">image=registry.k8s.io/kube-proxy:v1.29.10
+set -e
+local_repo=harbor.myharbor.com
+arm_image=$local_repo/$image-arm64
+amd_image=$local_repo/$image-amd64
+
+sed -i '/^#Environment="HTTPS_PROXY=http:\/\/10\.42\.16\.241:7890"/s/^#//' /usr/lib/systemd/system/docker.service
+sed -i '/^#Environment="HTTP_PROXY=http:\/\/10\.42\.16\.241:7890"/s/^#//' /usr/lib/systemd/system/docker.service
+systemctl daemon-reload
+systemctl restart docker
+docker pull $image
+docker tag $image $arm_image
+docker rmi $image
+docker pull --platform amd64 $image
+docker tag $image $amd_image
+docker rmi $image
+
+sed -i '/^Environment="HTTPS_PROXY=http:\/\/10\.42\.16\.241:7890"/s/^/#/' /usr/lib/systemd/system/docker.service
+sed -i '/^Environment="HTTP_PROXY=http:\/\/10\.42\.16\.241:7890"/s/^/#/' /usr/lib/systemd/system/docker.service
+systemctl daemon-reload
+systemctl restart docker
+
+docker push $arm_image
+docker push $amd_image
+docker manifest create $local_repo/$image --amend $arm_image --amend $amd_image
+docker manifest push $local_repo/$image
+docker manifest rm $local_repo/$image
 </code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
