@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://avatars.githubusercontent.com/u/43312586"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="|     |     |     |     |     |
+| --- | --- | --- | --- | --- |
+| Description | metrics中的信息 | 指标名称（release-1.3） | 值的来源 | 备注  |
+| Exposes ARP statistics from/proc/net/arp. | 正常  | node\_arp\_entries | /proc/net/arp |     |
+| Exposes the number of configured and active slaves of Linux bonding interfaces. | 正常  | node\_bonding\_active  <br>node\_bonding\_slaves | /sys/class/net/<bond name>/\* |     |
+| Exposes btrfs statistics | 正常  | node\_btrfs\_allocation\_ratio  <br>node\_btrfs\_device\_size\_bytes  <br>node\_btrfs\_global\_rsv\_size\_bytes  <br>node\_btrfs\_info  <br>node\_btrfs\_reserved\_bytes  <br>node\_btrfs\_size\_bytes  <br>node\_btrfs\_used\_bytes | /sys/fs/btrfs/\*-\*/ |     |
+| Exposes statistics of memory fragments as reported by /proc/buddyinfo. | 正常  | node\_buddyinfo\_blocks | /proc/buddyinfo |     |
+| Shows conntrack statistics (does nothing if no/proc/sys/net/netfilter/present). | 正常  | node\_nf\_conntrack\_entries  <br>node\_nf\_conntrack\_entries\_limit  <br>node\_nf\_conntrack\_stat\_found  <br>node\_nf\_conntrack\_stat\_invalid  <br>node\_nf\_conntrack\_stat\_ignore  <br>node\_nf\_conntrack\_stat\_insert  <br>node\_nf\_conntrack\_stat\_insert\_failed  <br>node\_nf\_conntrack\_stat\_drop  <br>node\_nf\_conntrack\_stat\_early\_drop  <br>node\_nf\_conntrack\_stat\_search\_restart | /proc/net/stat/nf\_conntrack |     |
+| Exposes CPU statistics | 正常  | node\_cpu\_seconds\_total  <br>node\_cpu\_info  <br>node\_cpu\_flag\_info  <br>node\_cpu\_bug\_info  <br>node\_cpu\_guest\_seconds\_total  <br>node\_cpu\_core\_throttles\_total  <br>node\_cpu\_package\_throttles\_total | /proc/cpuinfo |     |
+| Exposes disk I/O statistics. | 正常  | node\_disk\_reads\_completed\_total  <br>node\_disk\_read\_bytes\_total  <br>node\_disk\_writes\_completed\_total  <br>node\_disk\_written\_bytes\_total  <br>node\_disk\_io\_time\_seconds\_total  <br>node\_disk\_read\_time\_seconds\_total  <br>node\_disk\_write\_time\_seconds\_total  <br>node\_disk\_info  <br>node\_disk\_reads\_merged\_total  <br>node\_disk\_writes\_merged\_total  <br>node\_disk\_io\_now  <br>node\_disk\_io\_time\_weighted\_seconds\_total  <br>node\_disk\_discards\_completed\_total  <br>node\_disk\_discards\_merged\_total  <br>node\_disk\_discarded\_sectors\_total  <br>node\_disk\_discard\_time\_seconds\_total  <br>node\_disk\_flush\_requests\_total  <br>node\_disk\_flush\_requests\_time\_seconds\_total | /proc/diskstats |     |
+| Expose Desktop Management Interface (DMI) info from/sys/class/dmi/id/ | 正常  | node\_dmi\_info | /sys/class/dmi/id/ |     |
+| Exposes available entropy. | 正常  | node\_entropy\_available\_bits  <br>node\_entropy\_pool\_size\_bits | /proc/sys/kernel/random/ |     |
+| Exposes file descriptor statistics from/proc/sys/fs/file-nr. | 正常  | node\_filefd\_allocated  <br>node\_filefd\_maximum | /proc/sys/fs/file-nr |     |
+| Exposes filesystem statistics, such as disk space used. | 正常  | node\_filesystem\_size\_bytes  <br>node\_filesystem\_free\_bytes  <br>node\_filesystem\_avail\_bytes  <br>node\_filesystem\_files  <br>node\_filesystem\_files\_free  <br>node\_filesystem\_readonly  <br>node\_filesystem\_device\_error | /proc/1/mounts |     |
+| Exposes detailed interrupts statistics. | 正常  | node\_interrupts\_total | /proc/interrupts |     |
+| Exposes IPVS status from/proc/net/ip\_vsand stats from/proc/net/ip\_vs\_stats. | 正常  | node\_ipvs\_connections\_total  <br>node\_ipvs\_incoming\_packets\_total  <br>node\_ipvs\_outgoing\_packets\_total  <br>node\_ipvs\_incoming\_bytes\_total  <br>node\_ipvs\_outgoing\_bytes\_total  <br>node\_ipvs\_backend\_connections\_active  <br>node\_ipvs\_backend\_connections\_inactive  <br>node\_ipvs\_backend\_weight | /proc/net/ip\_vs  <br>/proc/net/ip\_vs\_stats |     |
+| Exposes stats from/proc/net/stat/. | 正常  | node\_lnstat\_allocs\_total  <br>node\_lnstat\_delete\_list\_total  <br>node\_lnstat\_delete\_total  <br>node\_lnstat\_destroys\_total  <br>node\_lnstat\_drop\_total  <br>node\_lnstat\_early\_drop\_total  <br>node\_lnstat\_entries\_total  <br>node\_lnstat\_expect\_create\_total  <br>node\_lnstat\_expect\_delete\_total  <br>node\_lnstat\_expect\_new\_total  <br>node\_lnstat\_forced\_gc\_runs\_total  <br>node\_lnstat\_found\_total  <br>node\_lnstat\_gc\_dst\_overflow\_total  <br>node\_lnstat\_gc\_goal\_miss\_total  <br>node\_lnstat\_gc\_ignored\_total  <br>node\_lnstat\_gc\_total\_total  <br>node\_lnstat\_hash\_grows\_total  <br>node\_lnstat\_hits\_total  <br>node\_lnstat\_icmp\_error\_total  <br>node\_lnstat\_ignore\_total  <br>node\_lnstat\_in\_brd\_total  <br>node\_lnstat\_in\_hit\_total  <br>node\_lnstat\_in\_hlist\_search\_total  <br>node\_lnstat\_in\_martian\_dst\_total<br>node\_lnstat\_in\_martian\_src\_total  <br>node\_lnstat\_in\_no\_route\_total  <br>node\_lnstat\_in\_slow\_mc\_total  <br>node\_lnstat\_in\_slow\_tot\_total  <br>node\_lnstat\_insert\_failed\_total  <br>node\_lnstat\_insert\_total  <br>node\_lnstat\_invalid\_total  <br>node\_lnstat\_lookups\_total  <br>node\_lnstat\_new\_total  <br>node\_lnstat\_out\_hit\_total  <br>node\_lnstat\_out\_hlist\_search\_total  <br>node\_lnstat\_out\_slow\_mc\_total  <br>node\_lnstat\_out\_slow\_tot\_total  <br>node\_lnstat\_periodic\_gc\_runs\_total  <br>node\_lnstat\_rcv\_probes\_mcast\_total  <br>node\_lnstat\_rcv\_probes\_ucast\_total  <br>node\_lnstat\_res\_failed\_total  <br>node\_lnstat\_search\_restart\_total  <br>node\_lnstat\_searched\_total  <br>node\_lnstat\_table\_fulls\_total  <br>node\_lnstat\_unresolved\_discards\_total| /proc/net/stat/ | 指标名称根据/proc/net/stat/\*第一行 |
+| Exposes load average. | 正常  | node\_load1  <br>node\_load15  <br>node\_load5 | /proc/loadavg |     |
+| Exposes memory statistics. | 正常  | node\_memory\_Active\_anon\_bytes  <br>node\_memory\_Active\_bytes  <br>node\_memory\_Active\_file\_bytes  <br>node\_memory\_AnonHugePages\_bytes  <br>node\_memory\_AnonPages\_bytes  <br>node\_memory\_Bounce\_bytes  <br>node\_memory\_Buffers\_bytes  <br>node\_memory\_Cached\_bytes  <br>node\_memory\_CommitLimit\_bytes  <br>node\_memory\_Committed\_AS\_bytes  <br>node\_memory\_DirectMap1G\_bytes  <br>node\_memory\_DirectMap2M\_bytes  <br>node\_memory\_DirectMap4k\_bytes  <br>node\_memory\_Dirty\_bytes  <br>node\_memory\_HardwareCorrupted\_bytes  <br>node\_memory\_HugePages\_Free  <br>node\_memory\_HugePages\_Rsvd  <br>node\_memory\_HugePages\_Surp  <br>node\_memory\_HugePages\_Total  <br>node\_memory\_Hugepagesize\_bytes  <br>node\_memory\_Hugetlb\_bytes  <br>node\_memory\_Inactive\_anon\_bytes  <br>node\_memory\_Inactive\_bytes   <br>node\_memory\_Inactive\_file\_bytes  <br>node\_memory\_KernelStack\_bytes  <br>node\_memory\_Mapped\_bytes  <br>node\_memory\_MemAvailable\_bytes  <br>node\_memory\_MemFree\_bytes  <br>node\_memory\_MemTotal\_bytes  <br>node\_memory\_Mlocked\_bytes  <br>node\_memory\_NFS\_Unstable\_bytes  <br>node\_memory\_PageTables\_bytes  <br>node\_memory\_Percpu\_bytes  <br>node\_memory\_SReclaimable\_bytes  <br>node\_memory\_SUnreclaim\_bytes  <br>node\_memory\_ShmemHugePages\_bytes  <br>node\_memory\_ShmemPmdMapped\_bytes  <br>node\_memory\_Shmem\_bytes  <br>node\_memory\_Slab\_bytes  <br>node\_memory\_SwapCached\_bytes  <br>node\_memory\_SwapFree\_bytes  <br>node\_memory\_SwapTotal\_bytes  <br>node\_memory\_Unevictable\_bytes  <br>node\_memory\_VmallocChunk\_bytes  <br>node\_memory\_VmallocTotal\_bytes  <br>node\_memory\_VmallocUsed\_bytes  <br>node\_memory\_WritebackTmp\_bytes  <br>node\_memory\_Writeback\_bytes| /proc/meminfo | 指标名称根据/proc/meminfo第一列 |
+| Exposes memory statistics from/proc/meminfo\_numa. | 正常  | node\_memory\_numa\_Active  <br>node\_memory\_numa\_Active\_anon  <br>node\_memory\_numa\_Active\_file  <br>node\_memory\_numa\_AnonHugePages  <br>node\_memory\_numa\_AnonPages  <br>node\_memory\_numa\_Bounce  <br>node\_memory\_numa\_Dirty  <br>node\_memory\_numa\_FilePages  <br>node\_memory\_numa\_HugePages\_Free  <br>node\_memory\_numa\_HugePages\_Surp  <br>node\_memory\_numa\_HugePages\_Total  <br>node\_memory\_numa\_Inactive  <br>node\_memory\_numa\_Inactive\_anon  <br>node\_memory\_numa\_Inactive\_file  <br>node\_memory\_numa\_KernelStack  <br>node\_memory\_numa\_Mapped  <br>node\_memory\_numa\_MemFree  <br>node\_memory\_numa\_MemTotal<br> node\_memory\_numa\_MemUsed  <br>node\_memory\_numa\_Mlocked  <br>node\_memory\_numa\_NFS\_Unstable  <br>node\_memory\_numa\_PageTables  <br>node\_memory\_numa\_SReclaimable  <br>node\_memory\_numa\_SUnreclaim  <br>node\_memory\_numa\_Shmem  <br>node\_memory\_numa\_ShmemHugePages  <br>node\_memory\_numa\_ShmemPmdMapped  <br>node\_memory\_numa\_Slab  <br>node\_memory\_numa\_Unevictable  <br>node\_memory\_numa\_Writeback  <br>node\_memory\_numa\_WritebackTmp  <br>node\_memory\_numa\_interleave\_hit\_total  <br>node\_memory\_numa\_local\_node\_total  <br>node\_memory\_numa\_numa\_foreign\_total  <br>node\_memory\_numa\_numa\_hit\_total  <br>node\_memory\_numa\_numa\_miss\_total  <br>node\_memory\_numa\_other\_node\_total<br> node\_memory\_numa\_MemUsed  <br>node\_memory\_numa\_Mlocked  <br>node\_memory\_numa\_NFS\_Unstable  <br>node\_memory\_numa\_PageTables  <br>node\_memory\_numa\_SReclaimable  <br>node\_memory\_numa\_SUnreclaim  <br>node\_memory\_numa\_Shmem  <br>node\_memory\_numa\_ShmemHugePages  <br>node\_memory\_numa\_ShmemPmdMapped  <br>node\_memory\_numa\_Slab  <br>node\_memory\_numa\_Unevictable  <br>node\_memory\_numa\_Writeback  <br>node\_memory\_numa\_WritebackTmp  <br>node\_memory\_numa\_interleave\_hit\_total  <br>node\_memory\_numa\_local\_node\_total  <br>node\_memory\_numa\_numa\_foreign\_total  <br>node\_memory\_numa\_numa\_hit\_total  <br>node\_memory\_numa\_numa\_miss\_total  <br>node\_memory\_numa\_other\_node\_total | /proc/meminfo\_numa | 指标名称根据/sys/devices/system/node/node\[0-9\]/meminfo |
+| Exposes network interface info from/sys/class/net/ | 正常  | node\_network\_info  <br>node\_network\_up  <br>node\_network\_address\_assign\_type  <br>node\_network\_carrier  <br>node\_network\_carrier\_changes\_total  <br>node\_network\_carrier\_up\_changes\_total  <br>node\_network\_carrier\_down\_changes\_total  <br>node\_network\_device\_id  <br>node\_network\_dormant  <br>node\_network\_flags  <br>node\_network\_iface\_id  <br>node\_network\_iface\_link  <br>node\_network\_iface\_link\_mode  <br>node\_network\_mtu\_bytes  <br>node\_network\_name\_assign\_type  <br>node\_network\_net\_dev\_group  <br>node\_network\_speed\_bytes  <br>node\_network\_transmit\_queue\_length  <br>node\_network\_protocol\_type | /sys/class/net/ |     |
+| Exposes network interface statistics such as bytes transferred. | 正常  | node\_network\_receive\_bytes\_total  <br>node\_network\_receive\_packets\_total  <br>node\_network\_receive\_errs\_total  <br>node\_network\_receive\_drop\_total  <br>node\_network\_receive\_fifo\_total  <br>node\_network\_receive\_frame\_total  <br>node\_network\_receive\_compressed\_total  <br>node\_network\_receive\_multicast\_total  <br>node\_network\_transmit\_bytes\_total  <br>node\_network\_transmit\_packets\_total  <br>node\_network\_transmit\_errs\_total  <br>node\_network\_transmit\_drop\_total  <br>node\_network\_transmit\_fifo\_total  <br>node\_network\_transmit\_frame\_total  <br>node\_network\_transmit\_compressed\_total  <br>node\_network\_transmit\_multicast\_total | /proc/net/dev | 指标名称根据/proc/net/dev |
+| Exposes network statistics from/proc/net/netstat. This is the same information asnetstat -s. | 正常  | node\_netstat\_Icmp6\_InErrors  <br>node\_netstat\_Icmp6\_InMsgs  <br>node\_netstat\_Icmp6\_OutMsgs  <br>node\_netstat\_Icmp\_InErrors  <br>node\_netstat\_Icmp\_InMsgs  <br>node\_netstat\_Icmp\_OutMsgs  <br>node\_netstat\_Ip6\_InOctets  <br>node\_netstat\_Ip6\_OutOctets  <br>node\_netstat\_IpExt\_InOctets  <br>node\_netstat\_IpExt\_OutOctets  <br>node\_netstat\_Ip\_Forwarding  <br>node\_netstat\_TcpExt\_ListenDrops  <br>node\_netstat\_TcpExt\_ListenOverflows  <br>node\_netstat\_TcpExt\_SyncookiesFailed  <br>node\_netstat\_TcpExt\_SyncookiesRecv  <br>node\_netstat\_TcpExt\_SyncookiesSent  <br>node\_netstat\_TcpExt\_TCPSynRetrans  <br>node\_netstat\_TcpExt\_TCPTimeouts  <br>node\_netstat\_Tcp\_ActiveOpens  <br>node\_netstat\_Tcp\_CurrEstab  <br>node\_netstat\_Tcp\_InErrs  <br>node\_netstat\_Tcp\_InSegs  <br>node\_netstat\_Tcp\_OutRsts  <br>node\_netstat\_Tcp\_OutSegs  <br>node\_netstat\_Tcp\_PassiveOpens  <br>node\_netstat\_Tcp\_RetransSegs  <br>node\_netstat\_Udp6\_InDatagrams  <br>node\_netstat\_Udp6\_InErrors  <br>node\_netstat\_Udp6\_NoPorts  <br>node\_netstat\_Udp6\_OutDatagrams  <br>node\_netstat\_Udp6\_RcvbufErrors  <br>node\_netstat\_Udp6\_SndbufErrors  <br>node\_netstat\_UdpLite6\_InErrors  <br>node\_netstat\_UdpLite\_InErrors  <br>node\_netstat\_Udp\_InDatagrams  <br>node\_netstat\_Udp\_InErrors  <br>node\_netstat\_Udp\_NoPorts  <br>node\_netstat\_Udp\_OutDatagrams  <br>node\_netstat\_Udp\_RcvbufErrors  <br>node\_netstat\_Udp\_SndbufErrors| /proc/net/netstat | 指标名称根据/proc/net/snmp、/proc/net/netstat、/proc/net/snmp6 |
+| Exposes the routing table as metrics | 正常  | node\_network\_route\_info  <br>node\_network\_routes | [github.com/mdlayher/netlink](https://github.com/mdlayher/netlink 'https://github.com/mdlayher/netlink') |     |
+| Exposes NFS client statistics from/proc/net/rpc/nfs. This is the same information asnfsstat -c. | 正常  | node\_nfs\_packets\_total  <br>node\_nfs\_connections\_total  <br>node\_nfs\_rpcs\_total  <br>node\_nfs\_rpc\_retransmissions\_total  <br>node\_nfs\_rpc\_authentication\_refreshes\_total  <br>node\_nfs\_requests\_total | /proc/net/rpc/nfs |     |
+| Exposes NFS kernel server statistics from/proc/net/rpc/nfsd. This is the same information asnfsstat -s. | 正常  | node\_nfsd\_requests\_total  <br>node\_nfsd\_reply\_cache\_hits\_total  <br>node\_nfsd\_reply\_cache\_misses\_total  <br>node\_nfsd\_reply\_cache\_nocache\_total  <br>node\_nfsd\_file\_handles\_stale\_total  <br>node\_nfsd\_disk\_bytes\_read\_total  <br>node\_nfsd\_disk\_bytes\_written\_total  <br>node\_nfsd\_server\_threads  <br>node\_nfsd\_read\_ahead\_cache\_size\_blocks  <br>node\_nfsd\_read\_ahead\_cache\_not\_found\_total  <br>node\_nfsd\_packets\_total  <br>node\_nfsd\_connections\_total  <br>node\_nfsd\_rpc\_errors\_total  <br>node\_nfsd\_server\_rpcs\_total | /proc/net/rpc/nfsd |     |
+| Expose OS release info from/etc/os-releaseor/usr/lib/os-release | 正常  | node\_os\_info  <br>node\_os\_version | /etc/os-release  <br>/usr/lib/os-release | /etc/os-release中VERSION\_ID的值不符合正则\`^\[0-9\]+\\.?\[0-9\]\*\`所以没有node\_os\_version指标 |
+| Exposes aggregate process statistics from/proc. | 正常  | node\_processes\_max\_processes  <br>node\_processes\_max\_threads  <br>node\_processes\_pids  <br>node\_processes\_state  <br>node\_processes\_threads  <br>node\_processes\_threads\_state | /proc/\* |     |
+| Exposesqueuing disciplinestatistics | 正常  | node\_qdisc\_backlog  <br>node\_qdisc\_bytes\_total  <br>node\_qdisc\_current\_queue\_length  <br>node\_qdisc\_drops\_total  <br>node\_qdisc\_overlimits\_total  <br>node\_qdisc\_packets\_total  <br>node\_qdisc\_requeues\_total | [github.com/mdlayher/netlink](https://github.com/mdlayher/netlink 'github.com/mdlayher/netlink') |     |
+| Exposes task scheduler statistics from/proc/schedstat. | 正常  | node\_schedstat\_timeslices\_total  <br>node\_schedstat\_waiting\_seconds\_total  <br>node\_schedstat\_running\_seconds\_total | /proc/schedstat |     |
+| Exposes various statistics from/proc/net/sockstat. | 正常  | node\_sockstat\_FRAG6\_inuse  <br>node\_sockstat\_FRAG6\_memory  <br>node\_sockstat\_FRAG\_inuse  <br>node\_sockstat\_FRAG\_memory  <br>node\_sockstat\_RAW6\_inuse  <br>node\_sockstat\_RAW\_inuse  <br>node\_sockstat\_TCP6\_inuse  <br>node\_sockstat\_TCP\_alloc  <br>node\_sockstat\_TCP\_inuse  <br>node\_sockstat\_TCP\_mem  <br>node\_sockstat\_TCP\_mem\_bytes  <br>node\_sockstat\_TCP\_orphan  <br>node\_sockstat\_TCP\_tw  <br>node\_sockstat\_UDP6\_inuse  <br>node\_sockstat\_UDPLITE6\_inuse  <br>node\_sockstat\_UDPLITE\_inuse  <br>node\_sockstat\_UDP\_inuse  <br>node\_sockstat\_UDP\_mem  <br>node\_sockstat\_UDP\_mem\_bytes  <br>node\_sockstat\_sockets\_used | /proc/net/sockstat |     |
+| Exposes statistics from/proc/net/softnet\_stat. | 正常  | node\_softnet\_dropped\_total  <br>node\_softnet\_processed\_total  <br>node\_softnet\_times\_squeezed\_total | /proc/net/softnet\_stat |     |
+| Exposes various statistics from/proc/stat. This includes boot time, forks and interrupts. | 正常  | node\_intr\_total  <br>node\_context\_switches\_total  <br>node\_forks\_total  <br>node\_boot\_time\_seconds  <br>node\_procs\_running  <br>node\_procs\_blocked | /proc/stat |     |
+| Exposes TCP connection status information from/proc/net/tcpand/proc/net/tcp6. (Warning: the current version has potential performance issues in high load situations.) | 正常  | node\_tcp\_connection\_states | /proc/net/tcp  <br>/proc/net/tcp6 |     |
+| Exposes statistics read from local disk. The\--collector.textfile.directoryflag must be set. | 正常  | node\_textfile\_mtime\_seconds  <br>node\_textfile\_scrape\_error | 根据参数指定的文件 |     |
+| Exposes thermal zone & cooling device statistics from/sys/class/thermal. | 正常  | node\_thermal\_zone\_temp  <br>node\_cooling\_device\_cur\_state  <br>node\_cooling\_device\_max\_state | /sys/class/thermal |     |
+| Exposes the current system time. | 正常  | node\_time\_seconds  <br>node\_time\_zone\_offset\_seconds  <br>node\_time\_clocksource\_available\_info  <br>node\_time\_clocksource\_current\_info | /sys/devices/system/clocksource/ |     |
+| Exposes selected adjtimex(2) system call stats. | 正常  | node\_timex\_estimated\_error\_seconds  <br>node\_timex\_frequency\_adjustment\_ratio  <br>node\_timex\_loop\_time\_constant  <br>node\_timex\_maxerror\_seconds  <br>node\_timex\_offset\_seconds  <br>node\_timex\_pps\_calibration\_total  <br>node\_timex\_pps\_error\_total  <br>node\_timex\_pps\_frequency\_hertz  <br>node\_timex\_pps\_jitter\_seconds  <br>node\_timex\_pps\_jitter\_total  <br>node\_timex\_pps\_shift\_seconds  <br>node\_timex\_pps\_stability\_exceeded\_total  <br>node\_timex\_pps\_stability\_hertz  <br>node\_timex\_status  <br>node\_timex\_sync\_status  <br>node\_timex\_tai\_offset\_seconds  <br>node\_timex\_tick\_seconds | unix.Adjtimex |     |
+| Exposes UDP total lengths of the rx\_queue and tx\_queue from/proc/net/udpand/proc/net/udp6. | 正常  | node\_udp\_queues | /proc/net/udp  <br>/proc/net/udp6 |     |
+| Exposes system information as provided by the uname system call. | 正常  | node\_uname\_info | unix.Uname |     |
+| Exposes statistics from/proc/vmstat. | 正常  | node\_vmstat\_oom\_kill  <br>node\_vmstat\_pgfault  <br>node\_vmstat\_pgmajfault  <br>node\_vmstat\_pgpgin  <br>node\_vmstat\_pgpgout  <br>node\_vmstat\_pswpin  <br>node\_vmstat\_pswpout | /proc/vmstat | 指标名称根据/proc/vmstat |
+| Exposes XFS runtime statistics. | 正常  | node\_xfs\_allocation\_btree\_compares\_total  <br>node\_xfs\_allocation\_btree\_lookups\_total  <br>node\_xfs\_allocation\_btree\_records\_deleted\_total  <br>node\_xfs\_allocation\_btree\_records\_inserted\_total  <br>node\_xfs\_block\_map\_btree\_compares\_total  <br>node\_xfs\_block\_map\_btree\_lookups\_total  <br>node\_xfs\_block\_map\_btree\_records\_deleted\_total  <br>node\_xfs\_block\_map\_btree\_records\_inserted\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_compares\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_deletions\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_insertions\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_lookups\_total  <br>node\_xfs\_block\_mapping\_reads\_total  <br>node\_xfs\_block\_mapping\_unmaps\_total  <br>node\_xfs\_block\_mapping\_writes\_total  <br>node\_xfs\_directory\_operation\_create\_total  <br>node\_xfs\_directory\_operation\_getdents\_total  <br>node\_xfs\_directory\_operation\_lookup\_total  <br>node\_xfs\_directory\_operation\_remove\_total  <br>node\_xfs\_extent\_allocation\_blocks\_allocated\_total  <br>node\_xfs\_extent\_allocation\_blocks\_freed\_total  <br>node\_xfs\_extent\_allocation\_extents\_allocated\_total  <br>node\_xfs\_extent\_allocation\_extents\_freed\_total  <br>node\_xfs\_inode\_operation\_attempts\_total  <br>node\_xfs\_inode\_operation\_attribute\_changes\_total  <br>node\_xfs\_inode\_operation\_duplicates\_total  <br>node\_xfs\_inode\_operation\_found\_total  <br>node\_xfs\_inode\_operation\_missed\_total  <br>node\_xfs\_inode\_operation\_reclaims\_total  <br>node\_xfs\_inode\_operation\_recycled\_total  <br>node\_xfs\_read\_calls\_total  <br>node\_xfs\_vnode\_active\_total  <br>node\_xfs\_vnode\_allocate\_total  <br>node\_xfs\_vnode\_get\_total  <br>node\_xfs\_vnode\_hold\_total  <br>node\_xfs\_vnode\_reclaim\_total  <br>node\_xfs\_vnode\_release\_total  <br>node\_xfs\_vnode\_remove\_total  <br>node\_xfs\_write\_calls\_total| /sys/fs/xfs/\*/stats/stats |     |
+| Exposes NUMA memory zone metrics. | 正常  | node\_zoneinfo\_high\_pages  <br>node\_zoneinfo\_low\_pages  <br>node\_zoneinfo\_managed\_pages  <br>node\_zoneinfo\_min\_pages  <br>node\_zoneinfo\_nr\_active\_anon\_pages  <br>node\_zoneinfo\_nr\_active\_file\_pages  <br>node\_zoneinfo\_nr\_anon\_pages  <br>node\_zoneinfo\_nr\_anon\_transparent\_hugepages  <br>node\_zoneinfo\_nr\_dirtied\_total  <br>node\_zoneinfo\_nr\_dirty\_pages  <br>node\_zoneinfo\_nr\_file\_pages  <br>node\_zoneinfo\_nr\_free\_pages  <br>node\_zoneinfo\_nr\_inactive\_anon\_pages  <br>node\_zoneinfo\_nr\_inactive\_file\_pages  <br>node\_zoneinfo\_nr\_isolated\_anon\_pages  <br>node\_zoneinfo\_nr\_isolated\_file\_pages  <br>node\_zoneinfo\_nr\_kernel\_stacks  <br>node\_zoneinfo\_nr\_mapped\_pages  <br>node\_zoneinfo\_nr\_shmem\_pages  <br>node\_zoneinfo\_nr\_slab\_reclaimable\_pages<br>node\_zoneinfo\_nr\_slab\_unreclaimable\_pages  <br>node\_zoneinfo\_nr\_unevictable\_pages  <br>node\_zoneinfo\_nr\_writeback\_pages  <br>node\_zoneinfo\_nr\_written\_total  <br>node\_zoneinfo\_numa\_foreign\_total  <br>node\_zoneinfo\_numa\_hit\_total  <br>node\_zoneinfo\_numa\_interleave\_total  <br>node\_zoneinfo\_numa\_local\_total  <br>node\_zoneinfo\_numa\_miss\_total  <br>node\_zoneinfo\_numa\_other\_total  <br>node\_zoneinfo\_present\_pages  <br>node\_zoneinfo\_spanned\_pages  <br>node\_zoneinfo\_protection\_0  <br>node\_zoneinfo\_protection\_1  <br>node\_zoneinfo\_protection\_2  <br>node\_zoneinfo\_protection\_3  <br>node\_zoneinfo\_protection\_4 | /proc/zoneinfo | 指标node\_zoneinfo\_protection\_x根据/proc/zoneinfo |
+| Exposes fibre channel information and statistics from/sys/class/fc\_host/. | 系统没有该目录或者目录为空 | node\_fibrechannel\_dumped\_frames\_total  <br>node\_fibrechannel\_loss\_of\_signal\_total  <br>node\_fibrechannel\_loss\_of\_sync\_total  <br>node\_fibrechannel\_rx\_frames\_total  <br>node\_fibrechannel\_error\_frames\_total  <br>node\_fibrechannel\_invalid\_tx\_words\_total  <br>node\_fibrechannel\_seconds\_since\_last\_reset\_total  <br>node\_fibrechannel\_tx\_words\_total  <br>node\_fibrechannel\_invalid\_crc\_total  <br>node\_fibrechannel\_nos\_total  <br>node\_fibrechannel\_fcp\_packet\_aborts\_total  <br>node\_fibrechannel\_rx\_words\_total  <br>node\_fibrechannel\_tx\_frames\_total  <br>node\_fibrechannel\_link\_failure\_total  <br>node\_fibrechannel\_name  <br>node\_fibrechannel\_speed  <br>node\_fibrechannel\_port\_state  <br>node\_fibrechannel\_port\_type  <br>node\_fibrechannel\_symbolic\_name  <br>node\_fibrechannel\_node\_name  <br>node\_fibrechannel\_port\_id  <br>node\_fibrechannel\_port\_name  <br>node\_fibrechannel\_fabric\_name  <br>node\_fibrechannel\_dev\_loss\_tmo  <br>node\_fibrechannel\_supported\_classes  <br>node\_fibrechannel\_supported\_speeds | /sys/class/fc\_host/ |     |
+| Expose hardware monitoring and sensor data from/sys/class/hwmon/. | 系统没有该目录或者目录为空 | node\_hwmon\_chip\_names  <br>node\_hwmon\_sensor\_label  <br>node\_hwmon\_beep\_enabled  <br>node\_hwmon\_voltage\_regulator\_version  <br>node\_hwmon\_update\_interval\_seconds  <br>node\_hwmon\_beep\_enable\_\*  <br>node\_hwmon\_vrm\_\*  <br>node\_hwmon\_update\_interval\_\* | /sys/class/hwmon/ | 指标名称\*根据/sys/class/hwmon/ |
+| Exposes kernel and system statistics from/sys/kernel/mm/ksm. | 系统没有该目录或者目录为空 | node\_ksmd\_full\_scans\_total  <br>node\_ksmd\_merge\_across\_nodes  <br>node\_ksmd\_pages\_shared  <br>node\_ksmd\_pages\_sharing  <br>node\_ksmd\_pages\_to\_scan  <br>node\_ksmd\_pages\_unshared  <br>node\_ksmd\_pages\_volatile  <br>node\_ksmd\_run  <br>node\_ksmd\_sleep\_seconds | /sys/kernel/mm/ksm |     |
+| Exposes NVMe info from/sys/class/nvme/ | 系统没有该目录或者目录为空 | node\_nvme\_info | /sys/class/nvme/ |     |
+| Exposes Power Supply statistics from/sys/class/power\_supply | 系统没有该目录或者目录为空 | node\_power\_supply\_authentic  <br>node\_power\_supply\_calibrate  <br>node\_power\_supply\_capacity  <br>node\_power\_supply\_capacity\_alert\_max  <br>node\_power\_supply\_capacity\_alert\_min  <br>node\_power\_supply\_cyclecount  <br>node\_power\_supply\_online  <br>node\_power\_supply\_present  <br>node\_power\_supply\_time\_to\_empty\_seconds  <br>node\_power\_supply\_time\_to\_full\_seconds  <br>node\_power\_supply\_current\_boot  <br>node\_power\_supply\_current\_max  <br>node\_power\_supply\_current\_ampere  <br>node\_power\_supply\_energy\_empty  <br>node\_power\_supply\_energy\_empty\_design  <br>node\_power\_supply\_energy\_full  <br>node\_power\_supply\_energy\_full\_design  <br>node\_power\_supply\_energy\_watthour  <br>node\_power\_supply\_voltage\_boot  <br>node\_power\_supply\_voltage\_max  <br>node\_power\_supply\_voltage\_max\_design  <br>node\_power\_supply\_voltage\_min  <br>node\_power\_supply\_voltage\_min\_design <br>node\_power\_supply\_voltage\_volt  <br>node\_power\_supply\_voltage\_ocv  <br>node\_power\_supply\_charge\_control\_limit  <br>node\_power\_supply\_charge\_control\_limit\_max  <br>node\_power\_supply\_charge\_counter  <br>node\_power\_supply\_charge\_empty  <br>node\_power\_supply\_charge\_empty\_design  <br>node\_power\_supply\_charge\_full  <br>node\_power\_supply\_charge\_full\_design  <br>node\_power\_supply\_charge\_ampere  <br>node\_power\_supply\_charge\_term\_current  <br>node\_power\_supply\_constant\_charge\_current  <br>node\_power\_supply\_constant\_charge\_current\_max  <br>node\_power\_supply\_constant\_charge\_voltage  <br>node\_power\_supply\_constant\_charge\_voltage\_max  <br>node\_power\_supply\_precharge\_current  <br>node\_power\_supply\_input\_current\_limit  <br>node\_power\_supply\_power\_watt  <br>node\_power\_supply\_temp\_celsius  <br>node\_power\_supply\_temp\_alert\_max\_celsius  <br>node\_power\_supply\_temp\_alert\_min\_celsius  <br>node\_power\_supply\_temp\_ambient\_celsius  <br>node\_power\_supply\_temp\_ambient\_max\_celsius  <br>node\_power\_supply\_temp\_ambient\_min\_celsius  <br>node\_power\_supply\_temp\_max\_celsius  <br>node\_power\_supply\_temp\_min\_celsius| /sys/class/power\_supply |     |
+| Exposes pressure stall statistics from/proc/pressure/. | 系统没有该目录或者目录为空 | node\_pressure\_cpu\_waiting\_seconds\_total  <br>node\_pressure\_io\_waiting\_seconds\_total  <br>node\_pressure\_io\_stalled\_seconds\_total  <br>node\_pressure\_memory\_waiting\_seconds\_total  <br>node\_pressure\_memory\_stalled\_seconds\_total | /proc/pressure/ |     |
+| Exposes various statistics from/sys/class/powercap. | 系统没有该目录或者目录为空 | node\_rapl\_\*\*\*\*\_joules\_total | /sys/class/powercap | 指标名称中的\*根据/sys/class/powercap中文件中的值确定 |
+| Exposes statistics from/sys/class/scsi\_tape. | 系统没有该目录或者目录为空 | node\_tape\_io\_now  <br>node\_tape\_io\_time\_seconds\_total  <br>node\_tape\_io\_others\_total  <br>node\_tape\_read\_bytes\_total  <br>node\_tape\_reads\_completed\_total  <br>node\_tape\_read\_time\_seconds\_total  <br>node\_tape\_written\_bytes\_total  <br>node\_tape\_writes\_completed\_total  <br>node\_tape\_write\_time\_seconds\_total  <br>node\_tape\_residual\_total | /sys/class/scsi\_tape |     |
+| A summary of the number of active and enabled cgroups | 没指标 | node\_cgroups\_cgroups  <br>node\_cgroups\_enabled | /proc/cgroups | release-1.4加入的collector |
+| Exposes device statistics | 没指标 | node\_devstat\_bytes\_total  <br>node\_devstat\_transfers\_total  <br>node\_devstat\_blocks\_total |     | 不支持linux |
+| Exposes network interface information and network driver statistics equivalent toethtool,ethtool -S, andethtool -i. | 没指标 | node\_ethtool\_info  <br>node\_ethtool\_\*  <br>node\_ethtool\_received\_bytes\_total  <br>node\_ethtool\_received\_dropped\_total  <br>node\_ethtool\_received\_errors\_total  <br>node\_ethtool\_received\_packets\_total  <br>node\_ethtool\_transmitted\_bytes\_total  <br>node\_ethtool\_transmitted\_errors\_total  <br>node\_ethtool\_transmitted\_packets\_total  <br>node\_network\_supported\_port\_info  <br>node\_network\_supported\_speed\_bytes  <br>node\_network\_autonegotiate\_supported  <br>node\_network\_pause\_supported  <br>node\_network\_asymmetricpause\_supported  <br>node\_network\_advertised\_speed\_bytes  <br>node\_network\_autonegotiate\_advertised  <br>node\_network\_pause\_advertised  <br>node\_network\_asymmetricpause\_advertised  <br>node\_network\_autonegotiate |     | 指标名称node\_ethtool\_\*根据不同网口设备还有其他参数 |
+| Exposes statistics about devices in/proc/mdstat(does nothing if no/proc/mdstatpresent). | 没指标 | node\_md\_state  <br>node\_md\_disks  <br>node\_md\_disks\_required  <br>node\_md\_blocks  <br>node\_md\_blocks\_synced | /proc/mdstat |     |
+| Exposes filesystem statistics from/proc/self/mountstats. Exposes detailed NFS client statistics. | 没指标 | node\_mountstats\_nfs\_age\_seconds\_total  <br>node\_mountstats\_nfs\_read\_bytes\_total  <br>node\_mountstats\_nfs\_write\_bytes\_total  <br>node\_mountstats\_nfs\_direct\_read\_bytes\_total  <br>node\_mountstats\_nfs\_direct\_write\_bytes\_total  <br>node\_mountstats\_nfs\_total\_read\_bytes\_total  <br>node\_mountstats\_nfs\_total\_write\_bytes\_total  <br>node\_mountstats\_nfs\_read\_pages\_total  <br>node\_mountstats\_nfs\_write\_pages\_total  <br>node\_mountstats\_nfs\_transport\_bind\_total  <br>node\_mountstats\_nfs\_transport\_connect\_total  <br>node\_mountstats\_nfs\_transport\_idle\_time\_seconds  <br>node\_mountstats\_nfs\_transport\_sends\_total  <br>node\_mountstats\_nfs\_transport\_receives\_total  <br>node\_mountstats\_nfs\_transport\_bad\_transaction\_ids\_total  <br>node\_mountstats\_nfs\_transport\_backlog\_queue\_total  <br>node\_mountstats\_nfs\_transport\_maximum\_rpc\_slots  <br>node\_mountstats\_nfs\_transport\_sending\_queue\_total  <br>node\_mountstats\_nfs\_transport\_pending\_queue\_total  <br>node\_mountstats\_nfs\_operations\_requests\_total  <br>node\_mountstats\_nfs\_operations\_transmissions\_total  <br>node\_mountstats\_nfs\_operations\_major\_timeouts\_total  <br>node\_mountstats\_nfs\_operations\_sent\_bytes\_total  <br>node\_mountstats\_nfs\_operations\_received\_bytes\_total  <br>node\_mountstats\_nfs\_operations\_queue\_time\_seconds\_total  <br>node\_mountstats\_nfs\_operations\_response\_time\_seconds\_total  <br>node\_mountstats\_nfs\_operations\_request\_time\_seconds\_total <br>node\_mountstats\_nfs\_event\_inode\_revalidate\_total  <br>node\_mountstats\_nfs\_event\_dnode\_revalidate\_total  <br>node\_mountstats\_nfs\_event\_data\_invalidate\_total  <br>node\_mountstats\_nfs\_event\_attribute\_invalidate\_total  <br>node\_mountstats\_nfs\_event\_vfs\_open\_total  <br>node\_mountstats\_nfs\_event\_vfs\_lookup\_total  <br>node\_mountstats\_nfs\_event\_vfs\_access\_total  <br>node\_mountstats\_nfs\_event\_vfs\_update\_page\_total  <br>node\_mountstats\_nfs\_event\_vfs\_read\_page\_total  <br>node\_mountstats\_nfs\_event\_vfs\_read\_pages\_total  <br>node\_mountstats\_nfs\_event\_vfs\_write\_page\_total  <br>node\_mountstats\_nfs\_event\_vfs\_write\_pages\_total  <br>node\_mountstats\_nfs\_event\_vfs\_getdents\_total  <br>node\_mountstats\_nfs\_event\_vfs\_setattr\_total  <br>node\_mountstats\_nfs\_event\_vfs\_flush\_total  <br>node\_mountstats\_nfs\_event\_vfs\_fsync\_total  <br>node\_mountstats\_nfs\_event\_vfs\_lock\_total  <br>node\_mountstats\_nfs\_event\_vfs\_file\_release\_total  <br>node\_mountstats\_nfs\_event\_truncation\_total  <br>node\_mountstats\_nfs\_event\_write\_extension\_total  <br>node\_mountstats\_nfs\_event\_silly\_rename\_total  <br>node\_mountstats\_nfs\_event\_short\_read\_total  <br>node\_mountstats\_nfs\_event\_short\_write\_total  <br>node\_mountstats\_nfs\_event\_jukebox\_delay\_total  <br>node\_mountstats\_nfs\_event\_pnfs\_read\_total  <br>node\_mountstats\_nfs\_event\_pnfs\_write\_total  | /proc/self/mountstats |     |
+| Exposes slab statistics from/proc/slabinfo. Note that permission of/proc/slabinfois usually 0400, so set it appropriately. | 没指标 | node\_slabinfo\_active\_objects  <br>node\_slabinfo\_objects  <br>node\_slabinfo\_object\_size\_bytes  <br>node\_slabinfo\_objects\_per\_slab  <br>node\_slabinfo\_pages\_per\_slab | /proc/slabinfo | release-1.4加入的collector |
+| Exposes detailed softirq statistics from/proc/softirqs. | 没指标 | node\_softirqs\_functions\_total | /proc/softirqs | release-1.6加入的collector |
+| Expose sysctl values from/proc/sys. Use\--collector.sysctl.include(-info)to configure. | 没指标 | node\_sysctl\_\* | /proc/sys | release-1.4加入的collector;  <br>指标名称\*与参数‘--collector.sysctl.include’的值有关 |
+| Exposes CPU frequency statistics | 没指标 | node\_cpu\_frequency\_hertz  <br>node\_cpu\_frequency\_min\_hertz  <br>node\_cpu\_frequency\_max\_hertz  <br>node\_cpu\_scaling\_frequency\_hertz  <br>node\_cpu\_scaling\_frequency\_min\_hertz  <br>node\_cpu\_scaling\_frequency\_max\_hertz | /sys/devices/system/cpu/cpu\[0-9\]\*/cpufreq |     |
+| Exposes system boot time derived from thekern.boottimesysctl. | 没指标 | node\_boot\_time\_seconds |     | 不支持linux |
+| Exposes netisr statistics | 没指标 | numthreads  <br>maxprot  <br>defaultqlimit  <br>maxqlimit  <br>bindthreads  <br>maxthreads |     | 不支持linux，release-1.6加入的collector |
+| Exposes Distributed Replicated Block Device statistics (to version 8.4) | 没测试 | node\_drdb\_network\_sent\_bytes\_total  <br>node\_drdb\_network\_received\_bytes\_total  <br>node\_drdb\_disk\_written\_bytes\_total  <br>node\_drdb\_disk\_read\_bytes\_total  <br>node\_drdb\_activitylog\_writes\_total  <br>node\_drdb\_bitmap\_writes\_total  <br>node\_drdb\_local\_pending  <br>node\_drdb\_remote\_pending  <br>node\_drdb\_remote\_unacknowledged  <br>node\_drdb\_application\_pending  <br>node\_drdb\_epochs  <br>node\_drdb\_out\_of\_sync\_bytes  <br>node\_drdb\_node\_role\_is\_primary  <br>node\_drdb\_disk\_state\_is\_up\_to\_date  <br>node\_drdb\_connected | /proc/drdb |     |
+| Exposes error detection and correction statistics. | 没测试 | node\_edac\_correctable\_errors\_total  <br>node\_edac\_uncorrectable\_errors\_total  <br>node\_edac\_csrow\_correctable\_errors\_total  <br>node\_edac\_csrow\_uncorrectable\_errors\_total | /sys/devices/system/edac/mc/mc\[0-9\]\* |     |
+| Exposes execution statistics. | 没测试 | node\_exec\_context\_switches\_total  <br>node\_exec\_traps\_total  <br>node\_exec\_system\_calls\_total  <br>node\_exec\_device\_interrupts\_total  <br>node\_exec\_software\_interrupts\_total  <br>node\_exec\_forks\_total |     | 不支持linux |
+| Exposes network statistics specific to InfiniBand and Intel OmniPath configurations. | 没测试 | node\_infiniband\_info  <br>node\_infiniband\_legacy\_multicast\_packets\_received\_total  <br>node\_infiniband\_legacy\_multicast\_packets\_transmitted\_total  <br>node\_infiniband\_legacy\_data\_received\_bytes\_total  <br>node\_infiniband\_legacy\_packets\_received\_total  <br>node\_infiniband\_legacy\_unicast\_packets\_received\_total  <br>node\_infiniband\_legacy\_unicast\_packets\_transmitted\_total  <br>node\_infiniband\_legacy\_data\_transmitted\_bytes\_total  <br>node\_infiniband\_legacy\_packets\_transmitted\_total  <br>node\_infiniband\_excessive\_buffer\_overrun\_errors\_total  <br>node\_infiniband\_link\_downed\_total  <br>node\_infiniband\_link\_error\_recovery\_total  <br>node\_infiniband\_local\_link\_integrity\_errors\_total  <br>node\_infiniband\_multicast\_packets\_received\_total  <br>node\_infiniband\_multicast\_packets\_transmitted\_total  <br>node\_infiniband\_physical\_state\_id  <br>node\_infiniband\_port\_constraint\_errors\_received\_total  <br>node\_infiniband\_port\_constraint\_errors\_transmitted\_total  <br>node\_infiniband\_port\_data\_received\_bytes\_total  <br>node\_infiniband\_port\_data\_transmitted\_bytes\_total  <br>node\_infiniband\_port\_discards\_received\_total  <br>node\_infiniband\_port\_discards\_transmitted\_total  <br>node\_infiniband\_port\_errors\_received\_total  <br>node\_infiniband\_port\_packets\_received\_total  <br>node\_infiniband\_port\_packets\_transmitted\_total  <br>node\_infiniband\_port\_transmit\_wait\_total  <br>node\_infiniband\_rate\_bytes\_per\_second  <br>node\_infiniband\_state\_id  <br>node\_infiniband\_unicast\_packets\_received\_total  <br>node\_infiniband\_unicast\_packets\_transmitted\_total  <br>node\_infiniband\_port\_receive\_remote\_physical\_errors\_total  <br>node\_infiniband\_port\_receive\_switch\_relay\_errors\_total  <br>node\_infiniband\_symbol\_error\_total  <br>node\_infiniband\_vl15\_dropped\_total | /sys/class/infiniband/<device> |     |
+| Exposes session counts fromlogind. | 没测试 | node\_logind\_sessions | dbus |     |
+| Exposes perf based metrics (Warning: Metrics are dependent on kernel configuration and settings). | 没测试 | node\_perf\_cpucycles\_total  <br>node\_perf\_instructions\_total  <br>node\_perf\_branch\_instructions\_total  <br>node\_perf\_branch\_misses\_total  <br>node\_perf\_cache\_refs\_total  <br>node\_perf\_cache\_misses\_total  <br>node\_perf\_ref\_cpucycles\_total  <br>node\_perf\_page\_faults\_total  <br>node\_perf\_context\_switches\_total  <br>node\_perf\_cpu\_migrations\_total  <br>node\_perf\_minor\_faults\_total  <br>node\_perf\_major\_faults\_total  <br>node\_perf\_cache\_l1d\_read\_hits\_total  <br>node\_perf\_cache\_l1d\_read\_misses\_total  <br>node\_perf\_cache\_l1d\_write\_hits\_total  <br>node\_perf\_cache\_l1\_instr\_read\_misses\_total  <br>node\_perf\_cache\_tlb\_instr\_read\_hits\_total  <br>node\_perf\_cache\_tlb\_instr\_read\_misses\_total  <br>node\_perf\_cache\_ll\_read\_hits\_total  <br>node\_perf\_cache\_ll\_read\_misses\_total  <br>node\_perf\_cache\_ll\_write\_hits\_total  <br>node\_perf\_cache\_ll\_write\_misses\_total  <br>node\_perf\_cache\_bpu\_read\_hits\_total  <br>node\_perf\_cache\_bpu\_read\_misses\_total | [github.com/hodgesds/perf-utils](https://github.com/hodgesds/perf-utils) |     |
+| Exposes service and system status fromsystemd. | 没测试 | node\_systemd\_unit\_state  <br>node\_systemd\_unit\_start\_time\_seconds  <br>node\_systemd\_unit\_tasks\_current  <br>node\_systemd\_unit\_tasks\_max  <br>node\_systemd\_system\_running  <br>node\_systemd\_units  <br>node\_systemd\_service\_restart\_total  <br>node\_systemd\_timer\_last\_trigger\_seconds  <br>node\_systemd\_socket\_accepted\_connections\_total  <br>node\_systemd\_socket\_current\_connections  <br>node\_systemd\_socket\_refused\_connections\_total  <br>node\_systemd\_version | dbus |     |
+| Exposes WiFi device and station statistics. | 没测试 | node\_wifi\_interface\_frequency\_hertz  <br>node\_wifi\_station\_info  <br>node\_wifi\_station\_connected\_seconds\_total  <br>node\_wifi\_station\_inactive\_seconds  <br>node\_wifi\_station\_receive\_bits\_per\_second  <br>node\_wifi\_station\_transmit\_bits\_per\_second  <br>node\_wifi\_station\_receive\_bytes\_total  <br>node\_wifi\_station\_transmit\_bytes\_total  <br>node\_wifi\_station\_signal\_dbm  <br>node\_wifi\_station\_transmit\_retries\_total  <br>node\_wifi\_station\_transmit\_failed\_total  <br>node\_wifi\_station\_beacon\_loss\_total | [github.com/mdlayher/wifi](https://github.com/mdlayher/wifi 'github.com/mdlayher/wifi') |     |
+| ExposesZFSperformance statistics. | 没测试 | node\_zfs\_pool\_state  <br>node\_zfs\_zpool\_dataset\_\*  <br>node\_zfs\_zpool\_\*  <br>node\_zfs\_abd\_\*  <br>node\_zfs\_arc\_\*  <br>node\_zfs\_dbuf\_\*  <br>node\_zfs\_dmu\_tx\_\*  <br>node\_zfs\_dnode\_\*  <br>node\_zfs\_fm\_\*  <br>node\_zfs\_vdev\_cache\_\*  <br>node\_zfs\_vdev\_mirror\_\*  <br>node\_zfs\_xuio\_\*  <br>node\_zfs\_zfetch\_\*  <br>node\_zfs\_zil\_\* | /proc/spl/kstat/zfs/\* | \*由kstat-zfs-misc-x-x替换，具体根据/proc/spl/kstat/zfs/\*确定 |。">
+<meta property="og:title" content="node-exporter各collector指标">
+<meta property="og:description" content="|     |     |     |     |     |
+| --- | --- | --- | --- | --- |
+| Description | metrics中的信息 | 指标名称（release-1.3） | 值的来源 | 备注  |
+| Exposes ARP statistics from/proc/net/arp. | 正常  | node\_arp\_entries | /proc/net/arp |     |
+| Exposes the number of configured and active slaves of Linux bonding interfaces. | 正常  | node\_bonding\_active  <br>node\_bonding\_slaves | /sys/class/net/<bond name>/\* |     |
+| Exposes btrfs statistics | 正常  | node\_btrfs\_allocation\_ratio  <br>node\_btrfs\_device\_size\_bytes  <br>node\_btrfs\_global\_rsv\_size\_bytes  <br>node\_btrfs\_info  <br>node\_btrfs\_reserved\_bytes  <br>node\_btrfs\_size\_bytes  <br>node\_btrfs\_used\_bytes | /sys/fs/btrfs/\*-\*/ |     |
+| Exposes statistics of memory fragments as reported by /proc/buddyinfo. | 正常  | node\_buddyinfo\_blocks | /proc/buddyinfo |     |
+| Shows conntrack statistics (does nothing if no/proc/sys/net/netfilter/present). | 正常  | node\_nf\_conntrack\_entries  <br>node\_nf\_conntrack\_entries\_limit  <br>node\_nf\_conntrack\_stat\_found  <br>node\_nf\_conntrack\_stat\_invalid  <br>node\_nf\_conntrack\_stat\_ignore  <br>node\_nf\_conntrack\_stat\_insert  <br>node\_nf\_conntrack\_stat\_insert\_failed  <br>node\_nf\_conntrack\_stat\_drop  <br>node\_nf\_conntrack\_stat\_early\_drop  <br>node\_nf\_conntrack\_stat\_search\_restart | /proc/net/stat/nf\_conntrack |     |
+| Exposes CPU statistics | 正常  | node\_cpu\_seconds\_total  <br>node\_cpu\_info  <br>node\_cpu\_flag\_info  <br>node\_cpu\_bug\_info  <br>node\_cpu\_guest\_seconds\_total  <br>node\_cpu\_core\_throttles\_total  <br>node\_cpu\_package\_throttles\_total | /proc/cpuinfo |     |
+| Exposes disk I/O statistics. | 正常  | node\_disk\_reads\_completed\_total  <br>node\_disk\_read\_bytes\_total  <br>node\_disk\_writes\_completed\_total  <br>node\_disk\_written\_bytes\_total  <br>node\_disk\_io\_time\_seconds\_total  <br>node\_disk\_read\_time\_seconds\_total  <br>node\_disk\_write\_time\_seconds\_total  <br>node\_disk\_info  <br>node\_disk\_reads\_merged\_total  <br>node\_disk\_writes\_merged\_total  <br>node\_disk\_io\_now  <br>node\_disk\_io\_time\_weighted\_seconds\_total  <br>node\_disk\_discards\_completed\_total  <br>node\_disk\_discards\_merged\_total  <br>node\_disk\_discarded\_sectors\_total  <br>node\_disk\_discard\_time\_seconds\_total  <br>node\_disk\_flush\_requests\_total  <br>node\_disk\_flush\_requests\_time\_seconds\_total | /proc/diskstats |     |
+| Expose Desktop Management Interface (DMI) info from/sys/class/dmi/id/ | 正常  | node\_dmi\_info | /sys/class/dmi/id/ |     |
+| Exposes available entropy. | 正常  | node\_entropy\_available\_bits  <br>node\_entropy\_pool\_size\_bits | /proc/sys/kernel/random/ |     |
+| Exposes file descriptor statistics from/proc/sys/fs/file-nr. | 正常  | node\_filefd\_allocated  <br>node\_filefd\_maximum | /proc/sys/fs/file-nr |     |
+| Exposes filesystem statistics, such as disk space used. | 正常  | node\_filesystem\_size\_bytes  <br>node\_filesystem\_free\_bytes  <br>node\_filesystem\_avail\_bytes  <br>node\_filesystem\_files  <br>node\_filesystem\_files\_free  <br>node\_filesystem\_readonly  <br>node\_filesystem\_device\_error | /proc/1/mounts |     |
+| Exposes detailed interrupts statistics. | 正常  | node\_interrupts\_total | /proc/interrupts |     |
+| Exposes IPVS status from/proc/net/ip\_vsand stats from/proc/net/ip\_vs\_stats. | 正常  | node\_ipvs\_connections\_total  <br>node\_ipvs\_incoming\_packets\_total  <br>node\_ipvs\_outgoing\_packets\_total  <br>node\_ipvs\_incoming\_bytes\_total  <br>node\_ipvs\_outgoing\_bytes\_total  <br>node\_ipvs\_backend\_connections\_active  <br>node\_ipvs\_backend\_connections\_inactive  <br>node\_ipvs\_backend\_weight | /proc/net/ip\_vs  <br>/proc/net/ip\_vs\_stats |     |
+| Exposes stats from/proc/net/stat/. | 正常  | node\_lnstat\_allocs\_total  <br>node\_lnstat\_delete\_list\_total  <br>node\_lnstat\_delete\_total  <br>node\_lnstat\_destroys\_total  <br>node\_lnstat\_drop\_total  <br>node\_lnstat\_early\_drop\_total  <br>node\_lnstat\_entries\_total  <br>node\_lnstat\_expect\_create\_total  <br>node\_lnstat\_expect\_delete\_total  <br>node\_lnstat\_expect\_new\_total  <br>node\_lnstat\_forced\_gc\_runs\_total  <br>node\_lnstat\_found\_total  <br>node\_lnstat\_gc\_dst\_overflow\_total  <br>node\_lnstat\_gc\_goal\_miss\_total  <br>node\_lnstat\_gc\_ignored\_total  <br>node\_lnstat\_gc\_total\_total  <br>node\_lnstat\_hash\_grows\_total  <br>node\_lnstat\_hits\_total  <br>node\_lnstat\_icmp\_error\_total  <br>node\_lnstat\_ignore\_total  <br>node\_lnstat\_in\_brd\_total  <br>node\_lnstat\_in\_hit\_total  <br>node\_lnstat\_in\_hlist\_search\_total  <br>node\_lnstat\_in\_martian\_dst\_total<br>node\_lnstat\_in\_martian\_src\_total  <br>node\_lnstat\_in\_no\_route\_total  <br>node\_lnstat\_in\_slow\_mc\_total  <br>node\_lnstat\_in\_slow\_tot\_total  <br>node\_lnstat\_insert\_failed\_total  <br>node\_lnstat\_insert\_total  <br>node\_lnstat\_invalid\_total  <br>node\_lnstat\_lookups\_total  <br>node\_lnstat\_new\_total  <br>node\_lnstat\_out\_hit\_total  <br>node\_lnstat\_out\_hlist\_search\_total  <br>node\_lnstat\_out\_slow\_mc\_total  <br>node\_lnstat\_out\_slow\_tot\_total  <br>node\_lnstat\_periodic\_gc\_runs\_total  <br>node\_lnstat\_rcv\_probes\_mcast\_total  <br>node\_lnstat\_rcv\_probes\_ucast\_total  <br>node\_lnstat\_res\_failed\_total  <br>node\_lnstat\_search\_restart\_total  <br>node\_lnstat\_searched\_total  <br>node\_lnstat\_table\_fulls\_total  <br>node\_lnstat\_unresolved\_discards\_total| /proc/net/stat/ | 指标名称根据/proc/net/stat/\*第一行 |
+| Exposes load average. | 正常  | node\_load1  <br>node\_load15  <br>node\_load5 | /proc/loadavg |     |
+| Exposes memory statistics. | 正常  | node\_memory\_Active\_anon\_bytes  <br>node\_memory\_Active\_bytes  <br>node\_memory\_Active\_file\_bytes  <br>node\_memory\_AnonHugePages\_bytes  <br>node\_memory\_AnonPages\_bytes  <br>node\_memory\_Bounce\_bytes  <br>node\_memory\_Buffers\_bytes  <br>node\_memory\_Cached\_bytes  <br>node\_memory\_CommitLimit\_bytes  <br>node\_memory\_Committed\_AS\_bytes  <br>node\_memory\_DirectMap1G\_bytes  <br>node\_memory\_DirectMap2M\_bytes  <br>node\_memory\_DirectMap4k\_bytes  <br>node\_memory\_Dirty\_bytes  <br>node\_memory\_HardwareCorrupted\_bytes  <br>node\_memory\_HugePages\_Free  <br>node\_memory\_HugePages\_Rsvd  <br>node\_memory\_HugePages\_Surp  <br>node\_memory\_HugePages\_Total  <br>node\_memory\_Hugepagesize\_bytes  <br>node\_memory\_Hugetlb\_bytes  <br>node\_memory\_Inactive\_anon\_bytes  <br>node\_memory\_Inactive\_bytes   <br>node\_memory\_Inactive\_file\_bytes  <br>node\_memory\_KernelStack\_bytes  <br>node\_memory\_Mapped\_bytes  <br>node\_memory\_MemAvailable\_bytes  <br>node\_memory\_MemFree\_bytes  <br>node\_memory\_MemTotal\_bytes  <br>node\_memory\_Mlocked\_bytes  <br>node\_memory\_NFS\_Unstable\_bytes  <br>node\_memory\_PageTables\_bytes  <br>node\_memory\_Percpu\_bytes  <br>node\_memory\_SReclaimable\_bytes  <br>node\_memory\_SUnreclaim\_bytes  <br>node\_memory\_ShmemHugePages\_bytes  <br>node\_memory\_ShmemPmdMapped\_bytes  <br>node\_memory\_Shmem\_bytes  <br>node\_memory\_Slab\_bytes  <br>node\_memory\_SwapCached\_bytes  <br>node\_memory\_SwapFree\_bytes  <br>node\_memory\_SwapTotal\_bytes  <br>node\_memory\_Unevictable\_bytes  <br>node\_memory\_VmallocChunk\_bytes  <br>node\_memory\_VmallocTotal\_bytes  <br>node\_memory\_VmallocUsed\_bytes  <br>node\_memory\_WritebackTmp\_bytes  <br>node\_memory\_Writeback\_bytes| /proc/meminfo | 指标名称根据/proc/meminfo第一列 |
+| Exposes memory statistics from/proc/meminfo\_numa. | 正常  | node\_memory\_numa\_Active  <br>node\_memory\_numa\_Active\_anon  <br>node\_memory\_numa\_Active\_file  <br>node\_memory\_numa\_AnonHugePages  <br>node\_memory\_numa\_AnonPages  <br>node\_memory\_numa\_Bounce  <br>node\_memory\_numa\_Dirty  <br>node\_memory\_numa\_FilePages  <br>node\_memory\_numa\_HugePages\_Free  <br>node\_memory\_numa\_HugePages\_Surp  <br>node\_memory\_numa\_HugePages\_Total  <br>node\_memory\_numa\_Inactive  <br>node\_memory\_numa\_Inactive\_anon  <br>node\_memory\_numa\_Inactive\_file  <br>node\_memory\_numa\_KernelStack  <br>node\_memory\_numa\_Mapped  <br>node\_memory\_numa\_MemFree  <br>node\_memory\_numa\_MemTotal<br> node\_memory\_numa\_MemUsed  <br>node\_memory\_numa\_Mlocked  <br>node\_memory\_numa\_NFS\_Unstable  <br>node\_memory\_numa\_PageTables  <br>node\_memory\_numa\_SReclaimable  <br>node\_memory\_numa\_SUnreclaim  <br>node\_memory\_numa\_Shmem  <br>node\_memory\_numa\_ShmemHugePages  <br>node\_memory\_numa\_ShmemPmdMapped  <br>node\_memory\_numa\_Slab  <br>node\_memory\_numa\_Unevictable  <br>node\_memory\_numa\_Writeback  <br>node\_memory\_numa\_WritebackTmp  <br>node\_memory\_numa\_interleave\_hit\_total  <br>node\_memory\_numa\_local\_node\_total  <br>node\_memory\_numa\_numa\_foreign\_total  <br>node\_memory\_numa\_numa\_hit\_total  <br>node\_memory\_numa\_numa\_miss\_total  <br>node\_memory\_numa\_other\_node\_total<br> node\_memory\_numa\_MemUsed  <br>node\_memory\_numa\_Mlocked  <br>node\_memory\_numa\_NFS\_Unstable  <br>node\_memory\_numa\_PageTables  <br>node\_memory\_numa\_SReclaimable  <br>node\_memory\_numa\_SUnreclaim  <br>node\_memory\_numa\_Shmem  <br>node\_memory\_numa\_ShmemHugePages  <br>node\_memory\_numa\_ShmemPmdMapped  <br>node\_memory\_numa\_Slab  <br>node\_memory\_numa\_Unevictable  <br>node\_memory\_numa\_Writeback  <br>node\_memory\_numa\_WritebackTmp  <br>node\_memory\_numa\_interleave\_hit\_total  <br>node\_memory\_numa\_local\_node\_total  <br>node\_memory\_numa\_numa\_foreign\_total  <br>node\_memory\_numa\_numa\_hit\_total  <br>node\_memory\_numa\_numa\_miss\_total  <br>node\_memory\_numa\_other\_node\_total | /proc/meminfo\_numa | 指标名称根据/sys/devices/system/node/node\[0-9\]/meminfo |
+| Exposes network interface info from/sys/class/net/ | 正常  | node\_network\_info  <br>node\_network\_up  <br>node\_network\_address\_assign\_type  <br>node\_network\_carrier  <br>node\_network\_carrier\_changes\_total  <br>node\_network\_carrier\_up\_changes\_total  <br>node\_network\_carrier\_down\_changes\_total  <br>node\_network\_device\_id  <br>node\_network\_dormant  <br>node\_network\_flags  <br>node\_network\_iface\_id  <br>node\_network\_iface\_link  <br>node\_network\_iface\_link\_mode  <br>node\_network\_mtu\_bytes  <br>node\_network\_name\_assign\_type  <br>node\_network\_net\_dev\_group  <br>node\_network\_speed\_bytes  <br>node\_network\_transmit\_queue\_length  <br>node\_network\_protocol\_type | /sys/class/net/ |     |
+| Exposes network interface statistics such as bytes transferred. | 正常  | node\_network\_receive\_bytes\_total  <br>node\_network\_receive\_packets\_total  <br>node\_network\_receive\_errs\_total  <br>node\_network\_receive\_drop\_total  <br>node\_network\_receive\_fifo\_total  <br>node\_network\_receive\_frame\_total  <br>node\_network\_receive\_compressed\_total  <br>node\_network\_receive\_multicast\_total  <br>node\_network\_transmit\_bytes\_total  <br>node\_network\_transmit\_packets\_total  <br>node\_network\_transmit\_errs\_total  <br>node\_network\_transmit\_drop\_total  <br>node\_network\_transmit\_fifo\_total  <br>node\_network\_transmit\_frame\_total  <br>node\_network\_transmit\_compressed\_total  <br>node\_network\_transmit\_multicast\_total | /proc/net/dev | 指标名称根据/proc/net/dev |
+| Exposes network statistics from/proc/net/netstat. This is the same information asnetstat -s. | 正常  | node\_netstat\_Icmp6\_InErrors  <br>node\_netstat\_Icmp6\_InMsgs  <br>node\_netstat\_Icmp6\_OutMsgs  <br>node\_netstat\_Icmp\_InErrors  <br>node\_netstat\_Icmp\_InMsgs  <br>node\_netstat\_Icmp\_OutMsgs  <br>node\_netstat\_Ip6\_InOctets  <br>node\_netstat\_Ip6\_OutOctets  <br>node\_netstat\_IpExt\_InOctets  <br>node\_netstat\_IpExt\_OutOctets  <br>node\_netstat\_Ip\_Forwarding  <br>node\_netstat\_TcpExt\_ListenDrops  <br>node\_netstat\_TcpExt\_ListenOverflows  <br>node\_netstat\_TcpExt\_SyncookiesFailed  <br>node\_netstat\_TcpExt\_SyncookiesRecv  <br>node\_netstat\_TcpExt\_SyncookiesSent  <br>node\_netstat\_TcpExt\_TCPSynRetrans  <br>node\_netstat\_TcpExt\_TCPTimeouts  <br>node\_netstat\_Tcp\_ActiveOpens  <br>node\_netstat\_Tcp\_CurrEstab  <br>node\_netstat\_Tcp\_InErrs  <br>node\_netstat\_Tcp\_InSegs  <br>node\_netstat\_Tcp\_OutRsts  <br>node\_netstat\_Tcp\_OutSegs  <br>node\_netstat\_Tcp\_PassiveOpens  <br>node\_netstat\_Tcp\_RetransSegs  <br>node\_netstat\_Udp6\_InDatagrams  <br>node\_netstat\_Udp6\_InErrors  <br>node\_netstat\_Udp6\_NoPorts  <br>node\_netstat\_Udp6\_OutDatagrams  <br>node\_netstat\_Udp6\_RcvbufErrors  <br>node\_netstat\_Udp6\_SndbufErrors  <br>node\_netstat\_UdpLite6\_InErrors  <br>node\_netstat\_UdpLite\_InErrors  <br>node\_netstat\_Udp\_InDatagrams  <br>node\_netstat\_Udp\_InErrors  <br>node\_netstat\_Udp\_NoPorts  <br>node\_netstat\_Udp\_OutDatagrams  <br>node\_netstat\_Udp\_RcvbufErrors  <br>node\_netstat\_Udp\_SndbufErrors| /proc/net/netstat | 指标名称根据/proc/net/snmp、/proc/net/netstat、/proc/net/snmp6 |
+| Exposes the routing table as metrics | 正常  | node\_network\_route\_info  <br>node\_network\_routes | [github.com/mdlayher/netlink](https://github.com/mdlayher/netlink 'https://github.com/mdlayher/netlink') |     |
+| Exposes NFS client statistics from/proc/net/rpc/nfs. This is the same information asnfsstat -c. | 正常  | node\_nfs\_packets\_total  <br>node\_nfs\_connections\_total  <br>node\_nfs\_rpcs\_total  <br>node\_nfs\_rpc\_retransmissions\_total  <br>node\_nfs\_rpc\_authentication\_refreshes\_total  <br>node\_nfs\_requests\_total | /proc/net/rpc/nfs |     |
+| Exposes NFS kernel server statistics from/proc/net/rpc/nfsd. This is the same information asnfsstat -s. | 正常  | node\_nfsd\_requests\_total  <br>node\_nfsd\_reply\_cache\_hits\_total  <br>node\_nfsd\_reply\_cache\_misses\_total  <br>node\_nfsd\_reply\_cache\_nocache\_total  <br>node\_nfsd\_file\_handles\_stale\_total  <br>node\_nfsd\_disk\_bytes\_read\_total  <br>node\_nfsd\_disk\_bytes\_written\_total  <br>node\_nfsd\_server\_threads  <br>node\_nfsd\_read\_ahead\_cache\_size\_blocks  <br>node\_nfsd\_read\_ahead\_cache\_not\_found\_total  <br>node\_nfsd\_packets\_total  <br>node\_nfsd\_connections\_total  <br>node\_nfsd\_rpc\_errors\_total  <br>node\_nfsd\_server\_rpcs\_total | /proc/net/rpc/nfsd |     |
+| Expose OS release info from/etc/os-releaseor/usr/lib/os-release | 正常  | node\_os\_info  <br>node\_os\_version | /etc/os-release  <br>/usr/lib/os-release | /etc/os-release中VERSION\_ID的值不符合正则\`^\[0-9\]+\\.?\[0-9\]\*\`所以没有node\_os\_version指标 |
+| Exposes aggregate process statistics from/proc. | 正常  | node\_processes\_max\_processes  <br>node\_processes\_max\_threads  <br>node\_processes\_pids  <br>node\_processes\_state  <br>node\_processes\_threads  <br>node\_processes\_threads\_state | /proc/\* |     |
+| Exposesqueuing disciplinestatistics | 正常  | node\_qdisc\_backlog  <br>node\_qdisc\_bytes\_total  <br>node\_qdisc\_current\_queue\_length  <br>node\_qdisc\_drops\_total  <br>node\_qdisc\_overlimits\_total  <br>node\_qdisc\_packets\_total  <br>node\_qdisc\_requeues\_total | [github.com/mdlayher/netlink](https://github.com/mdlayher/netlink 'github.com/mdlayher/netlink') |     |
+| Exposes task scheduler statistics from/proc/schedstat. | 正常  | node\_schedstat\_timeslices\_total  <br>node\_schedstat\_waiting\_seconds\_total  <br>node\_schedstat\_running\_seconds\_total | /proc/schedstat |     |
+| Exposes various statistics from/proc/net/sockstat. | 正常  | node\_sockstat\_FRAG6\_inuse  <br>node\_sockstat\_FRAG6\_memory  <br>node\_sockstat\_FRAG\_inuse  <br>node\_sockstat\_FRAG\_memory  <br>node\_sockstat\_RAW6\_inuse  <br>node\_sockstat\_RAW\_inuse  <br>node\_sockstat\_TCP6\_inuse  <br>node\_sockstat\_TCP\_alloc  <br>node\_sockstat\_TCP\_inuse  <br>node\_sockstat\_TCP\_mem  <br>node\_sockstat\_TCP\_mem\_bytes  <br>node\_sockstat\_TCP\_orphan  <br>node\_sockstat\_TCP\_tw  <br>node\_sockstat\_UDP6\_inuse  <br>node\_sockstat\_UDPLITE6\_inuse  <br>node\_sockstat\_UDPLITE\_inuse  <br>node\_sockstat\_UDP\_inuse  <br>node\_sockstat\_UDP\_mem  <br>node\_sockstat\_UDP\_mem\_bytes  <br>node\_sockstat\_sockets\_used | /proc/net/sockstat |     |
+| Exposes statistics from/proc/net/softnet\_stat. | 正常  | node\_softnet\_dropped\_total  <br>node\_softnet\_processed\_total  <br>node\_softnet\_times\_squeezed\_total | /proc/net/softnet\_stat |     |
+| Exposes various statistics from/proc/stat. This includes boot time, forks and interrupts. | 正常  | node\_intr\_total  <br>node\_context\_switches\_total  <br>node\_forks\_total  <br>node\_boot\_time\_seconds  <br>node\_procs\_running  <br>node\_procs\_blocked | /proc/stat |     |
+| Exposes TCP connection status information from/proc/net/tcpand/proc/net/tcp6. (Warning: the current version has potential performance issues in high load situations.) | 正常  | node\_tcp\_connection\_states | /proc/net/tcp  <br>/proc/net/tcp6 |     |
+| Exposes statistics read from local disk. The\--collector.textfile.directoryflag must be set. | 正常  | node\_textfile\_mtime\_seconds  <br>node\_textfile\_scrape\_error | 根据参数指定的文件 |     |
+| Exposes thermal zone & cooling device statistics from/sys/class/thermal. | 正常  | node\_thermal\_zone\_temp  <br>node\_cooling\_device\_cur\_state  <br>node\_cooling\_device\_max\_state | /sys/class/thermal |     |
+| Exposes the current system time. | 正常  | node\_time\_seconds  <br>node\_time\_zone\_offset\_seconds  <br>node\_time\_clocksource\_available\_info  <br>node\_time\_clocksource\_current\_info | /sys/devices/system/clocksource/ |     |
+| Exposes selected adjtimex(2) system call stats. | 正常  | node\_timex\_estimated\_error\_seconds  <br>node\_timex\_frequency\_adjustment\_ratio  <br>node\_timex\_loop\_time\_constant  <br>node\_timex\_maxerror\_seconds  <br>node\_timex\_offset\_seconds  <br>node\_timex\_pps\_calibration\_total  <br>node\_timex\_pps\_error\_total  <br>node\_timex\_pps\_frequency\_hertz  <br>node\_timex\_pps\_jitter\_seconds  <br>node\_timex\_pps\_jitter\_total  <br>node\_timex\_pps\_shift\_seconds  <br>node\_timex\_pps\_stability\_exceeded\_total  <br>node\_timex\_pps\_stability\_hertz  <br>node\_timex\_status  <br>node\_timex\_sync\_status  <br>node\_timex\_tai\_offset\_seconds  <br>node\_timex\_tick\_seconds | unix.Adjtimex |     |
+| Exposes UDP total lengths of the rx\_queue and tx\_queue from/proc/net/udpand/proc/net/udp6. | 正常  | node\_udp\_queues | /proc/net/udp  <br>/proc/net/udp6 |     |
+| Exposes system information as provided by the uname system call. | 正常  | node\_uname\_info | unix.Uname |     |
+| Exposes statistics from/proc/vmstat. | 正常  | node\_vmstat\_oom\_kill  <br>node\_vmstat\_pgfault  <br>node\_vmstat\_pgmajfault  <br>node\_vmstat\_pgpgin  <br>node\_vmstat\_pgpgout  <br>node\_vmstat\_pswpin  <br>node\_vmstat\_pswpout | /proc/vmstat | 指标名称根据/proc/vmstat |
+| Exposes XFS runtime statistics. | 正常  | node\_xfs\_allocation\_btree\_compares\_total  <br>node\_xfs\_allocation\_btree\_lookups\_total  <br>node\_xfs\_allocation\_btree\_records\_deleted\_total  <br>node\_xfs\_allocation\_btree\_records\_inserted\_total  <br>node\_xfs\_block\_map\_btree\_compares\_total  <br>node\_xfs\_block\_map\_btree\_lookups\_total  <br>node\_xfs\_block\_map\_btree\_records\_deleted\_total  <br>node\_xfs\_block\_map\_btree\_records\_inserted\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_compares\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_deletions\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_insertions\_total  <br>node\_xfs\_block\_mapping\_extent\_list\_lookups\_total  <br>node\_xfs\_block\_mapping\_reads\_total  <br>node\_xfs\_block\_mapping\_unmaps\_total  <br>node\_xfs\_block\_mapping\_writes\_total  <br>node\_xfs\_directory\_operation\_create\_total  <br>node\_xfs\_directory\_operation\_getdents\_total  <br>node\_xfs\_directory\_operation\_lookup\_total  <br>node\_xfs\_directory\_operation\_remove\_total  <br>node\_xfs\_extent\_allocation\_blocks\_allocated\_total  <br>node\_xfs\_extent\_allocation\_blocks\_freed\_total  <br>node\_xfs\_extent\_allocation\_extents\_allocated\_total  <br>node\_xfs\_extent\_allocation\_extents\_freed\_total  <br>node\_xfs\_inode\_operation\_attempts\_total  <br>node\_xfs\_inode\_operation\_attribute\_changes\_total  <br>node\_xfs\_inode\_operation\_duplicates\_total  <br>node\_xfs\_inode\_operation\_found\_total  <br>node\_xfs\_inode\_operation\_missed\_total  <br>node\_xfs\_inode\_operation\_reclaims\_total  <br>node\_xfs\_inode\_operation\_recycled\_total  <br>node\_xfs\_read\_calls\_total  <br>node\_xfs\_vnode\_active\_total  <br>node\_xfs\_vnode\_allocate\_total  <br>node\_xfs\_vnode\_get\_total  <br>node\_xfs\_vnode\_hold\_total  <br>node\_xfs\_vnode\_reclaim\_total  <br>node\_xfs\_vnode\_release\_total  <br>node\_xfs\_vnode\_remove\_total  <br>node\_xfs\_write\_calls\_total| /sys/fs/xfs/\*/stats/stats |     |
+| Exposes NUMA memory zone metrics. | 正常  | node\_zoneinfo\_high\_pages  <br>node\_zoneinfo\_low\_pages  <br>node\_zoneinfo\_managed\_pages  <br>node\_zoneinfo\_min\_pages  <br>node\_zoneinfo\_nr\_active\_anon\_pages  <br>node\_zoneinfo\_nr\_active\_file\_pages  <br>node\_zoneinfo\_nr\_anon\_pages  <br>node\_zoneinfo\_nr\_anon\_transparent\_hugepages  <br>node\_zoneinfo\_nr\_dirtied\_total  <br>node\_zoneinfo\_nr\_dirty\_pages  <br>node\_zoneinfo\_nr\_file\_pages  <br>node\_zoneinfo\_nr\_free\_pages  <br>node\_zoneinfo\_nr\_inactive\_anon\_pages  <br>node\_zoneinfo\_nr\_inactive\_file\_pages  <br>node\_zoneinfo\_nr\_isolated\_anon\_pages  <br>node\_zoneinfo\_nr\_isolated\_file\_pages  <br>node\_zoneinfo\_nr\_kernel\_stacks  <br>node\_zoneinfo\_nr\_mapped\_pages  <br>node\_zoneinfo\_nr\_shmem\_pages  <br>node\_zoneinfo\_nr\_slab\_reclaimable\_pages<br>node\_zoneinfo\_nr\_slab\_unreclaimable\_pages  <br>node\_zoneinfo\_nr\_unevictable\_pages  <br>node\_zoneinfo\_nr\_writeback\_pages  <br>node\_zoneinfo\_nr\_written\_total  <br>node\_zoneinfo\_numa\_foreign\_total  <br>node\_zoneinfo\_numa\_hit\_total  <br>node\_zoneinfo\_numa\_interleave\_total  <br>node\_zoneinfo\_numa\_local\_total  <br>node\_zoneinfo\_numa\_miss\_total  <br>node\_zoneinfo\_numa\_other\_total  <br>node\_zoneinfo\_present\_pages  <br>node\_zoneinfo\_spanned\_pages  <br>node\_zoneinfo\_protection\_0  <br>node\_zoneinfo\_protection\_1  <br>node\_zoneinfo\_protection\_2  <br>node\_zoneinfo\_protection\_3  <br>node\_zoneinfo\_protection\_4 | /proc/zoneinfo | 指标node\_zoneinfo\_protection\_x根据/proc/zoneinfo |
+| Exposes fibre channel information and statistics from/sys/class/fc\_host/. | 系统没有该目录或者目录为空 | node\_fibrechannel\_dumped\_frames\_total  <br>node\_fibrechannel\_loss\_of\_signal\_total  <br>node\_fibrechannel\_loss\_of\_sync\_total  <br>node\_fibrechannel\_rx\_frames\_total  <br>node\_fibrechannel\_error\_frames\_total  <br>node\_fibrechannel\_invalid\_tx\_words\_total  <br>node\_fibrechannel\_seconds\_since\_last\_reset\_total  <br>node\_fibrechannel\_tx\_words\_total  <br>node\_fibrechannel\_invalid\_crc\_total  <br>node\_fibrechannel\_nos\_total  <br>node\_fibrechannel\_fcp\_packet\_aborts\_total  <br>node\_fibrechannel\_rx\_words\_total  <br>node\_fibrechannel\_tx\_frames\_total  <br>node\_fibrechannel\_link\_failure\_total  <br>node\_fibrechannel\_name  <br>node\_fibrechannel\_speed  <br>node\_fibrechannel\_port\_state  <br>node\_fibrechannel\_port\_type  <br>node\_fibrechannel\_symbolic\_name  <br>node\_fibrechannel\_node\_name  <br>node\_fibrechannel\_port\_id  <br>node\_fibrechannel\_port\_name  <br>node\_fibrechannel\_fabric\_name  <br>node\_fibrechannel\_dev\_loss\_tmo  <br>node\_fibrechannel\_supported\_classes  <br>node\_fibrechannel\_supported\_speeds | /sys/class/fc\_host/ |     |
+| Expose hardware monitoring and sensor data from/sys/class/hwmon/. | 系统没有该目录或者目录为空 | node\_hwmon\_chip\_names  <br>node\_hwmon\_sensor\_label  <br>node\_hwmon\_beep\_enabled  <br>node\_hwmon\_voltage\_regulator\_version  <br>node\_hwmon\_update\_interval\_seconds  <br>node\_hwmon\_beep\_enable\_\*  <br>node\_hwmon\_vrm\_\*  <br>node\_hwmon\_update\_interval\_\* | /sys/class/hwmon/ | 指标名称\*根据/sys/class/hwmon/ |
+| Exposes kernel and system statistics from/sys/kernel/mm/ksm. | 系统没有该目录或者目录为空 | node\_ksmd\_full\_scans\_total  <br>node\_ksmd\_merge\_across\_nodes  <br>node\_ksmd\_pages\_shared  <br>node\_ksmd\_pages\_sharing  <br>node\_ksmd\_pages\_to\_scan  <br>node\_ksmd\_pages\_unshared  <br>node\_ksmd\_pages\_volatile  <br>node\_ksmd\_run  <br>node\_ksmd\_sleep\_seconds | /sys/kernel/mm/ksm |     |
+| Exposes NVMe info from/sys/class/nvme/ | 系统没有该目录或者目录为空 | node\_nvme\_info | /sys/class/nvme/ |     |
+| Exposes Power Supply statistics from/sys/class/power\_supply | 系统没有该目录或者目录为空 | node\_power\_supply\_authentic  <br>node\_power\_supply\_calibrate  <br>node\_power\_supply\_capacity  <br>node\_power\_supply\_capacity\_alert\_max  <br>node\_power\_supply\_capacity\_alert\_min  <br>node\_power\_supply\_cyclecount  <br>node\_power\_supply\_online  <br>node\_power\_supply\_present  <br>node\_power\_supply\_time\_to\_empty\_seconds  <br>node\_power\_supply\_time\_to\_full\_seconds  <br>node\_power\_supply\_current\_boot  <br>node\_power\_supply\_current\_max  <br>node\_power\_supply\_current\_ampere  <br>node\_power\_supply\_energy\_empty  <br>node\_power\_supply\_energy\_empty\_design  <br>node\_power\_supply\_energy\_full  <br>node\_power\_supply\_energy\_full\_design  <br>node\_power\_supply\_energy\_watthour  <br>node\_power\_supply\_voltage\_boot  <br>node\_power\_supply\_voltage\_max  <br>node\_power\_supply\_voltage\_max\_design  <br>node\_power\_supply\_voltage\_min  <br>node\_power\_supply\_voltage\_min\_design <br>node\_power\_supply\_voltage\_volt  <br>node\_power\_supply\_voltage\_ocv  <br>node\_power\_supply\_charge\_control\_limit  <br>node\_power\_supply\_charge\_control\_limit\_max  <br>node\_power\_supply\_charge\_counter  <br>node\_power\_supply\_charge\_empty  <br>node\_power\_supply\_charge\_empty\_design  <br>node\_power\_supply\_charge\_full  <br>node\_power\_supply\_charge\_full\_design  <br>node\_power\_supply\_charge\_ampere  <br>node\_power\_supply\_charge\_term\_current  <br>node\_power\_supply\_constant\_charge\_current  <br>node\_power\_supply\_constant\_charge\_current\_max  <br>node\_power\_supply\_constant\_charge\_voltage  <br>node\_power\_supply\_constant\_charge\_voltage\_max  <br>node\_power\_supply\_precharge\_current  <br>node\_power\_supply\_input\_current\_limit  <br>node\_power\_supply\_power\_watt  <br>node\_power\_supply\_temp\_celsius  <br>node\_power\_supply\_temp\_alert\_max\_celsius  <br>node\_power\_supply\_temp\_alert\_min\_celsius  <br>node\_power\_supply\_temp\_ambient\_celsius  <br>node\_power\_supply\_temp\_ambient\_max\_celsius  <br>node\_power\_supply\_temp\_ambient\_min\_celsius  <br>node\_power\_supply\_temp\_max\_celsius  <br>node\_power\_supply\_temp\_min\_celsius| /sys/class/power\_supply |     |
+| Exposes pressure stall statistics from/proc/pressure/. | 系统没有该目录或者目录为空 | node\_pressure\_cpu\_waiting\_seconds\_total  <br>node\_pressure\_io\_waiting\_seconds\_total  <br>node\_pressure\_io\_stalled\_seconds\_total  <br>node\_pressure\_memory\_waiting\_seconds\_total  <br>node\_pressure\_memory\_stalled\_seconds\_total | /proc/pressure/ |     |
+| Exposes various statistics from/sys/class/powercap. | 系统没有该目录或者目录为空 | node\_rapl\_\*\*\*\*\_joules\_total | /sys/class/powercap | 指标名称中的\*根据/sys/class/powercap中文件中的值确定 |
+| Exposes statistics from/sys/class/scsi\_tape. | 系统没有该目录或者目录为空 | node\_tape\_io\_now  <br>node\_tape\_io\_time\_seconds\_total  <br>node\_tape\_io\_others\_total  <br>node\_tape\_read\_bytes\_total  <br>node\_tape\_reads\_completed\_total  <br>node\_tape\_read\_time\_seconds\_total  <br>node\_tape\_written\_bytes\_total  <br>node\_tape\_writes\_completed\_total  <br>node\_tape\_write\_time\_seconds\_total  <br>node\_tape\_residual\_total | /sys/class/scsi\_tape |     |
+| A summary of the number of active and enabled cgroups | 没指标 | node\_cgroups\_cgroups  <br>node\_cgroups\_enabled | /proc/cgroups | release-1.4加入的collector |
+| Exposes device statistics | 没指标 | node\_devstat\_bytes\_total  <br>node\_devstat\_transfers\_total  <br>node\_devstat\_blocks\_total |     | 不支持linux |
+| Exposes network interface information and network driver statistics equivalent toethtool,ethtool -S, andethtool -i. | 没指标 | node\_ethtool\_info  <br>node\_ethtool\_\*  <br>node\_ethtool\_received\_bytes\_total  <br>node\_ethtool\_received\_dropped\_total  <br>node\_ethtool\_received\_errors\_total  <br>node\_ethtool\_received\_packets\_total  <br>node\_ethtool\_transmitted\_bytes\_total  <br>node\_ethtool\_transmitted\_errors\_total  <br>node\_ethtool\_transmitted\_packets\_total  <br>node\_network\_supported\_port\_info  <br>node\_network\_supported\_speed\_bytes  <br>node\_network\_autonegotiate\_supported  <br>node\_network\_pause\_supported  <br>node\_network\_asymmetricpause\_supported  <br>node\_network\_advertised\_speed\_bytes  <br>node\_network\_autonegotiate\_advertised  <br>node\_network\_pause\_advertised  <br>node\_network\_asymmetricpause\_advertised  <br>node\_network\_autonegotiate |     | 指标名称node\_ethtool\_\*根据不同网口设备还有其他参数 |
+| Exposes statistics about devices in/proc/mdstat(does nothing if no/proc/mdstatpresent). | 没指标 | node\_md\_state  <br>node\_md\_disks  <br>node\_md\_disks\_required  <br>node\_md\_blocks  <br>node\_md\_blocks\_synced | /proc/mdstat |     |
+| Exposes filesystem statistics from/proc/self/mountstats. Exposes detailed NFS client statistics. | 没指标 | node\_mountstats\_nfs\_age\_seconds\_total  <br>node\_mountstats\_nfs\_read\_bytes\_total  <br>node\_mountstats\_nfs\_write\_bytes\_total  <br>node\_mountstats\_nfs\_direct\_read\_bytes\_total  <br>node\_mountstats\_nfs\_direct\_write\_bytes\_total  <br>node\_mountstats\_nfs\_total\_read\_bytes\_total  <br>node\_mountstats\_nfs\_total\_write\_bytes\_total  <br>node\_mountstats\_nfs\_read\_pages\_total  <br>node\_mountstats\_nfs\_write\_pages\_total  <br>node\_mountstats\_nfs\_transport\_bind\_total  <br>node\_mountstats\_nfs\_transport\_connect\_total  <br>node\_mountstats\_nfs\_transport\_idle\_time\_seconds  <br>node\_mountstats\_nfs\_transport\_sends\_total  <br>node\_mountstats\_nfs\_transport\_receives\_total  <br>node\_mountstats\_nfs\_transport\_bad\_transaction\_ids\_total  <br>node\_mountstats\_nfs\_transport\_backlog\_queue\_total  <br>node\_mountstats\_nfs\_transport\_maximum\_rpc\_slots  <br>node\_mountstats\_nfs\_transport\_sending\_queue\_total  <br>node\_mountstats\_nfs\_transport\_pending\_queue\_total  <br>node\_mountstats\_nfs\_operations\_requests\_total  <br>node\_mountstats\_nfs\_operations\_transmissions\_total  <br>node\_mountstats\_nfs\_operations\_major\_timeouts\_total  <br>node\_mountstats\_nfs\_operations\_sent\_bytes\_total  <br>node\_mountstats\_nfs\_operations\_received\_bytes\_total  <br>node\_mountstats\_nfs\_operations\_queue\_time\_seconds\_total  <br>node\_mountstats\_nfs\_operations\_response\_time\_seconds\_total  <br>node\_mountstats\_nfs\_operations\_request\_time\_seconds\_total <br>node\_mountstats\_nfs\_event\_inode\_revalidate\_total  <br>node\_mountstats\_nfs\_event\_dnode\_revalidate\_total  <br>node\_mountstats\_nfs\_event\_data\_invalidate\_total  <br>node\_mountstats\_nfs\_event\_attribute\_invalidate\_total  <br>node\_mountstats\_nfs\_event\_vfs\_open\_total  <br>node\_mountstats\_nfs\_event\_vfs\_lookup\_total  <br>node\_mountstats\_nfs\_event\_vfs\_access\_total  <br>node\_mountstats\_nfs\_event\_vfs\_update\_page\_total  <br>node\_mountstats\_nfs\_event\_vfs\_read\_page\_total  <br>node\_mountstats\_nfs\_event\_vfs\_read\_pages\_total  <br>node\_mountstats\_nfs\_event\_vfs\_write\_page\_total  <br>node\_mountstats\_nfs\_event\_vfs\_write\_pages\_total  <br>node\_mountstats\_nfs\_event\_vfs\_getdents\_total  <br>node\_mountstats\_nfs\_event\_vfs\_setattr\_total  <br>node\_mountstats\_nfs\_event\_vfs\_flush\_total  <br>node\_mountstats\_nfs\_event\_vfs\_fsync\_total  <br>node\_mountstats\_nfs\_event\_vfs\_lock\_total  <br>node\_mountstats\_nfs\_event\_vfs\_file\_release\_total  <br>node\_mountstats\_nfs\_event\_truncation\_total  <br>node\_mountstats\_nfs\_event\_write\_extension\_total  <br>node\_mountstats\_nfs\_event\_silly\_rename\_total  <br>node\_mountstats\_nfs\_event\_short\_read\_total  <br>node\_mountstats\_nfs\_event\_short\_write\_total  <br>node\_mountstats\_nfs\_event\_jukebox\_delay\_total  <br>node\_mountstats\_nfs\_event\_pnfs\_read\_total  <br>node\_mountstats\_nfs\_event\_pnfs\_write\_total  | /proc/self/mountstats |     |
+| Exposes slab statistics from/proc/slabinfo. Note that permission of/proc/slabinfois usually 0400, so set it appropriately. | 没指标 | node\_slabinfo\_active\_objects  <br>node\_slabinfo\_objects  <br>node\_slabinfo\_object\_size\_bytes  <br>node\_slabinfo\_objects\_per\_slab  <br>node\_slabinfo\_pages\_per\_slab | /proc/slabinfo | release-1.4加入的collector |
+| Exposes detailed softirq statistics from/proc/softirqs. | 没指标 | node\_softirqs\_functions\_total | /proc/softirqs | release-1.6加入的collector |
+| Expose sysctl values from/proc/sys. Use\--collector.sysctl.include(-info)to configure. | 没指标 | node\_sysctl\_\* | /proc/sys | release-1.4加入的collector;  <br>指标名称\*与参数‘--collector.sysctl.include’的值有关 |
+| Exposes CPU frequency statistics | 没指标 | node\_cpu\_frequency\_hertz  <br>node\_cpu\_frequency\_min\_hertz  <br>node\_cpu\_frequency\_max\_hertz  <br>node\_cpu\_scaling\_frequency\_hertz  <br>node\_cpu\_scaling\_frequency\_min\_hertz  <br>node\_cpu\_scaling\_frequency\_max\_hertz | /sys/devices/system/cpu/cpu\[0-9\]\*/cpufreq |     |
+| Exposes system boot time derived from thekern.boottimesysctl. | 没指标 | node\_boot\_time\_seconds |     | 不支持linux |
+| Exposes netisr statistics | 没指标 | numthreads  <br>maxprot  <br>defaultqlimit  <br>maxqlimit  <br>bindthreads  <br>maxthreads |     | 不支持linux，release-1.6加入的collector |
+| Exposes Distributed Replicated Block Device statistics (to version 8.4) | 没测试 | node\_drdb\_network\_sent\_bytes\_total  <br>node\_drdb\_network\_received\_bytes\_total  <br>node\_drdb\_disk\_written\_bytes\_total  <br>node\_drdb\_disk\_read\_bytes\_total  <br>node\_drdb\_activitylog\_writes\_total  <br>node\_drdb\_bitmap\_writes\_total  <br>node\_drdb\_local\_pending  <br>node\_drdb\_remote\_pending  <br>node\_drdb\_remote\_unacknowledged  <br>node\_drdb\_application\_pending  <br>node\_drdb\_epochs  <br>node\_drdb\_out\_of\_sync\_bytes  <br>node\_drdb\_node\_role\_is\_primary  <br>node\_drdb\_disk\_state\_is\_up\_to\_date  <br>node\_drdb\_connected | /proc/drdb |     |
+| Exposes error detection and correction statistics. | 没测试 | node\_edac\_correctable\_errors\_total  <br>node\_edac\_uncorrectable\_errors\_total  <br>node\_edac\_csrow\_correctable\_errors\_total  <br>node\_edac\_csrow\_uncorrectable\_errors\_total | /sys/devices/system/edac/mc/mc\[0-9\]\* |     |
+| Exposes execution statistics. | 没测试 | node\_exec\_context\_switches\_total  <br>node\_exec\_traps\_total  <br>node\_exec\_system\_calls\_total  <br>node\_exec\_device\_interrupts\_total  <br>node\_exec\_software\_interrupts\_total  <br>node\_exec\_forks\_total |     | 不支持linux |
+| Exposes network statistics specific to InfiniBand and Intel OmniPath configurations. | 没测试 | node\_infiniband\_info  <br>node\_infiniband\_legacy\_multicast\_packets\_received\_total  <br>node\_infiniband\_legacy\_multicast\_packets\_transmitted\_total  <br>node\_infiniband\_legacy\_data\_received\_bytes\_total  <br>node\_infiniband\_legacy\_packets\_received\_total  <br>node\_infiniband\_legacy\_unicast\_packets\_received\_total  <br>node\_infiniband\_legacy\_unicast\_packets\_transmitted\_total  <br>node\_infiniband\_legacy\_data\_transmitted\_bytes\_total  <br>node\_infiniband\_legacy\_packets\_transmitted\_total  <br>node\_infiniband\_excessive\_buffer\_overrun\_errors\_total  <br>node\_infiniband\_link\_downed\_total  <br>node\_infiniband\_link\_error\_recovery\_total  <br>node\_infiniband\_local\_link\_integrity\_errors\_total  <br>node\_infiniband\_multicast\_packets\_received\_total  <br>node\_infiniband\_multicast\_packets\_transmitted\_total  <br>node\_infiniband\_physical\_state\_id  <br>node\_infiniband\_port\_constraint\_errors\_received\_total  <br>node\_infiniband\_port\_constraint\_errors\_transmitted\_total  <br>node\_infiniband\_port\_data\_received\_bytes\_total  <br>node\_infiniband\_port\_data\_transmitted\_bytes\_total  <br>node\_infiniband\_port\_discards\_received\_total  <br>node\_infiniband\_port\_discards\_transmitted\_total  <br>node\_infiniband\_port\_errors\_received\_total  <br>node\_infiniband\_port\_packets\_received\_total  <br>node\_infiniband\_port\_packets\_transmitted\_total  <br>node\_infiniband\_port\_transmit\_wait\_total  <br>node\_infiniband\_rate\_bytes\_per\_second  <br>node\_infiniband\_state\_id  <br>node\_infiniband\_unicast\_packets\_received\_total  <br>node\_infiniband\_unicast\_packets\_transmitted\_total  <br>node\_infiniband\_port\_receive\_remote\_physical\_errors\_total  <br>node\_infiniband\_port\_receive\_switch\_relay\_errors\_total  <br>node\_infiniband\_symbol\_error\_total  <br>node\_infiniband\_vl15\_dropped\_total | /sys/class/infiniband/<device> |     |
+| Exposes session counts fromlogind. | 没测试 | node\_logind\_sessions | dbus |     |
+| Exposes perf based metrics (Warning: Metrics are dependent on kernel configuration and settings). | 没测试 | node\_perf\_cpucycles\_total  <br>node\_perf\_instructions\_total  <br>node\_perf\_branch\_instructions\_total  <br>node\_perf\_branch\_misses\_total  <br>node\_perf\_cache\_refs\_total  <br>node\_perf\_cache\_misses\_total  <br>node\_perf\_ref\_cpucycles\_total  <br>node\_perf\_page\_faults\_total  <br>node\_perf\_context\_switches\_total  <br>node\_perf\_cpu\_migrations\_total  <br>node\_perf\_minor\_faults\_total  <br>node\_perf\_major\_faults\_total  <br>node\_perf\_cache\_l1d\_read\_hits\_total  <br>node\_perf\_cache\_l1d\_read\_misses\_total  <br>node\_perf\_cache\_l1d\_write\_hits\_total  <br>node\_perf\_cache\_l1\_instr\_read\_misses\_total  <br>node\_perf\_cache\_tlb\_instr\_read\_hits\_total  <br>node\_perf\_cache\_tlb\_instr\_read\_misses\_total  <br>node\_perf\_cache\_ll\_read\_hits\_total  <br>node\_perf\_cache\_ll\_read\_misses\_total  <br>node\_perf\_cache\_ll\_write\_hits\_total  <br>node\_perf\_cache\_ll\_write\_misses\_total  <br>node\_perf\_cache\_bpu\_read\_hits\_total  <br>node\_perf\_cache\_bpu\_read\_misses\_total | [github.com/hodgesds/perf-utils](https://github.com/hodgesds/perf-utils) |     |
+| Exposes service and system status fromsystemd. | 没测试 | node\_systemd\_unit\_state  <br>node\_systemd\_unit\_start\_time\_seconds  <br>node\_systemd\_unit\_tasks\_current  <br>node\_systemd\_unit\_tasks\_max  <br>node\_systemd\_system\_running  <br>node\_systemd\_units  <br>node\_systemd\_service\_restart\_total  <br>node\_systemd\_timer\_last\_trigger\_seconds  <br>node\_systemd\_socket\_accepted\_connections\_total  <br>node\_systemd\_socket\_current\_connections  <br>node\_systemd\_socket\_refused\_connections\_total  <br>node\_systemd\_version | dbus |     |
+| Exposes WiFi device and station statistics. | 没测试 | node\_wifi\_interface\_frequency\_hertz  <br>node\_wifi\_station\_info  <br>node\_wifi\_station\_connected\_seconds\_total  <br>node\_wifi\_station\_inactive\_seconds  <br>node\_wifi\_station\_receive\_bits\_per\_second  <br>node\_wifi\_station\_transmit\_bits\_per\_second  <br>node\_wifi\_station\_receive\_bytes\_total  <br>node\_wifi\_station\_transmit\_bytes\_total  <br>node\_wifi\_station\_signal\_dbm  <br>node\_wifi\_station\_transmit\_retries\_total  <br>node\_wifi\_station\_transmit\_failed\_total  <br>node\_wifi\_station\_beacon\_loss\_total | [github.com/mdlayher/wifi](https://github.com/mdlayher/wifi 'github.com/mdlayher/wifi') |     |
+| ExposesZFSperformance statistics. | 没测试 | node\_zfs\_pool\_state  <br>node\_zfs\_zpool\_dataset\_\*  <br>node\_zfs\_zpool\_\*  <br>node\_zfs\_abd\_\*  <br>node\_zfs\_arc\_\*  <br>node\_zfs\_dbuf\_\*  <br>node\_zfs\_dmu\_tx\_\*  <br>node\_zfs\_dnode\_\*  <br>node\_zfs\_fm\_\*  <br>node\_zfs\_vdev\_cache\_\*  <br>node\_zfs\_vdev\_mirror\_\*  <br>node\_zfs\_xuio\_\*  <br>node\_zfs\_zfetch\_\*  <br>node\_zfs\_zil\_\* | /proc/spl/kstat/zfs/\* | \*由kstat-zfs-misc-x-x替换，具体根据/proc/spl/kstat/zfs/\*确定 |。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://longxiucai.github.io/post/58.html">
+<meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
+<title>node-exporter各collector指标</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">node-exporter各collector指标</h1>
+<div class="title-right">
+    <a href="https://longxiucai.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Description</td>
+<td>metrics中的信息</td>
+<td>指标名称（release-1.3）</td>
+<td>值的来源</td>
+<td>备注</td>
+</tr>
+<tr>
+<td>Exposes ARP statistics from/proc/net/arp.</td>
+<td>正常</td>
+<td>node_arp_entries</td>
+<td>/proc/net/arp</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes the number of configured and active slaves of Linux bonding interfaces.</td>
+<td>正常</td>
+<td>node_bonding_active  <br>node_bonding_slaves</td>
+<td>/sys/class/net//*</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes btrfs statistics</td>
+<td>正常</td>
+<td>node_btrfs_allocation_ratio  <br>node_btrfs_device_size_bytes  <br>node_btrfs_global_rsv_size_bytes  <br>node_btrfs_info  <br>node_btrfs_reserved_bytes  <br>node_btrfs_size_bytes  <br>node_btrfs_used_bytes</td>
+<td>/sys/fs/btrfs/*-*/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes statistics of memory fragments as reported by /proc/buddyinfo.</td>
+<td>正常</td>
+<td>node_buddyinfo_blocks</td>
+<td>/proc/buddyinfo</td>
+<td></td>
+</tr>
+<tr>
+<td>Shows conntrack statistics (does nothing if no/proc/sys/net/netfilter/present).</td>
+<td>正常</td>
+<td>node_nf_conntrack_entries  <br>node_nf_conntrack_entries_limit  <br>node_nf_conntrack_stat_found  <br>node_nf_conntrack_stat_invalid  <br>node_nf_conntrack_stat_ignore  <br>node_nf_conntrack_stat_insert  <br>node_nf_conntrack_stat_insert_failed  <br>node_nf_conntrack_stat_drop  <br>node_nf_conntrack_stat_early_drop  <br>node_nf_conntrack_stat_search_restart</td>
+<td>/proc/net/stat/nf_conntrack</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes CPU statistics</td>
+<td>正常</td>
+<td>node_cpu_seconds_total  <br>node_cpu_info  <br>node_cpu_flag_info  <br>node_cpu_bug_info  <br>node_cpu_guest_seconds_total  <br>node_cpu_core_throttles_total  <br>node_cpu_package_throttles_total</td>
+<td>/proc/cpuinfo</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes disk I/O statistics.</td>
+<td>正常</td>
+<td>node_disk_reads_completed_total  <br>node_disk_read_bytes_total  <br>node_disk_writes_completed_total  <br>node_disk_written_bytes_total  <br>node_disk_io_time_seconds_total  <br>node_disk_read_time_seconds_total  <br>node_disk_write_time_seconds_total  <br>node_disk_info  <br>node_disk_reads_merged_total  <br>node_disk_writes_merged_total  <br>node_disk_io_now  <br>node_disk_io_time_weighted_seconds_total  <br>node_disk_discards_completed_total  <br>node_disk_discards_merged_total  <br>node_disk_discarded_sectors_total  <br>node_disk_discard_time_seconds_total  <br>node_disk_flush_requests_total  <br>node_disk_flush_requests_time_seconds_total</td>
+<td>/proc/diskstats</td>
+<td></td>
+</tr>
+<tr>
+<td>Expose Desktop Management Interface (DMI) info from/sys/class/dmi/id/</td>
+<td>正常</td>
+<td>node_dmi_info</td>
+<td>/sys/class/dmi/id/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes available entropy.</td>
+<td>正常</td>
+<td>node_entropy_available_bits  <br>node_entropy_pool_size_bits</td>
+<td>/proc/sys/kernel/random/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes file descriptor statistics from/proc/sys/fs/file-nr.</td>
+<td>正常</td>
+<td>node_filefd_allocated  <br>node_filefd_maximum</td>
+<td>/proc/sys/fs/file-nr</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes filesystem statistics, such as disk space used.</td>
+<td>正常</td>
+<td>node_filesystem_size_bytes  <br>node_filesystem_free_bytes  <br>node_filesystem_avail_bytes  <br>node_filesystem_files  <br>node_filesystem_files_free  <br>node_filesystem_readonly  <br>node_filesystem_device_error</td>
+<td>/proc/1/mounts</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes detailed interrupts statistics.</td>
+<td>正常</td>
+<td>node_interrupts_total</td>
+<td>/proc/interrupts</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes IPVS status from/proc/net/ip_vsand stats from/proc/net/ip_vs_stats.</td>
+<td>正常</td>
+<td>node_ipvs_connections_total  <br>node_ipvs_incoming_packets_total  <br>node_ipvs_outgoing_packets_total  <br>node_ipvs_incoming_bytes_total  <br>node_ipvs_outgoing_bytes_total  <br>node_ipvs_backend_connections_active  <br>node_ipvs_backend_connections_inactive  <br>node_ipvs_backend_weight</td>
+<td>/proc/net/ip_vs  <br>/proc/net/ip_vs_stats</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes stats from/proc/net/stat/.</td>
+<td>正常</td>
+<td>node_lnstat_allocs_total  <br>node_lnstat_delete_list_total  <br>node_lnstat_delete_total  <br>node_lnstat_destroys_total  <br>node_lnstat_drop_total  <br>node_lnstat_early_drop_total  <br>node_lnstat_entries_total  <br>node_lnstat_expect_create_total  <br>node_lnstat_expect_delete_total  <br>node_lnstat_expect_new_total  <br>node_lnstat_forced_gc_runs_total  <br>node_lnstat_found_total  <br>node_lnstat_gc_dst_overflow_total  <br>node_lnstat_gc_goal_miss_total  <br>node_lnstat_gc_ignored_total  <br>node_lnstat_gc_total_total  <br>node_lnstat_hash_grows_total  <br>node_lnstat_hits_total  <br>node_lnstat_icmp_error_total  <br>node_lnstat_ignore_total  <br>node_lnstat_in_brd_total  <br>node_lnstat_in_hit_total  <br>node_lnstat_in_hlist_search_total  <br>node_lnstat_in_martian_dst_total<br>node_lnstat_in_martian_src_total  <br>node_lnstat_in_no_route_total  <br>node_lnstat_in_slow_mc_total  <br>node_lnstat_in_slow_tot_total  <br>node_lnstat_insert_failed_total  <br>node_lnstat_insert_total  <br>node_lnstat_invalid_total  <br>node_lnstat_lookups_total  <br>node_lnstat_new_total  <br>node_lnstat_out_hit_total  <br>node_lnstat_out_hlist_search_total  <br>node_lnstat_out_slow_mc_total  <br>node_lnstat_out_slow_tot_total  <br>node_lnstat_periodic_gc_runs_total  <br>node_lnstat_rcv_probes_mcast_total  <br>node_lnstat_rcv_probes_ucast_total  <br>node_lnstat_res_failed_total  <br>node_lnstat_search_restart_total  <br>node_lnstat_searched_total  <br>node_lnstat_table_fulls_total  <br>node_lnstat_unresolved_discards_total</td>
+<td>/proc/net/stat/</td>
+<td>指标名称根据/proc/net/stat/*第一行</td>
+</tr>
+<tr>
+<td>Exposes load average.</td>
+<td>正常</td>
+<td>node_load1  <br>node_load15  <br>node_load5</td>
+<td>/proc/loadavg</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes memory statistics.</td>
+<td>正常</td>
+<td>node_memory_Active_anon_bytes  <br>node_memory_Active_bytes  <br>node_memory_Active_file_bytes  <br>node_memory_AnonHugePages_bytes  <br>node_memory_AnonPages_bytes  <br>node_memory_Bounce_bytes  <br>node_memory_Buffers_bytes  <br>node_memory_Cached_bytes  <br>node_memory_CommitLimit_bytes  <br>node_memory_Committed_AS_bytes  <br>node_memory_DirectMap1G_bytes  <br>node_memory_DirectMap2M_bytes  <br>node_memory_DirectMap4k_bytes  <br>node_memory_Dirty_bytes  <br>node_memory_HardwareCorrupted_bytes  <br>node_memory_HugePages_Free  <br>node_memory_HugePages_Rsvd  <br>node_memory_HugePages_Surp  <br>node_memory_HugePages_Total  <br>node_memory_Hugepagesize_bytes  <br>node_memory_Hugetlb_bytes  <br>node_memory_Inactive_anon_bytes  <br>node_memory_Inactive_bytes   <br>node_memory_Inactive_file_bytes  <br>node_memory_KernelStack_bytes  <br>node_memory_Mapped_bytes  <br>node_memory_MemAvailable_bytes  <br>node_memory_MemFree_bytes  <br>node_memory_MemTotal_bytes  <br>node_memory_Mlocked_bytes  <br>node_memory_NFS_Unstable_bytes  <br>node_memory_PageTables_bytes  <br>node_memory_Percpu_bytes  <br>node_memory_SReclaimable_bytes  <br>node_memory_SUnreclaim_bytes  <br>node_memory_ShmemHugePages_bytes  <br>node_memory_ShmemPmdMapped_bytes  <br>node_memory_Shmem_bytes  <br>node_memory_Slab_bytes  <br>node_memory_SwapCached_bytes  <br>node_memory_SwapFree_bytes  <br>node_memory_SwapTotal_bytes  <br>node_memory_Unevictable_bytes  <br>node_memory_VmallocChunk_bytes  <br>node_memory_VmallocTotal_bytes  <br>node_memory_VmallocUsed_bytes  <br>node_memory_WritebackTmp_bytes  <br>node_memory_Writeback_bytes</td>
+<td>/proc/meminfo</td>
+<td>指标名称根据/proc/meminfo第一列</td>
+</tr>
+<tr>
+<td>Exposes memory statistics from/proc/meminfo_numa.</td>
+<td>正常</td>
+<td>node_memory_numa_Active  <br>node_memory_numa_Active_anon  <br>node_memory_numa_Active_file  <br>node_memory_numa_AnonHugePages  <br>node_memory_numa_AnonPages  <br>node_memory_numa_Bounce  <br>node_memory_numa_Dirty  <br>node_memory_numa_FilePages  <br>node_memory_numa_HugePages_Free  <br>node_memory_numa_HugePages_Surp  <br>node_memory_numa_HugePages_Total  <br>node_memory_numa_Inactive  <br>node_memory_numa_Inactive_anon  <br>node_memory_numa_Inactive_file  <br>node_memory_numa_KernelStack  <br>node_memory_numa_Mapped  <br>node_memory_numa_MemFree  <br>node_memory_numa_MemTotal<br> node_memory_numa_MemUsed  <br>node_memory_numa_Mlocked  <br>node_memory_numa_NFS_Unstable  <br>node_memory_numa_PageTables  <br>node_memory_numa_SReclaimable  <br>node_memory_numa_SUnreclaim  <br>node_memory_numa_Shmem  <br>node_memory_numa_ShmemHugePages  <br>node_memory_numa_ShmemPmdMapped  <br>node_memory_numa_Slab  <br>node_memory_numa_Unevictable  <br>node_memory_numa_Writeback  <br>node_memory_numa_WritebackTmp  <br>node_memory_numa_interleave_hit_total  <br>node_memory_numa_local_node_total  <br>node_memory_numa_numa_foreign_total  <br>node_memory_numa_numa_hit_total  <br>node_memory_numa_numa_miss_total  <br>node_memory_numa_other_node_total<br> node_memory_numa_MemUsed  <br>node_memory_numa_Mlocked  <br>node_memory_numa_NFS_Unstable  <br>node_memory_numa_PageTables  <br>node_memory_numa_SReclaimable  <br>node_memory_numa_SUnreclaim  <br>node_memory_numa_Shmem  <br>node_memory_numa_ShmemHugePages  <br>node_memory_numa_ShmemPmdMapped  <br>node_memory_numa_Slab  <br>node_memory_numa_Unevictable  <br>node_memory_numa_Writeback  <br>node_memory_numa_WritebackTmp  <br>node_memory_numa_interleave_hit_total  <br>node_memory_numa_local_node_total  <br>node_memory_numa_numa_foreign_total  <br>node_memory_numa_numa_hit_total  <br>node_memory_numa_numa_miss_total  <br>node_memory_numa_other_node_total</td>
+<td>/proc/meminfo_numa</td>
+<td>指标名称根据/sys/devices/system/node/node[0-9]/meminfo</td>
+</tr>
+<tr>
+<td>Exposes network interface info from/sys/class/net/</td>
+<td>正常</td>
+<td>node_network_info  <br>node_network_up  <br>node_network_address_assign_type  <br>node_network_carrier  <br>node_network_carrier_changes_total  <br>node_network_carrier_up_changes_total  <br>node_network_carrier_down_changes_total  <br>node_network_device_id  <br>node_network_dormant  <br>node_network_flags  <br>node_network_iface_id  <br>node_network_iface_link  <br>node_network_iface_link_mode  <br>node_network_mtu_bytes  <br>node_network_name_assign_type  <br>node_network_net_dev_group  <br>node_network_speed_bytes  <br>node_network_transmit_queue_length  <br>node_network_protocol_type</td>
+<td>/sys/class/net/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes network interface statistics such as bytes transferred.</td>
+<td>正常</td>
+<td>node_network_receive_bytes_total  <br>node_network_receive_packets_total  <br>node_network_receive_errs_total  <br>node_network_receive_drop_total  <br>node_network_receive_fifo_total  <br>node_network_receive_frame_total  <br>node_network_receive_compressed_total  <br>node_network_receive_multicast_total  <br>node_network_transmit_bytes_total  <br>node_network_transmit_packets_total  <br>node_network_transmit_errs_total  <br>node_network_transmit_drop_total  <br>node_network_transmit_fifo_total  <br>node_network_transmit_frame_total  <br>node_network_transmit_compressed_total  <br>node_network_transmit_multicast_total</td>
+<td>/proc/net/dev</td>
+<td>指标名称根据/proc/net/dev</td>
+</tr>
+<tr>
+<td>Exposes network statistics from/proc/net/netstat. This is the same information asnetstat -s.</td>
+<td>正常</td>
+<td>node_netstat_Icmp6_InErrors  <br>node_netstat_Icmp6_InMsgs  <br>node_netstat_Icmp6_OutMsgs  <br>node_netstat_Icmp_InErrors  <br>node_netstat_Icmp_InMsgs  <br>node_netstat_Icmp_OutMsgs  <br>node_netstat_Ip6_InOctets  <br>node_netstat_Ip6_OutOctets  <br>node_netstat_IpExt_InOctets  <br>node_netstat_IpExt_OutOctets  <br>node_netstat_Ip_Forwarding  <br>node_netstat_TcpExt_ListenDrops  <br>node_netstat_TcpExt_ListenOverflows  <br>node_netstat_TcpExt_SyncookiesFailed  <br>node_netstat_TcpExt_SyncookiesRecv  <br>node_netstat_TcpExt_SyncookiesSent  <br>node_netstat_TcpExt_TCPSynRetrans  <br>node_netstat_TcpExt_TCPTimeouts  <br>node_netstat_Tcp_ActiveOpens  <br>node_netstat_Tcp_CurrEstab  <br>node_netstat_Tcp_InErrs  <br>node_netstat_Tcp_InSegs  <br>node_netstat_Tcp_OutRsts  <br>node_netstat_Tcp_OutSegs  <br>node_netstat_Tcp_PassiveOpens  <br>node_netstat_Tcp_RetransSegs  <br>node_netstat_Udp6_InDatagrams  <br>node_netstat_Udp6_InErrors  <br>node_netstat_Udp6_NoPorts  <br>node_netstat_Udp6_OutDatagrams  <br>node_netstat_Udp6_RcvbufErrors  <br>node_netstat_Udp6_SndbufErrors  <br>node_netstat_UdpLite6_InErrors  <br>node_netstat_UdpLite_InErrors  <br>node_netstat_Udp_InDatagrams  <br>node_netstat_Udp_InErrors  <br>node_netstat_Udp_NoPorts  <br>node_netstat_Udp_OutDatagrams  <br>node_netstat_Udp_RcvbufErrors  <br>node_netstat_Udp_SndbufErrors</td>
+<td>/proc/net/netstat</td>
+<td>指标名称根据/proc/net/snmp、/proc/net/netstat、/proc/net/snmp6</td>
+</tr>
+<tr>
+<td>Exposes the routing table as metrics</td>
+<td>正常</td>
+<td>node_network_route_info  <br>node_network_routes</td>
+<td><a href="https://github.com/mdlayher/netlink" title="https://github.com/mdlayher/netlink">github.com/mdlayher/netlink</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes NFS client statistics from/proc/net/rpc/nfs. This is the same information asnfsstat -c.</td>
+<td>正常</td>
+<td>node_nfs_packets_total  <br>node_nfs_connections_total  <br>node_nfs_rpcs_total  <br>node_nfs_rpc_retransmissions_total  <br>node_nfs_rpc_authentication_refreshes_total  <br>node_nfs_requests_total</td>
+<td>/proc/net/rpc/nfs</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes NFS kernel server statistics from/proc/net/rpc/nfsd. This is the same information asnfsstat -s.</td>
+<td>正常</td>
+<td>node_nfsd_requests_total  <br>node_nfsd_reply_cache_hits_total  <br>node_nfsd_reply_cache_misses_total  <br>node_nfsd_reply_cache_nocache_total  <br>node_nfsd_file_handles_stale_total  <br>node_nfsd_disk_bytes_read_total  <br>node_nfsd_disk_bytes_written_total  <br>node_nfsd_server_threads  <br>node_nfsd_read_ahead_cache_size_blocks  <br>node_nfsd_read_ahead_cache_not_found_total  <br>node_nfsd_packets_total  <br>node_nfsd_connections_total  <br>node_nfsd_rpc_errors_total  <br>node_nfsd_server_rpcs_total</td>
+<td>/proc/net/rpc/nfsd</td>
+<td></td>
+</tr>
+<tr>
+<td>Expose OS release info from/etc/os-releaseor/usr/lib/os-release</td>
+<td>正常</td>
+<td>node_os_info  <br>node_os_version</td>
+<td>/etc/os-release  <br>/usr/lib/os-release</td>
+<td>/etc/os-release中VERSION_ID的值不符合正则`^[0-9]+\.?[0-9]*`所以没有node_os_version指标</td>
+</tr>
+<tr>
+<td>Exposes aggregate process statistics from/proc.</td>
+<td>正常</td>
+<td>node_processes_max_processes  <br>node_processes_max_threads  <br>node_processes_pids  <br>node_processes_state  <br>node_processes_threads  <br>node_processes_threads_state</td>
+<td>/proc/*</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposesqueuing disciplinestatistics</td>
+<td>正常</td>
+<td>node_qdisc_backlog  <br>node_qdisc_bytes_total  <br>node_qdisc_current_queue_length  <br>node_qdisc_drops_total  <br>node_qdisc_overlimits_total  <br>node_qdisc_packets_total  <br>node_qdisc_requeues_total</td>
+<td><a href="https://github.com/mdlayher/netlink" title="github.com/mdlayher/netlink">github.com/mdlayher/netlink</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes task scheduler statistics from/proc/schedstat.</td>
+<td>正常</td>
+<td>node_schedstat_timeslices_total  <br>node_schedstat_waiting_seconds_total  <br>node_schedstat_running_seconds_total</td>
+<td>/proc/schedstat</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes various statistics from/proc/net/sockstat.</td>
+<td>正常</td>
+<td>node_sockstat_FRAG6_inuse  <br>node_sockstat_FRAG6_memory  <br>node_sockstat_FRAG_inuse  <br>node_sockstat_FRAG_memory  <br>node_sockstat_RAW6_inuse  <br>node_sockstat_RAW_inuse  <br>node_sockstat_TCP6_inuse  <br>node_sockstat_TCP_alloc  <br>node_sockstat_TCP_inuse  <br>node_sockstat_TCP_mem  <br>node_sockstat_TCP_mem_bytes  <br>node_sockstat_TCP_orphan  <br>node_sockstat_TCP_tw  <br>node_sockstat_UDP6_inuse  <br>node_sockstat_UDPLITE6_inuse  <br>node_sockstat_UDPLITE_inuse  <br>node_sockstat_UDP_inuse  <br>node_sockstat_UDP_mem  <br>node_sockstat_UDP_mem_bytes  <br>node_sockstat_sockets_used</td>
+<td>/proc/net/sockstat</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes statistics from/proc/net/softnet_stat.</td>
+<td>正常</td>
+<td>node_softnet_dropped_total  <br>node_softnet_processed_total  <br>node_softnet_times_squeezed_total</td>
+<td>/proc/net/softnet_stat</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes various statistics from/proc/stat. This includes boot time, forks and interrupts.</td>
+<td>正常</td>
+<td>node_intr_total  <br>node_context_switches_total  <br>node_forks_total  <br>node_boot_time_seconds  <br>node_procs_running  <br>node_procs_blocked</td>
+<td>/proc/stat</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes TCP connection status information from/proc/net/tcpand/proc/net/tcp6. (Warning: the current version has potential performance issues in high load situations.)</td>
+<td>正常</td>
+<td>node_tcp_connection_states</td>
+<td>/proc/net/tcp  <br>/proc/net/tcp6</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes statistics read from local disk. The--collector.textfile.directoryflag must be set.</td>
+<td>正常</td>
+<td>node_textfile_mtime_seconds  <br>node_textfile_scrape_error</td>
+<td>根据参数指定的文件</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes thermal zone &amp; cooling device statistics from/sys/class/thermal.</td>
+<td>正常</td>
+<td>node_thermal_zone_temp  <br>node_cooling_device_cur_state  <br>node_cooling_device_max_state</td>
+<td>/sys/class/thermal</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes the current system time.</td>
+<td>正常</td>
+<td>node_time_seconds  <br>node_time_zone_offset_seconds  <br>node_time_clocksource_available_info  <br>node_time_clocksource_current_info</td>
+<td>/sys/devices/system/clocksource/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes selected adjtimex(2) system call stats.</td>
+<td>正常</td>
+<td>node_timex_estimated_error_seconds  <br>node_timex_frequency_adjustment_ratio  <br>node_timex_loop_time_constant  <br>node_timex_maxerror_seconds  <br>node_timex_offset_seconds  <br>node_timex_pps_calibration_total  <br>node_timex_pps_error_total  <br>node_timex_pps_frequency_hertz  <br>node_timex_pps_jitter_seconds  <br>node_timex_pps_jitter_total  <br>node_timex_pps_shift_seconds  <br>node_timex_pps_stability_exceeded_total  <br>node_timex_pps_stability_hertz  <br>node_timex_status  <br>node_timex_sync_status  <br>node_timex_tai_offset_seconds  <br>node_timex_tick_seconds</td>
+<td>unix.Adjtimex</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes UDP total lengths of the rx_queue and tx_queue from/proc/net/udpand/proc/net/udp6.</td>
+<td>正常</td>
+<td>node_udp_queues</td>
+<td>/proc/net/udp  <br>/proc/net/udp6</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes system information as provided by the uname system call.</td>
+<td>正常</td>
+<td>node_uname_info</td>
+<td>unix.Uname</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes statistics from/proc/vmstat.</td>
+<td>正常</td>
+<td>node_vmstat_oom_kill  <br>node_vmstat_pgfault  <br>node_vmstat_pgmajfault  <br>node_vmstat_pgpgin  <br>node_vmstat_pgpgout  <br>node_vmstat_pswpin  <br>node_vmstat_pswpout</td>
+<td>/proc/vmstat</td>
+<td>指标名称根据/proc/vmstat</td>
+</tr>
+<tr>
+<td>Exposes XFS runtime statistics.</td>
+<td>正常</td>
+<td>node_xfs_allocation_btree_compares_total  <br>node_xfs_allocation_btree_lookups_total  <br>node_xfs_allocation_btree_records_deleted_total  <br>node_xfs_allocation_btree_records_inserted_total  <br>node_xfs_block_map_btree_compares_total  <br>node_xfs_block_map_btree_lookups_total  <br>node_xfs_block_map_btree_records_deleted_total  <br>node_xfs_block_map_btree_records_inserted_total  <br>node_xfs_block_mapping_extent_list_compares_total  <br>node_xfs_block_mapping_extent_list_deletions_total  <br>node_xfs_block_mapping_extent_list_insertions_total  <br>node_xfs_block_mapping_extent_list_lookups_total  <br>node_xfs_block_mapping_reads_total  <br>node_xfs_block_mapping_unmaps_total  <br>node_xfs_block_mapping_writes_total  <br>node_xfs_directory_operation_create_total  <br>node_xfs_directory_operation_getdents_total  <br>node_xfs_directory_operation_lookup_total  <br>node_xfs_directory_operation_remove_total  <br>node_xfs_extent_allocation_blocks_allocated_total  <br>node_xfs_extent_allocation_blocks_freed_total  <br>node_xfs_extent_allocation_extents_allocated_total  <br>node_xfs_extent_allocation_extents_freed_total  <br>node_xfs_inode_operation_attempts_total  <br>node_xfs_inode_operation_attribute_changes_total  <br>node_xfs_inode_operation_duplicates_total  <br>node_xfs_inode_operation_found_total  <br>node_xfs_inode_operation_missed_total  <br>node_xfs_inode_operation_reclaims_total  <br>node_xfs_inode_operation_recycled_total  <br>node_xfs_read_calls_total  <br>node_xfs_vnode_active_total  <br>node_xfs_vnode_allocate_total  <br>node_xfs_vnode_get_total  <br>node_xfs_vnode_hold_total  <br>node_xfs_vnode_reclaim_total  <br>node_xfs_vnode_release_total  <br>node_xfs_vnode_remove_total  <br>node_xfs_write_calls_total</td>
+<td>/sys/fs/xfs/*/stats/stats</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes NUMA memory zone metrics.</td>
+<td>正常</td>
+<td>node_zoneinfo_high_pages  <br>node_zoneinfo_low_pages  <br>node_zoneinfo_managed_pages  <br>node_zoneinfo_min_pages  <br>node_zoneinfo_nr_active_anon_pages  <br>node_zoneinfo_nr_active_file_pages  <br>node_zoneinfo_nr_anon_pages  <br>node_zoneinfo_nr_anon_transparent_hugepages  <br>node_zoneinfo_nr_dirtied_total  <br>node_zoneinfo_nr_dirty_pages  <br>node_zoneinfo_nr_file_pages  <br>node_zoneinfo_nr_free_pages  <br>node_zoneinfo_nr_inactive_anon_pages  <br>node_zoneinfo_nr_inactive_file_pages  <br>node_zoneinfo_nr_isolated_anon_pages  <br>node_zoneinfo_nr_isolated_file_pages  <br>node_zoneinfo_nr_kernel_stacks  <br>node_zoneinfo_nr_mapped_pages  <br>node_zoneinfo_nr_shmem_pages  <br>node_zoneinfo_nr_slab_reclaimable_pages<br>node_zoneinfo_nr_slab_unreclaimable_pages  <br>node_zoneinfo_nr_unevictable_pages  <br>node_zoneinfo_nr_writeback_pages  <br>node_zoneinfo_nr_written_total  <br>node_zoneinfo_numa_foreign_total  <br>node_zoneinfo_numa_hit_total  <br>node_zoneinfo_numa_interleave_total  <br>node_zoneinfo_numa_local_total  <br>node_zoneinfo_numa_miss_total  <br>node_zoneinfo_numa_other_total  <br>node_zoneinfo_present_pages  <br>node_zoneinfo_spanned_pages  <br>node_zoneinfo_protection_0  <br>node_zoneinfo_protection_1  <br>node_zoneinfo_protection_2  <br>node_zoneinfo_protection_3  <br>node_zoneinfo_protection_4</td>
+<td>/proc/zoneinfo</td>
+<td>指标node_zoneinfo_protection_x根据/proc/zoneinfo</td>
+</tr>
+<tr>
+<td>Exposes fibre channel information and statistics from/sys/class/fc_host/.</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_fibrechannel_dumped_frames_total  <br>node_fibrechannel_loss_of_signal_total  <br>node_fibrechannel_loss_of_sync_total  <br>node_fibrechannel_rx_frames_total  <br>node_fibrechannel_error_frames_total  <br>node_fibrechannel_invalid_tx_words_total  <br>node_fibrechannel_seconds_since_last_reset_total  <br>node_fibrechannel_tx_words_total  <br>node_fibrechannel_invalid_crc_total  <br>node_fibrechannel_nos_total  <br>node_fibrechannel_fcp_packet_aborts_total  <br>node_fibrechannel_rx_words_total  <br>node_fibrechannel_tx_frames_total  <br>node_fibrechannel_link_failure_total  <br>node_fibrechannel_name  <br>node_fibrechannel_speed  <br>node_fibrechannel_port_state  <br>node_fibrechannel_port_type  <br>node_fibrechannel_symbolic_name  <br>node_fibrechannel_node_name  <br>node_fibrechannel_port_id  <br>node_fibrechannel_port_name  <br>node_fibrechannel_fabric_name  <br>node_fibrechannel_dev_loss_tmo  <br>node_fibrechannel_supported_classes  <br>node_fibrechannel_supported_speeds</td>
+<td>/sys/class/fc_host/</td>
+<td></td>
+</tr>
+<tr>
+<td>Expose hardware monitoring and sensor data from/sys/class/hwmon/.</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_hwmon_chip_names  <br>node_hwmon_sensor_label  <br>node_hwmon_beep_enabled  <br>node_hwmon_voltage_regulator_version  <br>node_hwmon_update_interval_seconds  <br>node_hwmon_beep_enable_*  <br>node_hwmon_vrm_*  <br>node_hwmon_update_interval_*</td>
+<td>/sys/class/hwmon/</td>
+<td>指标名称*根据/sys/class/hwmon/</td>
+</tr>
+<tr>
+<td>Exposes kernel and system statistics from/sys/kernel/mm/ksm.</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_ksmd_full_scans_total  <br>node_ksmd_merge_across_nodes  <br>node_ksmd_pages_shared  <br>node_ksmd_pages_sharing  <br>node_ksmd_pages_to_scan  <br>node_ksmd_pages_unshared  <br>node_ksmd_pages_volatile  <br>node_ksmd_run  <br>node_ksmd_sleep_seconds</td>
+<td>/sys/kernel/mm/ksm</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes NVMe info from/sys/class/nvme/</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_nvme_info</td>
+<td>/sys/class/nvme/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes Power Supply statistics from/sys/class/power_supply</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_power_supply_authentic  <br>node_power_supply_calibrate  <br>node_power_supply_capacity  <br>node_power_supply_capacity_alert_max  <br>node_power_supply_capacity_alert_min  <br>node_power_supply_cyclecount  <br>node_power_supply_online  <br>node_power_supply_present  <br>node_power_supply_time_to_empty_seconds  <br>node_power_supply_time_to_full_seconds  <br>node_power_supply_current_boot  <br>node_power_supply_current_max  <br>node_power_supply_current_ampere  <br>node_power_supply_energy_empty  <br>node_power_supply_energy_empty_design  <br>node_power_supply_energy_full  <br>node_power_supply_energy_full_design  <br>node_power_supply_energy_watthour  <br>node_power_supply_voltage_boot  <br>node_power_supply_voltage_max  <br>node_power_supply_voltage_max_design  <br>node_power_supply_voltage_min  <br>node_power_supply_voltage_min_design <br>node_power_supply_voltage_volt  <br>node_power_supply_voltage_ocv  <br>node_power_supply_charge_control_limit  <br>node_power_supply_charge_control_limit_max  <br>node_power_supply_charge_counter  <br>node_power_supply_charge_empty  <br>node_power_supply_charge_empty_design  <br>node_power_supply_charge_full  <br>node_power_supply_charge_full_design  <br>node_power_supply_charge_ampere  <br>node_power_supply_charge_term_current  <br>node_power_supply_constant_charge_current  <br>node_power_supply_constant_charge_current_max  <br>node_power_supply_constant_charge_voltage  <br>node_power_supply_constant_charge_voltage_max  <br>node_power_supply_precharge_current  <br>node_power_supply_input_current_limit  <br>node_power_supply_power_watt  <br>node_power_supply_temp_celsius  <br>node_power_supply_temp_alert_max_celsius  <br>node_power_supply_temp_alert_min_celsius  <br>node_power_supply_temp_ambient_celsius  <br>node_power_supply_temp_ambient_max_celsius  <br>node_power_supply_temp_ambient_min_celsius  <br>node_power_supply_temp_max_celsius  <br>node_power_supply_temp_min_celsius</td>
+<td>/sys/class/power_supply</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes pressure stall statistics from/proc/pressure/.</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_pressure_cpu_waiting_seconds_total  <br>node_pressure_io_waiting_seconds_total  <br>node_pressure_io_stalled_seconds_total  <br>node_pressure_memory_waiting_seconds_total  <br>node_pressure_memory_stalled_seconds_total</td>
+<td>/proc/pressure/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes various statistics from/sys/class/powercap.</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_rapl_****_joules_total</td>
+<td>/sys/class/powercap</td>
+<td>指标名称中的*根据/sys/class/powercap中文件中的值确定</td>
+</tr>
+<tr>
+<td>Exposes statistics from/sys/class/scsi_tape.</td>
+<td>系统没有该目录或者目录为空</td>
+<td>node_tape_io_now  <br>node_tape_io_time_seconds_total  <br>node_tape_io_others_total  <br>node_tape_read_bytes_total  <br>node_tape_reads_completed_total  <br>node_tape_read_time_seconds_total  <br>node_tape_written_bytes_total  <br>node_tape_writes_completed_total  <br>node_tape_write_time_seconds_total  <br>node_tape_residual_total</td>
+<td>/sys/class/scsi_tape</td>
+<td></td>
+</tr>
+<tr>
+<td>A summary of the number of active and enabled cgroups</td>
+<td>没指标</td>
+<td>node_cgroups_cgroups  <br>node_cgroups_enabled</td>
+<td>/proc/cgroups</td>
+<td>release-1.4加入的collector</td>
+</tr>
+<tr>
+<td>Exposes device statistics</td>
+<td>没指标</td>
+<td>node_devstat_bytes_total  <br>node_devstat_transfers_total  <br>node_devstat_blocks_total</td>
+<td></td>
+<td>不支持linux</td>
+</tr>
+<tr>
+<td>Exposes network interface information and network driver statistics equivalent toethtool,ethtool -S, andethtool -i.</td>
+<td>没指标</td>
+<td>node_ethtool_info  <br>node_ethtool_*  <br>node_ethtool_received_bytes_total  <br>node_ethtool_received_dropped_total  <br>node_ethtool_received_errors_total  <br>node_ethtool_received_packets_total  <br>node_ethtool_transmitted_bytes_total  <br>node_ethtool_transmitted_errors_total  <br>node_ethtool_transmitted_packets_total  <br>node_network_supported_port_info  <br>node_network_supported_speed_bytes  <br>node_network_autonegotiate_supported  <br>node_network_pause_supported  <br>node_network_asymmetricpause_supported  <br>node_network_advertised_speed_bytes  <br>node_network_autonegotiate_advertised  <br>node_network_pause_advertised  <br>node_network_asymmetricpause_advertised  <br>node_network_autonegotiate</td>
+<td></td>
+<td>指标名称node_ethtool_*根据不同网口设备还有其他参数</td>
+</tr>
+<tr>
+<td>Exposes statistics about devices in/proc/mdstat(does nothing if no/proc/mdstatpresent).</td>
+<td>没指标</td>
+<td>node_md_state  <br>node_md_disks  <br>node_md_disks_required  <br>node_md_blocks  <br>node_md_blocks_synced</td>
+<td>/proc/mdstat</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes filesystem statistics from/proc/self/mountstats. Exposes detailed NFS client statistics.</td>
+<td>没指标</td>
+<td>node_mountstats_nfs_age_seconds_total  <br>node_mountstats_nfs_read_bytes_total  <br>node_mountstats_nfs_write_bytes_total  <br>node_mountstats_nfs_direct_read_bytes_total  <br>node_mountstats_nfs_direct_write_bytes_total  <br>node_mountstats_nfs_total_read_bytes_total  <br>node_mountstats_nfs_total_write_bytes_total  <br>node_mountstats_nfs_read_pages_total  <br>node_mountstats_nfs_write_pages_total  <br>node_mountstats_nfs_transport_bind_total  <br>node_mountstats_nfs_transport_connect_total  <br>node_mountstats_nfs_transport_idle_time_seconds  <br>node_mountstats_nfs_transport_sends_total  <br>node_mountstats_nfs_transport_receives_total  <br>node_mountstats_nfs_transport_bad_transaction_ids_total  <br>node_mountstats_nfs_transport_backlog_queue_total  <br>node_mountstats_nfs_transport_maximum_rpc_slots  <br>node_mountstats_nfs_transport_sending_queue_total  <br>node_mountstats_nfs_transport_pending_queue_total  <br>node_mountstats_nfs_operations_requests_total  <br>node_mountstats_nfs_operations_transmissions_total  <br>node_mountstats_nfs_operations_major_timeouts_total  <br>node_mountstats_nfs_operations_sent_bytes_total  <br>node_mountstats_nfs_operations_received_bytes_total  <br>node_mountstats_nfs_operations_queue_time_seconds_total  <br>node_mountstats_nfs_operations_response_time_seconds_total  <br>node_mountstats_nfs_operations_request_time_seconds_total <br>node_mountstats_nfs_event_inode_revalidate_total  <br>node_mountstats_nfs_event_dnode_revalidate_total  <br>node_mountstats_nfs_event_data_invalidate_total  <br>node_mountstats_nfs_event_attribute_invalidate_total  <br>node_mountstats_nfs_event_vfs_open_total  <br>node_mountstats_nfs_event_vfs_lookup_total  <br>node_mountstats_nfs_event_vfs_access_total  <br>node_mountstats_nfs_event_vfs_update_page_total  <br>node_mountstats_nfs_event_vfs_read_page_total  <br>node_mountstats_nfs_event_vfs_read_pages_total  <br>node_mountstats_nfs_event_vfs_write_page_total  <br>node_mountstats_nfs_event_vfs_write_pages_total  <br>node_mountstats_nfs_event_vfs_getdents_total  <br>node_mountstats_nfs_event_vfs_setattr_total  <br>node_mountstats_nfs_event_vfs_flush_total  <br>node_mountstats_nfs_event_vfs_fsync_total  <br>node_mountstats_nfs_event_vfs_lock_total  <br>node_mountstats_nfs_event_vfs_file_release_total  <br>node_mountstats_nfs_event_truncation_total  <br>node_mountstats_nfs_event_write_extension_total  <br>node_mountstats_nfs_event_silly_rename_total  <br>node_mountstats_nfs_event_short_read_total  <br>node_mountstats_nfs_event_short_write_total  <br>node_mountstats_nfs_event_jukebox_delay_total  <br>node_mountstats_nfs_event_pnfs_read_total  <br>node_mountstats_nfs_event_pnfs_write_total</td>
+<td>/proc/self/mountstats</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes slab statistics from/proc/slabinfo. Note that permission of/proc/slabinfois usually 0400, so set it appropriately.</td>
+<td>没指标</td>
+<td>node_slabinfo_active_objects  <br>node_slabinfo_objects  <br>node_slabinfo_object_size_bytes  <br>node_slabinfo_objects_per_slab  <br>node_slabinfo_pages_per_slab</td>
+<td>/proc/slabinfo</td>
+<td>release-1.4加入的collector</td>
+</tr>
+<tr>
+<td>Exposes detailed softirq statistics from/proc/softirqs.</td>
+<td>没指标</td>
+<td>node_softirqs_functions_total</td>
+<td>/proc/softirqs</td>
+<td>release-1.6加入的collector</td>
+</tr>
+<tr>
+<td>Expose sysctl values from/proc/sys. Use--collector.sysctl.include(-info)to configure.</td>
+<td>没指标</td>
+<td>node_sysctl_*</td>
+<td>/proc/sys</td>
+<td>release-1.4加入的collector;  <br>指标名称*与参数‘--collector.sysctl.include’的值有关</td>
+</tr>
+<tr>
+<td>Exposes CPU frequency statistics</td>
+<td>没指标</td>
+<td>node_cpu_frequency_hertz  <br>node_cpu_frequency_min_hertz  <br>node_cpu_frequency_max_hertz  <br>node_cpu_scaling_frequency_hertz  <br>node_cpu_scaling_frequency_min_hertz  <br>node_cpu_scaling_frequency_max_hertz</td>
+<td>/sys/devices/system/cpu/cpu[0-9]*/cpufreq</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes system boot time derived from thekern.boottimesysctl.</td>
+<td>没指标</td>
+<td>node_boot_time_seconds</td>
+<td></td>
+<td>不支持linux</td>
+</tr>
+<tr>
+<td>Exposes netisr statistics</td>
+<td>没指标</td>
+<td>numthreads  <br>maxprot  <br>defaultqlimit  <br>maxqlimit  <br>bindthreads  <br>maxthreads</td>
+<td></td>
+<td>不支持linux，release-1.6加入的collector</td>
+</tr>
+<tr>
+<td>Exposes Distributed Replicated Block Device statistics (to version 8.4)</td>
+<td>没测试</td>
+<td>node_drdb_network_sent_bytes_total  <br>node_drdb_network_received_bytes_total  <br>node_drdb_disk_written_bytes_total  <br>node_drdb_disk_read_bytes_total  <br>node_drdb_activitylog_writes_total  <br>node_drdb_bitmap_writes_total  <br>node_drdb_local_pending  <br>node_drdb_remote_pending  <br>node_drdb_remote_unacknowledged  <br>node_drdb_application_pending  <br>node_drdb_epochs  <br>node_drdb_out_of_sync_bytes  <br>node_drdb_node_role_is_primary  <br>node_drdb_disk_state_is_up_to_date  <br>node_drdb_connected</td>
+<td>/proc/drdb</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes error detection and correction statistics.</td>
+<td>没测试</td>
+<td>node_edac_correctable_errors_total  <br>node_edac_uncorrectable_errors_total  <br>node_edac_csrow_correctable_errors_total  <br>node_edac_csrow_uncorrectable_errors_total</td>
+<td>/sys/devices/system/edac/mc/mc[0-9]*</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes execution statistics.</td>
+<td>没测试</td>
+<td>node_exec_context_switches_total  <br>node_exec_traps_total  <br>node_exec_system_calls_total  <br>node_exec_device_interrupts_total  <br>node_exec_software_interrupts_total  <br>node_exec_forks_total</td>
+<td></td>
+<td>不支持linux</td>
+</tr>
+<tr>
+<td>Exposes network statistics specific to InfiniBand and Intel OmniPath configurations.</td>
+<td>没测试</td>
+<td>node_infiniband_info  <br>node_infiniband_legacy_multicast_packets_received_total  <br>node_infiniband_legacy_multicast_packets_transmitted_total  <br>node_infiniband_legacy_data_received_bytes_total  <br>node_infiniband_legacy_packets_received_total  <br>node_infiniband_legacy_unicast_packets_received_total  <br>node_infiniband_legacy_unicast_packets_transmitted_total  <br>node_infiniband_legacy_data_transmitted_bytes_total  <br>node_infiniband_legacy_packets_transmitted_total  <br>node_infiniband_excessive_buffer_overrun_errors_total  <br>node_infiniband_link_downed_total  <br>node_infiniband_link_error_recovery_total  <br>node_infiniband_local_link_integrity_errors_total  <br>node_infiniband_multicast_packets_received_total  <br>node_infiniband_multicast_packets_transmitted_total  <br>node_infiniband_physical_state_id  <br>node_infiniband_port_constraint_errors_received_total  <br>node_infiniband_port_constraint_errors_transmitted_total  <br>node_infiniband_port_data_received_bytes_total  <br>node_infiniband_port_data_transmitted_bytes_total  <br>node_infiniband_port_discards_received_total  <br>node_infiniband_port_discards_transmitted_total  <br>node_infiniband_port_errors_received_total  <br>node_infiniband_port_packets_received_total  <br>node_infiniband_port_packets_transmitted_total  <br>node_infiniband_port_transmit_wait_total  <br>node_infiniband_rate_bytes_per_second  <br>node_infiniband_state_id  <br>node_infiniband_unicast_packets_received_total  <br>node_infiniband_unicast_packets_transmitted_total  <br>node_infiniband_port_receive_remote_physical_errors_total  <br>node_infiniband_port_receive_switch_relay_errors_total  <br>node_infiniband_symbol_error_total  <br>node_infiniband_vl15_dropped_total</td>
+<td>/sys/class/infiniband/</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes session counts fromlogind.</td>
+<td>没测试</td>
+<td>node_logind_sessions</td>
+<td>dbus</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes perf based metrics (Warning: Metrics are dependent on kernel configuration and settings).</td>
+<td>没测试</td>
+<td>node_perf_cpucycles_total  <br>node_perf_instructions_total  <br>node_perf_branch_instructions_total  <br>node_perf_branch_misses_total  <br>node_perf_cache_refs_total  <br>node_perf_cache_misses_total  <br>node_perf_ref_cpucycles_total  <br>node_perf_page_faults_total  <br>node_perf_context_switches_total  <br>node_perf_cpu_migrations_total  <br>node_perf_minor_faults_total  <br>node_perf_major_faults_total  <br>node_perf_cache_l1d_read_hits_total  <br>node_perf_cache_l1d_read_misses_total  <br>node_perf_cache_l1d_write_hits_total  <br>node_perf_cache_l1_instr_read_misses_total  <br>node_perf_cache_tlb_instr_read_hits_total  <br>node_perf_cache_tlb_instr_read_misses_total  <br>node_perf_cache_ll_read_hits_total  <br>node_perf_cache_ll_read_misses_total  <br>node_perf_cache_ll_write_hits_total  <br>node_perf_cache_ll_write_misses_total  <br>node_perf_cache_bpu_read_hits_total  <br>node_perf_cache_bpu_read_misses_total</td>
+<td><a href="https://github.com/hodgesds/perf-utils">github.com/hodgesds/perf-utils</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes service and system status fromsystemd.</td>
+<td>没测试</td>
+<td>node_systemd_unit_state  <br>node_systemd_unit_start_time_seconds  <br>node_systemd_unit_tasks_current  <br>node_systemd_unit_tasks_max  <br>node_systemd_system_running  <br>node_systemd_units  <br>node_systemd_service_restart_total  <br>node_systemd_timer_last_trigger_seconds  <br>node_systemd_socket_accepted_connections_total  <br>node_systemd_socket_current_connections  <br>node_systemd_socket_refused_connections_total  <br>node_systemd_version</td>
+<td>dbus</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposes WiFi device and station statistics.</td>
+<td>没测试</td>
+<td>node_wifi_interface_frequency_hertz  <br>node_wifi_station_info  <br>node_wifi_station_connected_seconds_total  <br>node_wifi_station_inactive_seconds  <br>node_wifi_station_receive_bits_per_second  <br>node_wifi_station_transmit_bits_per_second  <br>node_wifi_station_receive_bytes_total  <br>node_wifi_station_transmit_bytes_total  <br>node_wifi_station_signal_dbm  <br>node_wifi_station_transmit_retries_total  <br>node_wifi_station_transmit_failed_total  <br>node_wifi_station_beacon_loss_total</td>
+<td><a href="https://github.com/mdlayher/wifi" title="github.com/mdlayher/wifi">github.com/mdlayher/wifi</a></td>
+<td></td>
+</tr>
+<tr>
+<td>ExposesZFSperformance statistics.</td>
+<td>没测试</td>
+<td>node_zfs_pool_state  <br>node_zfs_zpool_dataset_*  <br>node_zfs_zpool_*  <br>node_zfs_abd_*  <br>node_zfs_arc_*  <br>node_zfs_dbuf_*  <br>node_zfs_dmu_tx_*  <br>node_zfs_dnode_*  <br>node_zfs_fm_*  <br>node_zfs_vdev_cache_*  <br>node_zfs_vdev_mirror_*  <br>node_zfs_xuio_*  <br>node_zfs_zfetch_*  <br>node_zfs_zil_*</td>
+<td>/proc/spl/kstat/zfs/*</td>
+<td>*由kstat-zfs-misc-x-x替换，具体根据/proc/spl/kstat/zfs/*确定</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://longxiucai.github.io">龙宇翔的小本本</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","longxiucai/longxiucai.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>
+
+</html>
