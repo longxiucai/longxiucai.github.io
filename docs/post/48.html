@@ -167,6 +167,18 @@ cluster-cidr的ipv6配置为fc00::/48</p>
       natOutgoing: Enabled
       nodeSelector: all()
 </code></pre>
+<h2>手动部署的calico需要修改calico-node的env</h2>
+<pre class="notranslate"><code class="notranslate">        - name: FELIX_IPV6SUPPORT
+          value: "true"
+        - name: IP6
+          value: autodetect
+        - name: CALICO_IPV6POOL_VXLAN
+          value: Always
+</code></pre>
+<p>以及calico的配置文件</p>
+<pre class="notranslate"><code class="notranslate">                            "ipv6_pools": ["fc00::/48"],
+                            "assign_ipv6": "true"
+</code></pre>
 <h1>验证</h1>
 <p>创建nginx应用与svc，svc的<code class="notranslate">ipFamilyPolicy: PreferDualStack</code>表示双栈<br>
 nginx-pod-svc.yaml文件如下：</p>

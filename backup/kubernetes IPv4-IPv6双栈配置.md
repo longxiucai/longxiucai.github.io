@@ -59,7 +59,20 @@ clusterCIDR: 10.119.0.0/22,fc00::/48
       natOutgoing: Enabled
       nodeSelector: all()
 ```
-
+## 手动部署的calico需要修改calico-node的env
+```
+        - name: FELIX_IPV6SUPPORT
+          value: "true"
+        - name: IP6
+          value: autodetect
+        - name: CALICO_IPV6POOL_VXLAN
+          value: Always
+```
+以及calico的配置文件
+```
+                            "ipv6_pools": ["fc00::/48"],
+                            "assign_ipv6": "true"
+```
 # 验证
 创建nginx应用与svc，svc的`ipFamilyPolicy: PreferDualStack`表示双栈
 nginx-pod-svc.yaml文件如下：
