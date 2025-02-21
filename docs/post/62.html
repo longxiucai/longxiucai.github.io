@@ -10,429 +10,15 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="Gmeek-html<!DOCTYPE html><html lang='zh-CN'>
-<head>
-    <meta charset='UTF-8'>
-    <title>love</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #ffe6f2;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-
-        h1 {
-            color: #ff69b4;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 10;
-        }
-
-        .heart-img {
-            width: 100px;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.2s ease; /* 加快动画速度 */
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #yesBtn {
-            background-color: #ff69b4;
-            color: white;
-        }
-
-        #noBtn {
-            background-color: #d3d3d3;
-            color: #666;
-        }
-
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .new-interface {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 230, 242, 0.9); /* 粉色半透明背景 */
-            color: #ff69b4;
-            text-align: center;
-            padding-top: 20%;
-            font-size: 2em;
-            z-index: 1000;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.8em;
-            }
-            .buttons {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-<body>
-    <canvas id='fireworksCanvas'></canvas>
-    <img src='/static/heart.png' alt='爱心' class='heart-img' onerror='this.style.display='none''>
-    <h1>可以成为我的恋人吗？</h1>
-    <div class='buttons'>
-        <button id='yesBtn' onclick='accept()'>可❤️以</button>
-        <button id='noBtn' onclick='shrink()'>不可以</button>
-    </div>
-
-    <div id='newInterface' class='new-interface'>
-        <h2>❤️ 就知道你会同意的 ❤️</h2>
-        <p>愿我们的未来如烟花般绚烂！</p>
-    </div>
-
-    <script>
-        // ==================== 按钮交互逻辑 ====================
-        function shrink() {
-            const yesBtn = document.getElementById('yesBtn');
-            const noBtn = document.getElementById('noBtn');
-            
-            // 增大可以按钮（加快变化速度）
-            const currentYesSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
-            yesBtn.style.fontSize = (currentYesSize * 1.5) + 'px'; // 增大比例调整为 1.5
-            yesBtn.style.padding = (currentYesSize * 0.8) + 'px ' + (currentYesSize * 1.6) + 'px';
-            
-            // 减小不可以按钮（加快变化速度）
-            const currentNoSize = parseFloat(window.getComputedStyle(noBtn).fontSize);
-            if (currentNoSize > 8) {
-                noBtn.style.fontSize = (currentNoSize * 0.6) + 'px'; // 缩小比例调整为 0.6
-                noBtn.style.padding = (currentNoSize * 0.2) + 'px ' + (currentNoSize * 0.4) + 'px';
-            }
-        }
-
-        function accept() {
-            const newInterface = document.getElementById('newInterface');
-            newInterface.style.display = 'block';
-            launchFireworks();
-        }
-
-        // ==================== 烟花特效 ====================
-        const canvas = document.getElementById('fireworksCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let fireworks = [];
-
-        function Firework(x, y) {
-            this.x = x;
-            this.y = y;
-            this.color = 'hsl(' + (Math.random() * 360) + ', 100%, 50%)';
-            this.particles = [];
-            for (let i = 0; i < 30; i++) {
-                this.particles.push(new Particle(this.x, this.y, this.color));
-            }
-        }
-
-        function Particle(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.color = color;
-            this.size = Math.random() * 4 + 1;
-            this.speedX = (Math.random() - 0.5) * 6;
-            this.speedY = (Math.random() - 0.5) * 6;
-            this.life = 100;
-        }
-
-        Particle.prototype.update = function () {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            this.speedY += 0.05; // 模拟重力
-            this.life -= 2;
-        }
-
-        Particle.prototype.draw = function () {
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function animate() {
-            ctx.fillStyle = 'rgba(255, 230, 242, 0.9)'; // 粉色背景，轻微透明
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            for (let i = fireworks.length - 1; i >= 0; i--) {
-                let firework = fireworks[i];
-                for (let j = firework.particles.length - 1; j >= 0; j--) {
-                    let particle = firework.particles[j];
-                    particle.update();
-                    particle.draw();
-
-                    if (particle.life <= 0) {
-                        firework.particles.splice(j, 1);
-                    }
-                }
-                if (firework.particles.length === 0) {
-                    fireworks.splice(i, 1);
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-
-        function launchFireworks() {
-            setInterval(() => {
-                fireworks.push(new Firework(
-                    Math.random() * canvas.width,
-                    Math.random() * canvas.height / 2
-                ));
-            }, 500); // 每 500ms 发射一个烟花
-        }
-
-        animate();
-    </script>
-</body>
-</html>。">
-<meta property="og:title" content="test">
-<meta property="og:description" content="Gmeek-html<!DOCTYPE html><html lang='zh-CN'>
-<head>
-    <meta charset='UTF-8'>
-    <title>love</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #ffe6f2;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-
-        h1 {
-            color: #ff69b4;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 10;
-        }
-
-        .heart-img {
-            width: 100px;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.2s ease; /* 加快动画速度 */
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #yesBtn {
-            background-color: #ff69b4;
-            color: white;
-        }
-
-        #noBtn {
-            background-color: #d3d3d3;
-            color: #666;
-        }
-
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .new-interface {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 230, 242, 0.9); /* 粉色半透明背景 */
-            color: #ff69b4;
-            text-align: center;
-            padding-top: 20%;
-            font-size: 2em;
-            z-index: 1000;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.8em;
-            }
-            .buttons {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-<body>
-    <canvas id='fireworksCanvas'></canvas>
-    <img src='/static/heart.png' alt='爱心' class='heart-img' onerror='this.style.display='none''>
-    <h1>可以成为我的恋人吗？</h1>
-    <div class='buttons'>
-        <button id='yesBtn' onclick='accept()'>可❤️以</button>
-        <button id='noBtn' onclick='shrink()'>不可以</button>
-    </div>
-
-    <div id='newInterface' class='new-interface'>
-        <h2>❤️ 就知道你会同意的 ❤️</h2>
-        <p>愿我们的未来如烟花般绚烂！</p>
-    </div>
-
-    <script>
-        // ==================== 按钮交互逻辑 ====================
-        function shrink() {
-            const yesBtn = document.getElementById('yesBtn');
-            const noBtn = document.getElementById('noBtn');
-            
-            // 增大可以按钮（加快变化速度）
-            const currentYesSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
-            yesBtn.style.fontSize = (currentYesSize * 1.5) + 'px'; // 增大比例调整为 1.5
-            yesBtn.style.padding = (currentYesSize * 0.8) + 'px ' + (currentYesSize * 1.6) + 'px';
-            
-            // 减小不可以按钮（加快变化速度）
-            const currentNoSize = parseFloat(window.getComputedStyle(noBtn).fontSize);
-            if (currentNoSize > 8) {
-                noBtn.style.fontSize = (currentNoSize * 0.6) + 'px'; // 缩小比例调整为 0.6
-                noBtn.style.padding = (currentNoSize * 0.2) + 'px ' + (currentNoSize * 0.4) + 'px';
-            }
-        }
-
-        function accept() {
-            const newInterface = document.getElementById('newInterface');
-            newInterface.style.display = 'block';
-            launchFireworks();
-        }
-
-        // ==================== 烟花特效 ====================
-        const canvas = document.getElementById('fireworksCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let fireworks = [];
-
-        function Firework(x, y) {
-            this.x = x;
-            this.y = y;
-            this.color = 'hsl(' + (Math.random() * 360) + ', 100%, 50%)';
-            this.particles = [];
-            for (let i = 0; i < 30; i++) {
-                this.particles.push(new Particle(this.x, this.y, this.color));
-            }
-        }
-
-        function Particle(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.color = color;
-            this.size = Math.random() * 4 + 1;
-            this.speedX = (Math.random() - 0.5) * 6;
-            this.speedY = (Math.random() - 0.5) * 6;
-            this.life = 100;
-        }
-
-        Particle.prototype.update = function () {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            this.speedY += 0.05; // 模拟重力
-            this.life -= 2;
-        }
-
-        Particle.prototype.draw = function () {
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function animate() {
-            ctx.fillStyle = 'rgba(255, 230, 242, 0.9)'; // 粉色背景，轻微透明
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            for (let i = fireworks.length - 1; i >= 0; i--) {
-                let firework = fireworks[i];
-                for (let j = firework.particles.length - 1; j >= 0; j--) {
-                    let particle = firework.particles[j];
-                    particle.update();
-                    particle.draw();
-
-                    if (particle.life <= 0) {
-                        firework.particles.splice(j, 1);
-                    }
-                }
-                if (firework.particles.length === 0) {
-                    fireworks.splice(i, 1);
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-
-        function launchFireworks() {
-            setInterval(() => {
-                fireworks.push(new Firework(
-                    Math.random() * canvas.width,
-                    Math.random() * canvas.height / 2
-                ));
-            }, 500); // 每 500ms 发射一个烟花
-        }
-
-        animate();
-    </script>
-</body>
-</html>。">
+<meta name="description" content="# 示例
+使用slog将日志保存到文件，同时输出到控制台。">
+<meta property="og:title" content="【go】slog使用以及配合第三方库实现log rotation">
+<meta property="og:description" content="# 示例
+使用slog将日志保存到文件，同时输出到控制台。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://longxiucai.github.io/post/62.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
-<title>test</title>
+<title>【go】slog使用以及配合第三方库实现log rotation</title>
 
 
 
@@ -475,7 +61,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 
 <body>
     <div id="header">
-<h1 class="postTitle">test</h1>
+<h1 class="postTitle">【go】slog使用以及配合第三方库实现log rotation</h1>
 <div class="title-right">
     <a href="https://longxiucai.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
         <svg class="octicon" width="16" height="16">
@@ -493,215 +79,104 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p>Gmeek-html</p>
-
-    
-    &lt;title&gt;love&lt;/title&gt;
-    &lt;style&gt;
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #ffe6f2;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-<pre class="notranslate"><code class="notranslate">    h1 {
-        color: #ff69b4;
-        margin-bottom: 30px;
-        font-size: 2.5em;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        position: relative;
-        z-index: 10;
-    }
-
-    .heart-img {
-        width: 100px;
-        margin-bottom: 20px;
-        position: relative;
-        z-index: 10;
-    }
-
-    .buttons {
-        display: flex;
-        gap: 20px;
-        position: relative;
-        z-index: 10;
-    }
-
-    button {
-        padding: 15px 30px;
-        font-size: 18px;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        transition: all 0.2s ease; /* 加快动画速度 */
-        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    #yesBtn {
-        background-color: #ff69b4;
-        color: white;
-    }
-
-    #noBtn {
-        background-color: #d3d3d3;
-        color: #666;
-    }
-
-    canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
-
-    .new-interface {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 230, 242, 0.9); /* 粉色半透明背景 */
-        color: #ff69b4;
-        text-align: center;
-        padding-top: 20%;
-        font-size: 2em;
-        z-index: 1000;
-    }
-
-    @media (max-width: 600px) {
-        h1 {
-            font-size: 1.8em;
-        }
-        .buttons {
-            flex-direction: column;
-        }
-    }
-&lt;/style&gt;
+<div class="markdown-body" id="postBody"><h1>示例</h1>
+<p>使用slog将日志保存到文件，同时输出到控制台。</p>
+<p>使用第三方库<code class="notranslate">import "gopkg.in/natefinch/lumberjack.v2"</code>实现log rotation</p>
+<pre class="notranslate"><code class="notranslate">	// 配置 lumberjack
+	logFile := &amp;lumberjack.Logger{
+		Filename:   common.LogFilePath, // 日志文件路径
+		MaxSize:    100,                // 单个日志文件的最大大小（MB）
+		MaxBackups: 3,                  // 保留的旧日志文件数量
+		MaxAge:     28,                 // 保留旧日志文件的最大天数
+		Compress:   true,               // 是否压缩旧日志文件
+	}
+	// 配置 slog 写入文件、同时写到控制台
+	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	logger := slog.New(slog.NewTextHandler(multiWriter, &amp;slog.HandlerOptions{
+		Level: slog.LevelInfo, // 设定日志等级
+	}))
+	slog.SetDefault(logger) // 设置全局默认日志
+	slog.Info("log saved to", slog.String("path", common.LogFilePath))
 </code></pre>
-
-
-    
-    <p><a target="_blank" rel="noopener noreferrer" href="/static/heart.png"><img src="/static/heart.png" alt="爱心" style="max-width: 100%;"></a></p>
-    <h1>可以成为我的恋人吗？</h1>
-    <div>
-        可❤️以
-        不可以
-    </div>
-<pre class="notranslate"><code class="notranslate">&lt;div id="newInterface" class="new-interface"&gt;
-    &lt;h2&gt;❤️ 就知道你会同意的 ❤️&lt;/h2&gt;
-    &lt;p&gt;愿我们的未来如烟花般绚烂！&lt;/p&gt;
-&lt;/div&gt;
-
-&lt;script&gt;
-    // ==================== 按钮交互逻辑 ====================
-    function shrink() {
-        const yesBtn = document.getElementById('yesBtn');
-        const noBtn = document.getElementById('noBtn');
-        
-        // 增大可以按钮（加快变化速度）
-        const currentYesSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
-        yesBtn.style.fontSize = (currentYesSize * 1.5) + 'px'; // 增大比例调整为 1.5
-        yesBtn.style.padding = (currentYesSize * 0.8) + 'px ' + (currentYesSize * 1.6) + 'px';
-        
-        // 减小不可以按钮（加快变化速度）
-        const currentNoSize = parseFloat(window.getComputedStyle(noBtn).fontSize);
-        if (currentNoSize &gt; 8) {
-            noBtn.style.fontSize = (currentNoSize * 0.6) + 'px'; // 缩小比例调整为 0.6
-            noBtn.style.padding = (currentNoSize * 0.2) + 'px ' + (currentNoSize * 0.4) + 'px';
-        }
-    }
-
-    function accept() {
-        const newInterface = document.getElementById('newInterface');
-        newInterface.style.display = 'block';
-        launchFireworks();
-    }
-
-    // ==================== 烟花特效 ====================
-    const canvas = document.getElementById("fireworksCanvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let fireworks = [];
-
-    function Firework(x, y) {
-        this.x = x;
-        this.y = y;
-        this.color = "hsl(" + (Math.random() * 360) + ", 100%, 50%)";
-        this.particles = [];
-        for (let i = 0; i &lt; 30; i++) {
-            this.particles.push(new Particle(this.x, this.y, this.color));
-        }
-    }
-
-    function Particle(x, y, color) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.size = Math.random() * 4 + 1;
-        this.speedX = (Math.random() - 0.5) * 6;
-        this.speedY = (Math.random() - 0.5) * 6;
-        this.life = 100;
-    }
-
-    Particle.prototype.update = function () {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        this.speedY += 0.05; // 模拟重力
-        this.life -= 2;
-    }
-
-    Particle.prototype.draw = function () {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    function animate() {
-        ctx.fillStyle = "rgba(255, 230, 242, 0.9)"; // 粉色背景，轻微透明
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (let i = fireworks.length - 1; i &gt;= 0; i--) {
-            let firework = fireworks[i];
-            for (let j = firework.particles.length - 1; j &gt;= 0; j--) {
-                let particle = firework.particles[j];
-                particle.update();
-                particle.draw();
-
-                if (particle.life &lt;= 0) {
-                    firework.particles.splice(j, 1);
-                }
-            }
-            if (firework.particles.length === 0) {
-                fireworks.splice(i, 1);
-            }
-        }
-        requestAnimationFrame(animate);
-    }
-
-    function launchFireworks() {
-        setInterval(() =&gt; {
-            fireworks.push(new Firework(
-                Math.random() * canvas.width,
-                Math.random() * canvas.height / 2
-            ));
-        }, 500); // 每 500ms 发射一个烟花
-    }
-
-    animate();
-&lt;/script&gt;
-</code></pre>
-
-</div>
+<h1>lumberjack参数</h1>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>字段名</th>
+<th>类型</th>
+<th>作用</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Filename</td>
+<td>string</td>
+<td>指定日志文件路径</td>
+<td>为空时，默认使用 &lt;进程名&gt;-lumberjack.log 存放在 os.TempDir()</td>
+</tr>
+<tr>
+<td>MaxSize</td>
+<td>int</td>
+<td>日志文件 最大大小（MB）</td>
+<td>例如 MaxSize: 10，表示日志文件 超过 10MB 就会进行切割</td>
+</tr>
+<tr>
+<td>MaxAge</td>
+<td>int</td>
+<td>最大保留天数</td>
+<td>旧日志超过 MaxAge 天后删除（0 表示不按天删除）</td>
+</tr>
+<tr>
+<td>MaxBackups</td>
+<td>int</td>
+<td>最大保留日志文件数</td>
+<td>旧日志文件超过 MaxBackups 后会被删除</td>
+</tr>
+<tr>
+<td>LocalTime</td>
+<td>bool</td>
+<td>是否使用 本地时间 作为日志文件时间戳</td>
+<td>false 时使用 UTC 时间</td>
+</tr>
+<tr>
+<td>Compress</td>
+<td>bool</td>
+<td>是否对 旧日志进行 gzip 压缩</td>
+<td>true 表示对历史日志进行 .gz 压缩</td>
+</tr>
+<tr>
+<td>size</td>
+<td>int64</td>
+<td>记录当前日志文件的大小</td>
+<td>内部使用</td>
+</tr>
+<tr>
+<td>file</td>
+<td>*os.File</td>
+<td>当前日志文件的文件句柄</td>
+<td>用于读写日志</td>
+</tr>
+<tr>
+<td>mu</td>
+<td>sync.Mutex</td>
+<td>互斥锁</td>
+<td>确保多线程安全</td>
+</tr>
+<tr>
+<td>millCh</td>
+<td>chan bool</td>
+<td>信号通道</td>
+<td>控制日志清理（删除旧日志等）</td>
+</tr>
+<tr>
+<td>startMill</td>
+<td>sync.Once</td>
+<td>确保 millCh 只初始化一次</td>
+<td>避免重复启动清理任务</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
