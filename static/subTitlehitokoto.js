@@ -23,12 +23,10 @@ function handleResponse(data) {
 
         // 使用解构来处理数据字段
         const { hitokoto, from, from_who } = data;
-
-        // 防止undefined或null值
-        const safeHitokoto = hitokoto || '未知的句子';
+        const text = hitokoto || '未知的句子';
         const safeFrom = from || '未知来源';
         const safeFromWho = from_who || '未知作者';
-
+		const textFrom = safeFrom +'|'+ safeFromWho
         targetDiv.innerHTML = `
             <div style="
                 padding: 12px 20px;
@@ -42,10 +40,10 @@ function handleResponse(data) {
                 transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
             ">
                 <p style="font-size: 18px; font-weight: bold; color: ${textColor}; margin-bottom: 8px;">
-                    ${safeHitokoto}
+                    ${text}
                 </p>
                 <p style="text-align: right; font-size: 14px; color: ${subTextColor};margin-bottom: 0px;">
-           			 ------ ${safeFrom}  | ${safeFromWho}
+           			 ------ ${textFrom}
                 </p>
             </div>
         `;
