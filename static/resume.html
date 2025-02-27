@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人简介</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: space-between;
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .contact-info a {
+            color: white;
+            text-decoration: none;
+        }
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>龙宇翔</h1>
+    <div class="contact-info">
+        <p>邮箱: <a href="mailto:yxlong@hunnu.edu.cn">yxlong@hunnu.edu.cn</a></p>
+        <p>地点: 长沙</p>
+        <p>性别: 男</p>
+        <p>年龄: <span id="age"></span></p>
+        <p>毕业院校: 湖南师范大学</p>
+        <p>学历: 全日制本科</p>
+    </div>
+
+    <div class="section">
+        <h2>个人简介</h2>
+        <p>我是一名云原生开发工程师，拥有丰富的 Kubernetes (k8s) 运维和开发经验。在过去的项目中，我主要负责 Kubernetes 集群的搭建与优化，深入理解并使用 Go 开发自动化运维工具。</p>
+        <p>擅长监控告警系统的设计与实现，能通过 Prometheus、Grafana 、自研工具有效地监控集群健康，及时发现潜在问题并进行处理。</p>
+        <p>热衷于不断学习新技术，致力于提升系统的稳定性和可扩展性，帮助团队高效地解决实际问题。</p>
+    </div>
+</div>
+
+<script>
+    function calculateAge(birthDate) {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const month = today.getMonth();
+        if (month < birth.getMonth() || (month === birth.getMonth() && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }
+    const birthDate = '1999-12-10';
+    document.getElementById('age').textContent = calculateAge(birthDate);
+</script>
+
+</body>
+</html>
