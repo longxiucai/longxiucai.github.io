@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   resumeWrapper.appendChild(resumeIframe);
   document.body.appendChild(resumeWrapper);
+
   // 创建悬浮按钮（改为 About Me 和图标）
   const toggleButton = document.createElement("div");
   toggleButton.style.position = "fixed";
@@ -60,9 +61,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.body.appendChild(toggleButton);
 
-
-
-
   let isResumeVisible = false;
   let isClickedInsideResume = false; // 新增标记
 
@@ -81,13 +79,11 @@ document.addEventListener("DOMContentLoaded", function () {
     let startLeft = buttonRect.left + buttonRect.width / 2;
     let startTop = buttonRect.top + buttonRect.height / 2;
 
-    console.log("动画起点（按钮中心）:", { startLeft, startTop });
-
     // 简历的目标宽度和高度
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    const resumeWidth = Math.min(windowWidth * 0.5, 800);
-    const resumeHeight = windowHeight * 0.8;
+    const resumeWidth = 880; // 固定宽度
+    const resumeHeight = 565; // 固定高度
 
     // 计算简历的目标位置（从按钮位置展开）
     let finalLeft, finalTop;
@@ -104,7 +100,6 @@ document.addEventListener("DOMContentLoaded", function () {
       finalTop = buttonRect.top + buttonRect.height;
     }
 
-    console.log("动画目标位置:", { finalLeft, finalTop, resumeWidth, resumeHeight });
 
     // 设置简历的初始位置和大小
     resumeWrapper.style.left = `${startLeft}px`;
@@ -127,7 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (isResumeVisible) {
       // 关闭简历，回到按钮当前位置
       const buttonRect = logButtonPosition("关闭时按钮位置");
-      console.log("按钮最新位置：", buttonRect);
       resumeWrapper.style.left = `${buttonRect.left}px`;
       resumeWrapper.style.top = `${buttonRect.top}px`;
       resumeWrapper.style.width = "0px";
