@@ -50,7 +50,7 @@ function handleResponse(data) {
                 cursor: pointer; /* 让用户知道可以点击 */
                 overflow: hidden;
                 transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
-            " onclick="loadRandomQuote()">
+            "title="单击切换文字内容" onclick="loadRandomQuote()">
                 <div style="position: relative; z-index: 1;">
                     <p style="font-size: 18px; font-weight: bold; color: ${textColor}; margin-bottom: 8px;">
                         ${text}
