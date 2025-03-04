@@ -27,27 +27,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 创建悬浮按钮（改为 About Me 和图标）
   const toggleButton = document.createElement("div");
-  toggleButton.style.position = "fixed";
-  toggleButton.style.width = "100px"; // 适当加宽
-  toggleButton.style.height = "50px";
-  toggleButton.style.lineHeight = "50px";
-  toggleButton.style.textAlign = "center";
-  toggleButton.style.background = "linear-gradient(135deg, #3498db, #5dade2)";
-  toggleButton.style.color = "#fff";
-  toggleButton.style.borderRadius = "25px"; // 圆角更自然
-  toggleButton.style.cursor = "pointer";
-  toggleButton.style.fontSize = "18px"; // 字体稍大
-  toggleButton.style.fontWeight = "bold";
-  toggleButton.style.userSelect = "none";
-  toggleButton.style.zIndex = "10000";
-  toggleButton.style.top = "10px";
-  toggleButton.style.left = "10px";
-  toggleButton.style.padding = "0 20px";
-  toggleButton.style.display = "flex"; // 让图标和文本更好对齐
-  toggleButton.style.alignItems = "center";
-  toggleButton.style.justifyContent = "center";
-  toggleButton.style.boxShadow = "0 4px 10px rgba(0, 0, 0)"; // 添加阴影
-  toggleButton.style.transition = "all 0.3s ease"; // 平滑过渡
+toggleButton.style.position = "fixed";
+toggleButton.style.width = "100px"; // 适当加宽
+toggleButton.style.height = "50px";
+toggleButton.style.lineHeight = "50px";
+toggleButton.style.textAlign = "center";
+toggleButton.style.background = "linear-gradient(135deg, #3498db, #5dade2)"; 
+toggleButton.style.color = "rgba(20,20,20)";
+toggleButton.style.borderRadius = "25px"; // 圆角更自然
+toggleButton.style.cursor = "pointer";
+toggleButton.style.fontSize = "18px"; // 字体稍大
+toggleButton.style.fontWeight = "bold";
+toggleButton.style.userSelect = "none";
+toggleButton.style.zIndex = "10000";
+toggleButton.style.top = "10px";
+toggleButton.style.left = "10px";
+toggleButton.style.padding = "0 20px";
+toggleButton.style.display = "flex"; // 让图标和文本更好对齐
+toggleButton.style.alignItems = "center";
+toggleButton.style.justifyContent = "center";
+toggleButton.style.border = "none";
+toggleButton.style.boxShadow = "0 3px 8px rgba(52, 152, 299)"; // 添加阴影
+toggleButton.style.transition = "all 0.3s ease"; // 平滑过渡
 
 
   // 创建图标并插入按钮
@@ -78,28 +79,29 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   // 监听窗口变化，调整按钮位置
   function updateButtonPosition() {
-    if (window.innerWidth < 601) {
-      let initialTop = 25; // 初始顶部位置
-      let scrollOffset = window.scrollY; // 获取当前滚动位置
-      let newTop = initialTop - scrollOffset; // 让按钮随滚动上移
-      if (newTop < -60) { // 当按钮滚动到 -60px 以上时，彻底隐藏
-        toggleButton.style.opacity = "0";
-        toggleButton.style.pointerEvents = "none"; // 禁用点击
-      } else {
-        toggleButton.style.opacity = "1";
-        toggleButton.style.pointerEvents = "auto"; // 重新启用点击
-      }
+  if (window.innerWidth < 601) {
+    let initialTop = 25; // 初始顶部位置
+    let scrollOffset = window.scrollY; // 获取当前滚动位置
+    let newTop = initialTop - scrollOffset; // 让按钮随滚动上移
 
-      toggleButton.style.position = "absolute"; // 让按钮随页面滚动
-      toggleButton.style.top = newTop + "px"; // 更新 top 位置
-      toggleButton.style.left = "60px";
+    if (newTop < -60) { // 当按钮滚动到 -60px 以上时，彻底隐藏
+      toggleButton.style.opacity = "0";
+      toggleButton.style.pointerEvents = "none"; // 禁用点击
     } else {
-      toggleButton.style.position = "fixed"; // PC 端按钮固定不变
-      toggleButton.style.top = "10px";
-      toggleButton.style.left = "10px";
-      toggleButton.style.opacity = "1"; // 确保 PC 端按钮不会消失
-      toggleButton.style.pointerEvents = "auto";
+      toggleButton.style.opacity = "1";
+      toggleButton.style.pointerEvents = "auto"; // 重新启用点击
     }
+
+    toggleButton.style.position = "absolute"; // 让按钮随页面滚动
+    toggleButton.style.top = newTop + "px"; // 更新 top 位置
+    toggleButton.style.left = "60px";
+  } else {
+    toggleButton.style.position = "fixed"; // PC 端按钮固定不变
+    toggleButton.style.top = "10px";
+    toggleButton.style.left = "10px";
+    toggleButton.style.opacity = "1"; // 确保 PC 端按钮不会消失
+    toggleButton.style.pointerEvents = "auto";
+  }
 
   }
 
