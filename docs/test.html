@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TesT</title>
+<style>@import url('https://longxiucai.github.io/spoiler.css');</style>
+    <style>
+
+        /* A4纸大小（固定） */
+        .a4-container {
+            width: 210mm;
+            height: 297mm;
+            margin: 20px auto;
+            padding: 40px;
+            /* A4容器的内边距 */
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            /* 防止内容溢出 */
+        }
+
+        /* 简历容器（大小会变化） */
+        .resume-container {
+            width: 100%;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            /* 初始行间距 */
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            /* 标题居中 */
+        }
+
+        /* 个人信息部分 */
+        .personal-info-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .personal-info {
+            flex: 1;
+            text-align: center;
+        }
+
+        .personal-info p {
+            margin: 0px 0;
+            /* 调整行间距 */
+        }
+
+        /* 照片容器 */
+        .photo-container {
+            width: 25mm;
+            /* 1 英寸 */
+            height: 35mm;
+            /* 1 英寸 */
+            border: 2px solid #ccc;
+            /* 添加边框 */
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* 确保图片填充 */
+        }
+
+        /* 允许用户更换照片（可选） */
+        .photo-upload {
+            display: none;
+            /* 默认隐藏 */
+        }
+
+        .edit-mode .photo-upload {
+            display: block;
+            /* 只有在编辑模式下显示 */
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .section p,
+        .section ul {
+            margin: 10px 0;
+        }
+
+        .section ul {
+            padding-left: 20px;
+        }
+
+        .editable {
+            padding-left: 10px;
+            position: relative;
+            /* 使删除按钮定位相对当前项目 */
+        }
+
+        .edit-mode .editable {
+            background-color: #f9f9f9;
+        }
+
+        .project {
+            margin-bottom: 20px;
+        }
+
+        .edit-button,
+        .cancel-button,
+        .add-project {
+            margin: 10px 5px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cancel-button {
+            background-color: #dc3545;
+        }
+
+        .delete-project {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: transparent;
+            color: #dc3545;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .delete-project:hover {
+            color: #ff0000;
+        }
+
+        .add-project {
+            display: none;
+            /* 默认隐藏按钮 */
+        }
+
+        .edit-mode .add-project {
+            display: inline-block;
+            /* 编辑模式下显示按钮 */
+        }
+
+        .button-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* 添加项目的按钮固定在A4容器底部 */
+        .add-project-container {
+            position: absolute;
+            bottom: 0px;
+            /* 与A4容器的内边距一致 */
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="button-container">
+        <button class="edit-button" onclick="toggleEditMode(true)">编辑简历</button>
+        <button class="cancel-button" onclick="toggleEditMode(false)" style="display: none;">取消编辑</button>
+        <button class="edit-button" onclick="adjustLineHeight()">智能一页</button>
+    </div>
+
+    <!-- A4容器（固定大小） -->
+    <div class="a4-container">
+        <!-- 简历容器（大小会变化） -->
+        <div class="resume-container">
+            <!-- 个人信息部分 -->
+            <!-- 个人信息 + 照片 -->
+            <div class="personal-info-container">
+                <div class="personal-info editable" contenteditable="false">
+                    <h1 class="spoiler">龙宇翔</h1>
+                    <p><strong>求职意向：</strong>Golang、运维工程师 | 长沙 </p>
+                    <p><strong>年龄：</strong>25岁 | <strong>性别：</strong>男
+                    </p>
+                    <p> <strong>邮箱：</strong>yxlong@hunnu.edu.cn</p>
+                </div>
+                <div class="photo-container">
+                    <img id="profile-photo" src="default-photo.jpg" alt="个人照片">
+                    <input type="file" id="photo-upload" class="photo-upload" accept="image/*"
+                        onchange="previewPhoto(event)">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>项目经验</h2>
+                <div id="project-experience">
+            </div>
+        </div>
+
+        <!-- 添加项目的按钮固定在A4容器底部 -->
+        <div class="add-project-container">
+            <button class="add-project" onclick="addProject()">添加项目</button>
+        </div>
+    </div>
+    <script>
+        // 初始行间距
+        const initialLineHeight = 1.6;
+        function toggleEditMode(isEdit) {
+            const resumeContainer = document.querySelector('.resume-container');
+            const editables = document.querySelectorAll('.editable');
+            const addProjectButton = document.querySelector('.add-project');
+            const deleteButtons = document.querySelectorAll('.delete-project');
+            const editButton = document.querySelector('.edit-button');
+            const cancelButton = document.querySelector('.cancel-button');
+            const photoUpload = document.getElementById('photo-upload');
+            if (isEdit) {
+                resumeContainer.classList.add('edit-mode');
+                editables.forEach(editable => editable.contentEditable = 'true');
+                addProjectButton.style.display = 'inline-block';
+                deleteButtons.forEach(button => button.style.display = 'inline-block');
+                editButton.style.display = 'none';
+                cancelButton.style.display = 'inline-block';
+                editables.forEach(editable => editable.contentEditable = 'true');
+                photoUpload.style.display = 'block'; // 允许上传照片
+            } else {
+                resumeContainer.classList.remove('edit-mode');
+                editables.forEach(editable => editable.contentEditable = 'false');
+                addProjectButton.style.display = 'none';
+                deleteButtons.forEach(button => button.style.display = 'none');
+                editButton.style.display = 'inline-block';
+                cancelButton.style.display = 'none';
+                editables.forEach(editable => editable.contentEditable = 'false');
+                photoUpload.style.display = 'none';
+
+            }
+        }
+
+        function addProject() {
+            const projectExperience = document.getElementById('project-experience');
+            const newProject = document.createElement('div');
+            newProject.className = 'project editable';
+            newProject.contentEditable = 'true';
+            newProject.innerHTML = `
+                <h3>新项目</h3>
+                <ul>
+                    <li>项目描述1</li>
+                    <li>项目描述2</li>
+                </ul>
+                <button class="delete-project" onclick="deleteProject(this)" style="display: inline-block;">×</button> <!-- 小叉叉按钮 -->
+            `;
+            projectExperience.appendChild(newProject);
+        }
+
+        function deleteProject(button) {
+            const project = button.parentElement;
+            project.remove();
+        }
+
+        function adjustLineHeight() {
+            const a4Container = document.querySelector('.a4-container');
+            const resumeContainer = document.querySelector('.resume-container');
+            const a4Height = a4Container.clientHeight; // A4容器的固定高度
+            const a4Padding = 90;
+            const maxContentHeight = a4Height - a4Padding; // 最大内容高度（减去内边距）
+            let lineHeight = initialLineHeight;
+
+            console.log(resumeContainer.scrollHeight)
+            console.log(maxContentHeight)
+            if (resumeContainer.scrollHeight > maxContentHeight) {
+                while (resumeContainer.scrollHeight > maxContentHeight) {
+                    console.log(lineHeight)
+                    lineHeight -= 0.01;
+                    resumeContainer.style.lineHeight = `${lineHeight}em`;
+                }
+            } else if (resumeContainer.scrollHeight < maxContentHeight) {
+                while (resumeContainer.scrollHeight < maxContentHeight) {
+                    console.log(lineHeight)
+                    lineHeight += 0.01;
+                    resumeContainer.style.lineHeight = `${lineHeight}em`;
+                }
+            }
+
+            // 动态调整 h3 的间距
+            const h3Elements = document.querySelectorAll('h3');
+            h3Elements.forEach(h3 => {
+                if (lineHeight < 1.4) {
+                    h3.style.marginTop = '1px';
+                    h3.style.marginBottom = '1px';
+                } else {
+                    h3.style.marginTop = '5px';
+                    h3.style.marginBottom = '5px';
+                }
+            });
+        }
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    console.log(e)
+                    document.getElementById("profile-photo").src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+
+</html>
