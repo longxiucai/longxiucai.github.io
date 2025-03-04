@@ -1,75 +1,69 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // ==================== 悬浮按钮 ====================
+  // ==================== 创建悬浮按钮 ====================
   const toggleButton = document.createElement("div");
-  toggleButton.style.position = "fixed";
-  toggleButton.style.width = "100px";
-  toggleButton.style.height = "50px";
-  toggleButton.style.lineHeight = "50px";
-  toggleButton.style.textAlign = "center";
-  toggleButton.style.background = "linear-gradient(135deg, #3498db, #5dade2)";
-  toggleButton.style.color = "rgba(20,20,20)";
-  toggleButton.style.borderRadius = "25px";
-  toggleButton.style.cursor = "pointer";
-  toggleButton.style.fontSize = "18px";
-  toggleButton.style.fontWeight = "bold";
-  toggleButton.style.userSelect = "none";
-  toggleButton.style.zIndex = "10000";
-  toggleButton.style.top = "10px";
-  toggleButton.style.left = "10px";
-  toggleButton.style.padding = "0 20px";
-  toggleButton.style.display = "flex";
-  toggleButton.style.alignItems = "center";
-  toggleButton.style.justifyContent = "center";
-  toggleButton.style.border = "none";
-  toggleButton.style.boxShadow = "0 3px 8px rgba(52, 152, 219)";
-  toggleButton.style.transition = "all 0.3s ease";
-  toggleButton.style.touchAction = "manipulation";
-  toggleButton.style.webkitTapHighlightColor = "transparent";
+  Object.assign(toggleButton.style, {
+    position: "fixed",
+    width: "100px",
+    height: "50px",
+    lineHeight: "50px",
+    textAlign: "center",
+    background: "linear-gradient(135deg, #3498db, #5dade2)",
+    color: "rgba(20,20,20)",
+    borderRadius: "25px",
+    cursor: "pointer",
+    fontSize: "18px",
+    fontWeight: "bold",
+    userSelect: "none",
+    zIndex: "10000",
+    top: "10px",
+    left: "10px",
+    padding: "0 20px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "none",
+    boxShadow: "0 3px 8px rgba(52, 152, 219)",
+    transition: "all 0.3s ease",
+    touchAction: "manipulation",
+    WebkitTapHighlightColor: "transparent"
+  });
 
-  // 按钮图标
-  const icon = document.createElement("img");
+  // 按钮内容
+  const icon = new Image();
   icon.src = "https://longxiucai.github.io/icons8-resume-50.png";
-  icon.style.width = "30px";
-  icon.style.height = "30px";
-  icon.style.marginRight = "3px";
-  icon.style.verticalAlign = "middle";
-
-  // 按钮文字
+  icon.style.cssText = "width:30px;height:30px;margin-right:3px;vertical-align:middle";
+  
   const text = document.createElement("span");
-  text.innerText = "About";
+  text.textContent = "About";
   text.style.verticalAlign = "middle";
-
-  toggleButton.appendChild(icon);
-  toggleButton.appendChild(text);
+  
+  toggleButton.append(icon, text);
   document.body.appendChild(toggleButton);
 
-  // ==================== 简历容器 ====================
+  // ==================== 创建简历容器 ====================
   const resumeWrapper = document.createElement("div");
-  resumeWrapper.id = "resume-wrapper";
-  resumeWrapper.style.position = "fixed";
-  resumeWrapper.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
-  resumeWrapper.style.overflow = "auto";
-  resumeWrapper.style.backgroundColor = "#fff";
-  resumeWrapper.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.3)";
-  resumeWrapper.style.zIndex = "9999";
-  resumeWrapper.style.transform = "scale(0)";
-  resumeWrapper.style.borderRadius = "10px";
-  resumeWrapper.style.padding = "0";
-  resumeWrapper.style.opacity = "0";
-  resumeWrapper.style.pointerEvents = "auto";
-  resumeWrapper.style.boxSizing = "border-box";
+  Object.assign(resumeWrapper.style, {
+    position: "fixed",
+    transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+    overflow: "auto",
+    backgroundColor: "#fff",
+    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
+    zIndex: "9999",
+    transform: "scale(0)",
+    borderRadius: "10px",
+    padding: "0",
+    opacity: "0",
+    pointerEvents: "auto",
+    boxSizing: "border-box"
+  });
 
   // iframe容器
   const iframeContainer = document.createElement("div");
-  iframeContainer.style.width = "100%";
-  iframeContainer.style.height = "100%";
+  iframeContainer.style.cssText = "width:100%;height:100%;overflow:auto";
   
   const resumeIframe = document.createElement("iframe");
   resumeIframe.src = "https://longxiucai.github.io/resume.html";
-  resumeIframe.style.width = "100%";
-  resumeIframe.style.height = "100%";
-  resumeIframe.style.border = "none";
-  resumeIframe.style.pointerEvents = "auto";
+  resumeIframe.style.cssText = "width:100%;height:100%;border:none;pointer-events:auto";
   
   iframeContainer.appendChild(resumeIframe);
   resumeWrapper.appendChild(iframeContainer);
@@ -77,52 +71,55 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ==================== 核心逻辑 ====================
   let isResumeVisible = false;
-  let isMobile = window.innerWidth <= 768;
-  let lastWindowHeight = window.innerHeight;
-  let hideTimer;
+  let isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  let hideTimer, hoverTimer, touchStartTime, touchStartY;
 
   // 更新按钮位置（移动端滚动隐藏）
   function updateButtonPosition() {
     if (window.innerWidth < 601) {
-      const initialTop = 25;
-      const scrollOffset = window.scrollY;
-      const newTop = initialTop - scrollOffset;
-
+      const newTop = 25 - window.scrollY;
       toggleButton.style.opacity = newTop < -60 ? "0" : "1";
       toggleButton.style.pointerEvents = newTop < -60 ? "none" : "auto";
       toggleButton.style.position = "absolute";
       toggleButton.style.top = `${newTop}px`;
       toggleButton.style.left = "60px";
     } else {
-      toggleButton.style.position = "fixed";
-      toggleButton.style.top = "10px";
-      toggleButton.style.left = "10px";
-      toggleButton.style.opacity = "1";
-      toggleButton.style.pointerEvents = "auto";
+      Object.assign(toggleButton.style, {
+        position: "fixed",
+        top: "10px",
+        left: "10px",
+        opacity: "1",
+        pointerEvents: "auto"
+      });
     }
   }
 
   // 显示简历
   function showResume() {
     clearTimeout(hideTimer);
-    isMobile = window.innerWidth <= 768;
     
     if (isMobile) {
-      resumeWrapper.style.width = `${window.innerWidth - 40}px`;
-      resumeWrapper.style.height = `${window.innerHeight * 0.9}px`;
-      resumeWrapper.style.left = "20px";
-      resumeWrapper.style.top = `${window.innerHeight * 0.05}px`;
-      resumeWrapper.style.transform = "scale(1)";
+      const viewport = window.visualViewport;
+      Object.assign(resumeWrapper.style, {
+        width: `${viewport.width - 40}px`,
+        height: `${viewport.height * 0.9}px`,
+        left: "20px",
+        top: `${viewport.offsetTop + 20}px`,
+        transform: "scale(1)",
+        opacity: "1"
+      });
     } else {
-      const buttonRect = toggleButton.getBoundingClientRect();
-      resumeWrapper.style.width = "880px";
-      resumeWrapper.style.height = "565px";
-      resumeWrapper.style.left = `${buttonRect.left}px`;
-      resumeWrapper.style.top = `${buttonRect.top + 60}px`;
-      resumeWrapper.style.transform = "scale(1)";
+      const rect = toggleButton.getBoundingClientRect();
+      Object.assign(resumeWrapper.style, {
+        width: "880px",
+        height: "565px",
+        left: `${rect.left}px`,
+        top: `${rect.top + 60}px`,
+        transform: "scale(1)",
+        opacity: "1"
+      });
     }
     
-    resumeWrapper.style.opacity = "1";
     isResumeVisible = true;
   }
 
@@ -133,80 +130,88 @@ document.addEventListener("DOMContentLoaded", function () {
     isResumeVisible = false;
   }
 
-  // ==================== 事件监听 ====================
-  // 统一交互
-  function handleToggle() {
-    if (!isResumeVisible) {
-      showResume();
-    } else {
-      hideResume();
-    }
-  }
+  // ==================== 事件处理 ====================
+  // 统一切换逻辑
+  const handleToggle = () => isResumeVisible ? hideResume() : showResume();
 
-  // 点击事件
-  toggleButton.addEventListener("click", handleToggle);
-  
   // 移动端触摸事件
-  toggleButton.addEventListener("touchstart", function(e) {
-    e.preventDefault();
-    handleToggle();
-  });
+  const initMobileEvents = () => {
+    // 触摸处理
+toggleButton.addEventListener("touchstart", e => {
+  touchStartTime = Date.now();
+  touchStartY = e.touches[0].clientY;  // 修改：正确获取 clientY
+  toggleButton.style.transform = "scale(0.95)";
+});
 
-  // PC端悬停逻辑
-  if (!isMobile) {
-    let hoverTimer;
-    
-    // 鼠标进入按钮
-    toggleButton.addEventListener("mouseenter", () => {
-      hoverTimer = setTimeout(showResume, 50);
-    });
-    
-    // 鼠标离开按钮
-    toggleButton.addEventListener("mouseleave", (e) => {
-      clearTimeout(hoverTimer);
-      if (isResumeVisible && !resumeWrapper.contains(e.relatedTarget)) {
-        hideTimer = setTimeout(hideResume, 100);
-      }
-    });
-    
-    // 鼠标进入简历
-    resumeWrapper.addEventListener("mouseenter", () => {
-      clearTimeout(hideTimer);
-    });
-    
-    // 鼠标离开简历
-    resumeWrapper.addEventListener("mouseleave", (e) => {
-      if (!toggleButton.contains(e.relatedTarget)) {
-        hideTimer = setTimeout(hideResume, 100);
-      }
-    });
+toggleButton.addEventListener("touchend", e => {
+  toggleButton.style.transform = "scale(1)";
+  const touch = e.changedTouches[0]; // 修改：正确获取 changedTouches 的 clientY
+  const deltaY = Math.abs(touch.clientY - touchStartY); // 计算滑动距离
+
+  if (Date.now() - touchStartTime < 300 && deltaY < 10) {
+    handleToggle(); // 只有点击（非滑动）才切换简历
   }
+});
 
-  // 移动端外部点击关闭
-  document.addEventListener("touchend", function(e) {
-    if (isMobile && isResumeVisible) {
-      if (!resumeWrapper.contains(e.target) && e.target !== toggleButton) {
+    // 下滑关闭
+    let startY = 0;
+    resumeWrapper.addEventListener("touchstart", e => {
+      startY = e.touches.clientY;
+    });
+    
+    resumeWrapper.addEventListener("touchmove", e => {
+      if (e.touches.clientY - startY > 50) hideResume();
+    });
+
+    // 外部点击关闭
+    document.addEventListener("touchend", e => {
+      if (!resumeWrapper.contains(e.target) && !toggleButton.contains(e.target)) {
         hideResume();
       }
-    }
-  });
+    });
+  };
 
-  // 窗口事件
+  // PC端鼠标事件
+  const initPCEvents = () => {
+    // 悬停逻辑
+    toggleButton.addEventListener("mouseenter", () => {
+      hoverTimer = setTimeout(showResume, 100);
+    });
+    
+    toggleButton.addEventListener("mouseleave", () => {
+      clearTimeout(hoverTimer);
+      hideTimer = setTimeout(() => {
+        if (!resumeWrapper.matches(":hover")) hideResume();
+      }, 100);
+    });
+
+    // 简历区域交互
+    resumeWrapper.addEventListener("mouseenter", () => clearTimeout(hideTimer));
+    resumeWrapper.addEventListener("mouseleave", () => {
+      hideTimer = setTimeout(hideResume, 100);
+    });
+    
+    // 点击切换
+    toggleButton.addEventListener("click", handleToggle);
+  };
+
+  // 初始化事件
+  isMobile ? initMobileEvents() : initPCEvents();
+
+  // ==================== 窗口事件 ====================
   window.addEventListener("scroll", updateButtonPosition);
   window.addEventListener("resize", () => {
-    isMobile = window.innerWidth <= 768;
+    isMobile = /Mobi|Android/i.test(navigator.userAgent);
     updateButtonPosition();
-    
-    // 虚拟键盘检测
-    if (isMobile && Math.abs(lastWindowHeight - window.innerHeight) > 50) {
-      setTimeout(() => {
-        if (isResumeVisible) showResume();
-      }, 300);
-      lastWindowHeight = window.innerHeight;
-    }
-    
     if (isResumeVisible) showResume();
   });
+
+  // 虚拟键盘处理
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+      if (isMobile && isResumeVisible) showResume();
+    });
+  }
 
   // 初始化
   updateButtonPosition();
