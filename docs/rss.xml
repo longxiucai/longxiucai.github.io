@@ -1,5 +1,18 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 03 Mar 2025 08:51:22 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>Gmeek中文字spoiler剧透效果</title><link>https://longxiucai.github.io/post/67.html</link><description>#### 参考
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 04 Mar 2025 08:03:17 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>ingress controller黑白名单</title><link>https://longxiucai.github.io/post/68.html</link><description>参考: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
+
+黑名单
+根据实际情况，修改需要配置黑白名单的ingress资源，示例：
+kubectl  edit  ingresses.networking.k8s.io -n xx xxxxx
+
+增加annotations：
+nginx.ingress.kubernetes.io/denylist-source-range: ip1/mask,ip2/mask
+
+白名单
+使用上述方法，增加annotations：
+nginx.ingress.kubernetes.io/whitelist-source-range: ip1/mask,ip2/mask
+
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/68.html</guid><pubDate>Tue, 04 Mar 2025 08:02:53 +0000</pubDate></item><item><title>Gmeek中文字spoiler剧透效果</title><link>https://longxiucai.github.io/post/67.html</link><description>#### 参考
 https://hellodk.cn/post/1187
 
 #### 配置
