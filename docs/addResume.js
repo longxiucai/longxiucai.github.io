@@ -28,32 +28,38 @@ document.addEventListener("DOMContentLoaded", function () {
   // 创建悬浮按钮（改为 About Me 和图标）
   const toggleButton = document.createElement("div");
   toggleButton.style.position = "fixed";
-  toggleButton.style.width = "150px"; // 设置宽度以适配文本和图标
+  toggleButton.style.width = "100px"; // 适当加宽
   toggleButton.style.height = "50px";
   toggleButton.style.lineHeight = "50px";
   toggleButton.style.textAlign = "center";
-  toggleButton.style.backgroundColor = "#3498db"; // 更加柔和的蓝色
+  toggleButton.style.background = "linear-gradient(135deg, #3498db, #5dade2)";
   toggleButton.style.color = "#fff";
-  toggleButton.style.borderRadius = "50px";
+  toggleButton.style.borderRadius = "25px"; // 圆角更自然
   toggleButton.style.cursor = "pointer";
-  toggleButton.style.fontSize = "16px";
+  toggleButton.style.fontSize = "18px"; // 字体稍大
+  toggleButton.style.fontWeight = "bold";
   toggleButton.style.userSelect = "none";
   toggleButton.style.zIndex = "10000";
-  toggleButton.style.top = "10px"; // 设置左上角的顶部距离
-  toggleButton.style.left = "10px"; // 设置左上角的左边距离
-  toggleButton.style.padding = "0 20px"; // 为按钮增加内边距
-  toggleButton.style.transition = "background-color 0.3s ease, transform 0.2s"; // 按钮的渐变效果
+  toggleButton.style.top = "10px";
+  toggleButton.style.left = "10px";
+  toggleButton.style.padding = "0 20px";
+  toggleButton.style.display = "flex"; // 让图标和文本更好对齐
+  toggleButton.style.alignItems = "center";
+  toggleButton.style.justifyContent = "center";
+  toggleButton.style.boxShadow = "0 4px 10px rgba(0, 0, 0)"; // 添加阴影
+  toggleButton.style.transition = "all 0.3s ease"; // 平滑过渡
+
 
   // 创建图标并插入按钮
   const icon = document.createElement("img");
   icon.src = "https://longxiucai.github.io/icons8-resume-50.png"; // 图标来源
   icon.style.width = "30px"; // 图标宽度
   icon.style.height = "30px"; // 图标高度
-  icon.style.marginRight = "10px"; // 图标和文本之间的间距
+  icon.style.marginRight = "3px"; // 图标和文本之间的间距
   icon.style.verticalAlign = "middle"; // 让图标和文字垂直对齐
 
   const text = document.createElement("span");
-  text.innerText = "About Me"; // 按钮文本
+  text.innerText = "About"; // 按钮文本
   text.style.verticalAlign = "middle"; // 确保文本垂直居中
 
   toggleButton.appendChild(icon);
@@ -63,13 +69,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let isResumeVisible = false;
   let isClickedInsideResume = false; // 新增标记
-
+  updateButtonPosition()
   // 调试日志：输出按钮当前位置
   function logButtonPosition(context) {
     const rect = toggleButton.getBoundingClientRect();
     console.log(`[${context}] Button Rect:`, rect);
     return rect;
   }
+  // 监听窗口变化，调整按钮位置
+  function updateButtonPosition() {
+    if (window.innerWidth < 601) {
+      let initialTop = 25; // 初始顶部位置
+      let scrollOffset = window.scrollY; // 获取当前滚动位置
+      let newTop = initialTop - scrollOffset; // 让按钮随滚动上移
+      if (newTop < -60) { // 当按钮滚动到 -60px 以上时，彻底隐藏
+        toggleButton.style.opacity = "0";
+        toggleButton.style.pointerEvents = "none"; // 禁用点击
+      } else {
+        toggleButton.style.opacity = "1";
+        toggleButton.style.pointerEvents = "auto"; // 重新启用点击
+      }
+
+      toggleButton.style.position = "absolute"; // 让按钮随页面滚动
+      toggleButton.style.top = newTop + "px"; // 更新 top 位置
+      toggleButton.style.left = "60px";
+    } else {
+      toggleButton.style.position = "fixed"; // PC 端按钮固定不变
+      toggleButton.style.top = "10px";
+      toggleButton.style.left = "10px";
+      toggleButton.style.opacity = "1"; // 确保 PC 端按钮不会消失
+      toggleButton.style.pointerEvents = "auto";
+    }
+
+  }
+
+  // 页面加载和窗口变化时，更新按钮位置
+  window.addEventListener("resize", updateButtonPosition);
 
   function updateResumePosition() {
     // 获取按钮的最新位置
@@ -89,9 +124,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let finalLeft, finalTop;
 
     if (buttonRect.left + resumeWidth > windowWidth) {
-      finalLeft = windowWidth - resumeWidth - 10  ; // 避免超出右侧
+      finalLeft = windowWidth - resumeWidth - 10; // 避免超出右侧
     } else {
-      finalLeft = buttonRect.left ;
+      finalLeft = buttonRect.left;
     }
 
     if (buttonRect.top + resumeHeight > windowHeight) {
