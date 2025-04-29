@@ -1,5 +1,62 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Wed, 02 Apr 2025 08:22:00 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>k8s pod日志默认存储大小</title><link>https://longxiucai.github.io/post/70.html</link><description>kubeadm有参数containerLogMaxSize（默认10M） containerLogMaxFiles(默认5)
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 29 Apr 2025 08:44:50 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>promethues operator中alertmanager挂载自定义模板</title><link>https://longxiucai.github.io/post/72.html</link><description>1. 创建模板为configmap，内容如下，根据实际需求修改，kubectl apply即可
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-templates
+  namespace: monitoring  # 根据你的 Alertmanager 命名空间调整
+data:
+  kubediag.tmpl: |
+    {{ define 'kubediag.payload' }}
+    {{ .Alerts }}
+    {{ end }}
+```  
+2. 修改alertmanager资源添加configMaps配置项（配置会挂载到`/etc/alertmanager/configmaps`中），patch.yaml文件内容如下
+```
+spec:
+  configMaps:
+  - alertmanager-templates
+```
+执行命令`kubectl patch alertmanager main -n monitoring --type=merge --patch-file patch.yaml`
+3. 修改alertmanager的配置，根据实际情况，我的环境为kubectl get secrets -n monitoring  alertmanager-main这个secret。</description><guid isPermaLink="true">https://longxiucai.github.io/post/72.html</guid><pubDate>Tue, 29 Apr 2025 08:36:50 +0000</pubDate></item><item><title>promethues operator中alertmanagerconfig的使用</title><link>https://longxiucai.github.io/post/71.html</link><description>1. `kubectl patch alertmanager main -n monitoring --type=merge --patch-file patch.yaml`配置选择哪些alertmanagerConfig
+
+patch.yaml文件内容如下
+```
+spec:
+  alertmanagerConfigSelector:
+    matchLabels:
+      alertmanagerConfig: main
+```
+2. 创建alertmanagerConfig资源，资源需要有上述label：`alertmanagerConfig: main`
+```
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: kubediag-config
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: main
+spec:
+  route:
+    receiver: 'kubediag'
+    routes:
+      - receiver: 'kubediag'
+        matchers: 
+        - name: 'strategy_type'
+          value: 'user_strategy'
+        - name: 'namespace'
+          value: default
+  receivers:
+    - name: 'kubediag'
+      webhookConfigs:
+       - url: 'http://kubediag-master.kubediag.svc.cluster.local:8089/api/v1/alerts'
+          sendResolved: true
+          httpConfig:
+            tlsConfig:
+              insecureSkipVerify: true
+          maxAlerts: 0
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/71.html</guid><pubDate>Tue, 29 Apr 2025 08:29:49 +0000</pubDate></item><item><title>k8s pod日志默认存储大小</title><link>https://longxiucai.github.io/post/70.html</link><description>kubeadm有参数containerLogMaxSize（默认10M） containerLogMaxFiles(默认5)
 
 containerd本身没有管理容器日志分割与限制大小的功能，kubelet有参数`--container-log-max-files=5 --container-log-max-size=100Mi`与配置`'containerLogMaxSize': '100Mi','containerLogMaxFiles': 5`，验证kubelet对日志控制的功能，默认为400M 4个备份，压缩之后30M，不存在空间爆满的情况。</description><guid isPermaLink="true">https://longxiucai.github.io/post/70.html</guid><pubDate>Wed, 02 Apr 2025 08:21:39 +0000</pubDate></item><item><title>k6性能测试工具（笔记）</title><link>https://longxiucai.github.io/post/69.html</link><description># Load test types
 
