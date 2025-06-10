@@ -1,5 +1,28 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Thu, 22 May 2025 07:15:13 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>ingress代理另一个集群中ingress代理服务</title><link>https://longxiucai.github.io/post/75.html</link><description>前提条件：A环境中能够解析B提供服务的域名
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙宇翔的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙宇翔的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 10 Jun 2025 03:14:17 +0000</lastBuildDate><managingEditor>龙宇翔的小本本</managingEditor><ttl>60</ttl><webMaster>龙宇翔的小本本</webMaster><item><title>promethues数据导入与导出</title><link>https://longxiucai.github.io/post/76.html</link><description>
+# 数据导出
+## 方式一、通过快照的方法
+### 启动admin api
+先判断当前是否启用了admin api，如果没有启用，需要启用，判断方法：
+```
+kubectl get pod -n monitoring prometheus-k8s-0 -oyaml|grep admin
+```
+看是否有`    - --web.enable-admin-api`，如果没有则需要启用，启用方法：
+```
+kubectl -n monitoring patch prometheus k8s --type merge --patch '{'spec':{'enableAdminAPI':true}}'
+```
+### 通过api创建快照
+```
+curl -XPOST http://&lt;masterip&gt;:30200/api/v1/admin/tsdb/snapshot
+```
+返回:{'status':'success','data':{'name':'20250609T091200Z-462edddd226ddbd5'}} 可以在容器中/prometheus/snapshots/中找到这个name 的目录
+### 将快照数据拷贝出来（下面方法二选一）
+#### kubectl cp
+```
+kubectl cp -n monitoring prometheus-k8s-0:/prometheus/snapshots  .
+```
+&gt; [!TIP]
+&gt; 通过kubectl cp方式时，当前目录会存在`&lt;snapshots-name&gt;`，这里面直接是元数据，例如`ls 20250610T022906Z-610813546f16aadd`可以看到很多目录。</description><guid isPermaLink="true">https://longxiucai.github.io/post/76.html</guid><pubDate>Tue, 10 Jun 2025 03:13:51 +0000</pubDate></item><item><title>ingress代理另一个集群中ingress代理服务</title><link>https://longxiucai.github.io/post/75.html</link><description>前提条件：A环境中能够解析B提供服务的域名
 
 1.在A环境增加一条内部“svc-B”的service资源，“svc-B”的spec.type为ExternalName、spec.externalName为集群B中服务的域名地址。</description><guid isPermaLink="true">https://longxiucai.github.io/post/75.html</guid><pubDate>Thu, 22 May 2025 07:14:41 +0000</pubDate></item><item><title>域名解析的原理与故障排查</title><link>https://longxiucai.github.io/post/74.html</link><description># 原理
 如图所示，域名是一种树状结构，最顶层的域名是根域名（注意是一个点“.”，它是 .root 的含义，不过现在“.root”已经默认被隐藏），然后是顶级域名（Top Level Domain，简写 TLD，例如 .com），再是二级域名（例如 google.com）。</description><guid isPermaLink="true">https://longxiucai.github.io/post/74.html</guid><pubDate>Mon, 12 May 2025 06:06:39 +0000</pubDate></item><item><title>curl命令对HTTPS请求的各个阶输出详细的延迟</title><link>https://longxiucai.github.io/post/73.html</link><description># curl -w参数说明
