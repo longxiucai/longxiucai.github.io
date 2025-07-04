@@ -256,7 +256,7 @@ spec:
 <li>pod1执行kubectl exec -it busybox-pod1 -- nc -l -p 8080</li>
 <li>pod2执行kubectl exec -it busybox-pod1 -- nc &lt;pod1的ip地址&gt; 8080，然后输入任意字符回车，pod1端会有打印，tcp连接成功。</li>
 <li>pod2执行kubectl exec -it busybox-pod1 -- ping &lt;pod1的ip地址&gt; ，ping不通，网络策略配置中没有显式配置icmp表示拒绝ICMP流量。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7b8fd391-5489-4922-95dd-1af2e6a86234"><img src="https://github.com/user-attachments/assets/7b8fd391-5489-4922-95dd-1af2e6a86234" alt="allow-tcp-block-icmp-test" style="max-width: 100%;"></a></li>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7b8fd391-5489-4922-95dd-1af2e6a86234"><img src="https://github.com/user-attachments/assets/7b8fd391-5489-4922-95dd-1af2e6a86234" alt="allow-tcp-block-icmp-test" style="max-width: 100%; height: auto;"></a></li>
 </ul></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 

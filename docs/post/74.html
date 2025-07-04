@@ -81,9 +81,9 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <div id="content">
 <div class="markdown-body" id="postBody"><h1>原理</h1>
 <p>如图所示，域名是一种树状结构，最顶层的域名是根域名（注意是一个点“.”，它是 .root 的含义，不过现在“.root”已经默认被隐藏），然后是顶级域名（Top Level Domain，简写 TLD，例如 .com），再是二级域名（例如 google.com）。</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/67747662-d16b-4589-a931-ba4ac00321ad"><img src="https://github.com/user-attachments/assets/67747662-d16b-4589-a931-ba4ac00321ad" alt="Image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/67747662-d16b-4589-a931-ba4ac00321ad"><img src="https://github.com/user-attachments/assets/67747662-d16b-4589-a931-ba4ac00321ad" alt="Image" style="max-width: 100%; height: auto;"></a></p>
 <p>通常情况下的域名解析过程，其实就是从“域名树”的根部到顶部，不断递归查询的过程。整个解析过程可总结如下图。</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a88d4798-12b5-4a8a-a4ba-1a05aca11755"><img src="https://github.com/user-attachments/assets/a88d4798-12b5-4a8a-a4ba-1a05aca11755" alt="Image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a88d4798-12b5-4a8a-a4ba-1a05aca11755"><img src="https://github.com/user-attachments/assets/a88d4798-12b5-4a8a-a4ba-1a05aca11755" alt="Image" style="max-width: 100%; height: auto;"></a></p>
 <ul>
 <li>第 1 步，用户向“DNS 解析器”（Recursive resolver）发出解析 thebyte.con.cn 域名请求。“DNS 解析器”也称 LocalDNS，例如电信运营商的 114.114.114.114。</li>
 <li>“DNS 解析器” 判断是否存在解析缓存：
