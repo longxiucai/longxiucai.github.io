@@ -119,15 +119,15 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <div id="content">
 <div class="markdown-body" id="postBody"><h3>问题现象</h3>
 <p>maxcale的pod中查看如下图所示<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/40abae26-c65a-48fa-b714-fd4a0cf5023a"><img src="https://github.com/user-attachments/assets/40abae26-c65a-48fa-b714-fd4a0cf5023a" alt="微信图片_20240730141907" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/40abae26-c65a-48fa-b714-fd4a0cf5023a"><img src="https://github.com/user-attachments/assets/40abae26-c65a-48fa-b714-fd4a0cf5023a" alt="微信图片_20240730141907" style="max-width: 100%;"></a></p>
 <h3>排查</h3>
 <p>1.查看日志，可以知道没有找到master，有只读错误<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/ae1d81e5-9f0b-44f9-8ab0-152ac1da6f72"><img src="https://github.com/user-attachments/assets/ae1d81e5-9f0b-44f9-8ab0-152ac1da6f72" alt="微信图片_20240730142747" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/ae1d81e5-9f0b-44f9-8ab0-152ac1da6f72"><img src="https://github.com/user-attachments/assets/ae1d81e5-9f0b-44f9-8ab0-152ac1da6f72" alt="微信图片_20240730142747" style="max-width: 100%;"></a></p>
 <p>2.查看monitor，发现3个节点都是只读</p>
 <pre class="notranslate"><code class="notranslate">maxctrl list monitors
 maxctrl show monitor MariaDB-Monitor
 </code></pre>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/2fc22344-bd6a-4bda-922a-642614f8bcbc"><img src="https://github.com/user-attachments/assets/2fc22344-bd6a-4bda-922a-642614f8bcbc" alt="微信图片_20240730143048" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/2fc22344-bd6a-4bda-922a-642614f8bcbc"><img src="https://github.com/user-attachments/assets/2fc22344-bd6a-4bda-922a-642614f8bcbc" alt="微信图片_20240730143048" style="max-width: 100%;"></a></p>
 <h3>解决问题</h3>
 <ul>
 <li>手动修改主节点，关闭只读</li>
@@ -140,7 +140,7 @@ maxctrl show monitor MariaDB-Monitor
 <p>在maxcale配置文件中配置项目<code class="notranslate">[MariaDB-Monitor]</code>，有配置参数<code class="notranslate">master_reconnection=true</code>，已经被弃用<br>
 参考文档 <a href="https://mariadb.com/kb/en/mariadb-maxscale-25-mariadb-monitor/#detect_stale_master" rel="nofollow">https://mariadb.com/kb/en/mariadb-maxscale-25-mariadb-monitor/#detect_stale_master</a><br>
 删除使用<code class="notranslate">master_conditions=connected_slave,running_slave</code>代替。再次删除maxcale的pod重新拉起之后恢复正常。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/16a292c5-4e39-4ebe-94ac-abd3bb248be5"><img src="https://github.com/user-attachments/assets/16a292c5-4e39-4ebe-94ac-abd3bb248be5" alt="微信图片_20240730144528" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/16a292c5-4e39-4ebe-94ac-abd3bb248be5"><img src="https://github.com/user-attachments/assets/16a292c5-4e39-4ebe-94ac-abd3bb248be5" alt="微信图片_20240730144528" style="max-width: 100%;"></a></p>
 </li>
 <li>
 <p>将maxcale配置文件恢复为<code class="notranslate">master_reconnection=true</code>之后，？？？？？？依然正常？？？？？？。</p>

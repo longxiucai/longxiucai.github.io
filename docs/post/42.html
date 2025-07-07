@@ -107,7 +107,7 @@ type itab struct {
 </code></pre>
 <p>可以看到，它包装了 _type 类型，_type 实际上是描述 Go 语言中各种数据类型的结构体。我们注意到，这里还包含一个 mhdr 字段，表示接口所定义的函数列表， pkgpath 记录定义了接口的包名。</p>
 <p>这里通过一张图来看下 iface 结构体的全貌：<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/fafe26b4-346f-49d4-b7d4-497c7e852bea"><img src="https://github.com/user-attachments/assets/fafe26b4-346f-49d4-b7d4-497c7e852bea" alt="0" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/fafe26b4-346f-49d4-b7d4-497c7e852bea"><img src="https://github.com/user-attachments/assets/fafe26b4-346f-49d4-b7d4-497c7e852bea" alt="0" style="max-width: 100%;"></a></p>
 <h2>eface</h2>
 <pre class="notranslate"><code class="notranslate">type eface struct {
     _type *_type
@@ -115,7 +115,7 @@ type itab struct {
 }
 </code></pre>
 <p>相比 iface，eface 就比较简单了。只维护了一个 _type 字段，表示空接口所承载的具体的实体类型。data 描述了具体的值。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/356d30f2-89a0-4f87-855a-f648de21fd9c"><img src="https://github.com/user-attachments/assets/356d30f2-89a0-4f87-855a-f648de21fd9c" alt="1" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/356d30f2-89a0-4f87-855a-f648de21fd9c"><img src="https://github.com/user-attachments/assets/356d30f2-89a0-4f87-855a-f648de21fd9c" alt="1" style="max-width: 100%;"></a></p>
 <p>上面两个函数的参数和 iface 及 eface 结构体的字段是可以联系起来的：两个函数都是将参数组装一下，形成最终的接口。</p>
 <p>作为补充，我们最后再来看下 _type 结构体：</p>
 <pre class="notranslate"><code class="notranslate">type _type struct {
@@ -158,21 +158,21 @@ r = tty
 </code></pre>
 <p>首先声明 r 的类型是 io.Reader，注意，这是 r 的静态类型，此时它的动态类型为 nil，并且它的动态值也是 nil。</p>
 <p>之后，r = tty 这一语句，将 r 的动态类型变成 *os.File，动态值则变成非空，表示打开的文件对象。这时，r 可以用&lt;value, type&gt;对来表示为： &lt;tty, *os.File&gt;。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/96518978-b149-4757-ae5c-5ab6ccddcbe6"><img src="https://github.com/user-attachments/assets/96518978-b149-4757-ae5c-5ab6ccddcbe6" alt="2" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/96518978-b149-4757-ae5c-5ab6ccddcbe6"><img src="https://github.com/user-attachments/assets/96518978-b149-4757-ae5c-5ab6ccddcbe6" alt="2" style="max-width: 100%;"></a></p>
 <p>注意看上图，此时虽然 fun 所指向的函数只有一个 Read 函数，其实 *os.File 还包含 Write 函数，也就是说 *os.File 其实还实现了 io.Writer 接口。因此下面的断言语句可以执行：</p>
 <pre class="notranslate"><code class="notranslate">var w io.Writer
 w = r.(io.Writer)
 </code></pre>
 <p>之所以用断言，而不能直接赋值，是因为 r 的静态类型是 io.Reader，并没有实现 io.Writer 接口。断言能否成功，看 r 的动态类型是否符合要求。</p>
 <p>这样，w 也可以表示成 &lt;tty, *os.File&gt;，仅管它和 r 一样，但是 w 可调用的函数取决于它的静态类型 io.Writer，也就是说它只能有这样的调用形式： w.Write() 。w 的内存形式如下图：<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/57978369-e34b-4378-be83-adffbd8f1ab0"><img src="https://github.com/user-attachments/assets/57978369-e34b-4378-be83-adffbd8f1ab0" alt="3" style="max-width: 100%; height: auto;"></a><br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/57978369-e34b-4378-be83-adffbd8f1ab0"><img src="https://github.com/user-attachments/assets/57978369-e34b-4378-be83-adffbd8f1ab0" alt="3" style="max-width: 100%;"></a><br>
 和 r 相比，仅仅是 fun 对应的函数变了：Read -&gt; Write。</p>
 <p>最后，再来一个赋值：</p>
 <pre class="notranslate"><code class="notranslate">var empty interface{}
 empty = w
 </code></pre>
 <p>由于 empty 是一个空接口，因此所有的类型都实现了它，w 可以直接赋给它，不需要执行断言操作。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/363813f8-3955-4c0b-b387-7f2af679c63b"><img src="https://github.com/user-attachments/assets/363813f8-3955-4c0b-b387-7f2af679c63b" alt="4" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/363813f8-3955-4c0b-b387-7f2af679c63b"><img src="https://github.com/user-attachments/assets/363813f8-3955-4c0b-b387-7f2af679c63b" alt="4" style="max-width: 100%;"></a></p>
 <p>从上面的三张图可以看到，interface 包含三部分信息：_type 是类型信息，*data 指向实际类型的实际值，itab 包含实际类型的信息，包括大小、包路径，还包含绑定在类型上的各种方法（图上没有画出方法）</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 

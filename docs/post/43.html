@@ -94,7 +94,7 @@ type slice struct {
 </code></pre>
 <h1>slice的底层结构</h1>
 <p>slice 的数据结构如下：<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f5c875ea-cb9d-4cb1-8609-6683f90b1551"><img src="https://github.com/user-attachments/assets/f5c875ea-cb9d-4cb1-8609-6683f90b1551" alt="image" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f5c875ea-cb9d-4cb1-8609-6683f90b1551"><img src="https://github.com/user-attachments/assets/f5c875ea-cb9d-4cb1-8609-6683f90b1551" alt="image" style="max-width: 100%;"></a></p>
 <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p><p>底层数组是可以被多个 slice 同时指向的，因此对一个 slice 的元素进行操作是有可能影响到其他 slice 的。</p>
 </div>
 <h1>引申</h1>
@@ -127,22 +127,22 @@ func main() {
 [0 1 2 3 20 5 6 7 100 9]
 </code></pre>
 <p><code class="notranslate">s1</code> 从 <code class="notranslate">slice</code> 索引2（闭区间）到索引5（开区间，元素真正取到索引4），长度为3，容量默认到数组结尾，为8。 <code class="notranslate">s2</code> 从 <code class="notranslate">s1</code> 的索引2（闭区间）到索引6（开区间，元素真正取到索引5），容量到索引7（开区间，真正到索引6），为5。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/091113eb-585c-4a06-ad75-6cd4f901ec80"><img src="https://github.com/user-attachments/assets/091113eb-585c-4a06-ad75-6cd4f901ec80" alt="image" style="max-width: 100%; height: auto;"></a><br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/091113eb-585c-4a06-ad75-6cd4f901ec80"><img src="https://github.com/user-attachments/assets/091113eb-585c-4a06-ad75-6cd4f901ec80" alt="image" style="max-width: 100%;"></a><br>
 接着，向 s2 尾部追加一个元素 100：</p>
 <pre class="notranslate"><code class="notranslate">s2 = append(s2, 100)
 </code></pre>
 <p><code class="notranslate">s2</code> 容量刚好够，直接追加。不过，这会修改原始数组对应位置的元素。这一改动，数组和 <code class="notranslate">s1</code> 都可以看得到。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/64237635-f58a-49bc-9f71-bc21e22ec6d0"><img src="https://github.com/user-attachments/assets/64237635-f58a-49bc-9f71-bc21e22ec6d0" alt="image" style="max-width: 100%; height: auto;"></a><br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/64237635-f58a-49bc-9f71-bc21e22ec6d0"><img src="https://github.com/user-attachments/assets/64237635-f58a-49bc-9f71-bc21e22ec6d0" alt="image" style="max-width: 100%;"></a><br>
 再次向 <code class="notranslate">s2</code> 追加元素200：</p>
 <pre class="notranslate"><code class="notranslate">s2 = append(s2, 200)
 </code></pre>
 <p>这时，<code class="notranslate">s2</code> 的容量不够用，该扩容了。于是，<code class="notranslate">s2</code> 另起炉灶，将原来的元素复制新的位置，扩大自己的容量。并且为了应对未来可能的 append 带来的再一次扩容，<code class="notranslate">s2</code> 会在此次扩容的时候多留一些 buffer，将新的容量将扩大为原始容量的2倍，也就是10了。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/15b5d441-daff-47f6-a22c-5374f0b453aa"><img src="https://github.com/user-attachments/assets/15b5d441-daff-47f6-a22c-5374f0b453aa" alt="image" style="max-width: 100%; height: auto;"></a><br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/15b5d441-daff-47f6-a22c-5374f0b453aa"><img src="https://github.com/user-attachments/assets/15b5d441-daff-47f6-a22c-5374f0b453aa" alt="image" style="max-width: 100%;"></a><br>
 最后，修改 <code class="notranslate">s1</code> 索引为2位置的元素：</p>
 <pre class="notranslate"><code class="notranslate">s1[2] = 20
 </code></pre>
 <p>这次只会影响原始数组相应位置的元素。它影响不到 s2 了。<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/01ada3f3-a243-4db0-ae34-22bd8ba70aa2"><img src="https://github.com/user-attachments/assets/01ada3f3-a243-4db0-ae34-22bd8ba70aa2" alt="image" style="max-width: 100%; height: auto;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/01ada3f3-a243-4db0-ae34-22bd8ba70aa2"><img src="https://github.com/user-attachments/assets/01ada3f3-a243-4db0-ae34-22bd8ba70aa2" alt="image" style="max-width: 100%;"></a></p>
 <div class="markdown-alert markdown-alert-note"><p class="markdown-alert-title"><svg class="octicon octicon-info mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p><p>打印 <code class="notranslate">s1</code> 的时候，只会打印出 <code class="notranslate">s1</code> 长度以内的元素。所以，只会打印出3个元素，虽然它的底层数组不止3个元素。</p>
 </div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
