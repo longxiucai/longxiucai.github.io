@@ -127,6 +127,9 @@ spec:
         pathType: Prefix  # 路径类型为前缀，表示所有以"/"开头的请求都将被转发到此服务
 ```
 ## 流量切分
+canary规则按优先级顺序进行评估。优先级如下：请求头（canary-by-header）→  Cookie （canary-by-cookie）→ 权重（canary-weight）
+> [!TIP]
+> 当某个 ingress 标记为canary时，除了`nginx.ingress.kubernetes.io/load-balance、nginx.ingress.kubernetes.io/upstream-hash-by`以及与会话亲和性相关的注解外，其他所有非canary注解都会被忽略（这些注解会从对应的主 ingress 继承）。如果您希望恢复canary的原始行为（即忽略会话亲和性），请在canary的ingress 定义中设置注解 `nginx.ingress.kubernetes.io/affinity-canary-behavior`，并将其值设为`legacy`。
 ### 流量切分---基于权重的灰度发布
 ```
 ## 第二个Ingress定义，用于灰度发布服务
