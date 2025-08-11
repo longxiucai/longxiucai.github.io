@@ -210,7 +210,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: canary-cookie-new  # 定义第二个Ingress资源的名称
+  name: canary-header-new  # 定义第二个Ingress资源的名称
   annotations:
     nginx.ingress.kubernetes.io/canary: "true"  # 开启灰度发布模式
     nginx.ingress.kubernetes.io/canary-by-header: "canary"  # 指定使用HTTP头部来区分流量
