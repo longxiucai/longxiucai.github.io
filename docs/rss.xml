@@ -1,5 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 26 Aug 2025 05:25:01 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>libvirt使用ovs桥接，ipv6测试无法连通问题分析</title><link>https://longxiucai.github.io/post/81.html</link><description>nmcli connection modify enp1s0 ipv6.method manual ipv6.addresses 2003:db8::37/64
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Thu, 04 Sep 2025 03:28:59 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>命令行ssh之后自动修改标题</title><link>https://longxiucai.github.io/post/82.html</link><description>修改/etc/ssh/ssh_config (参考https://linux.die.net/man/5/ssh_config)
+```
+Host *
+    PermitLocalCommand yes
+    LocalCommand echo -ne '\033]0;$(echo %r@%h)\007' 
+```
+
+这个命令之所以以修改终端标题，是因为它利用了终端支持的**ANSI转义序列**（ANSI escape codes）来与终端进行通信，指示终端执行特定操作（这里是修改窗口标题）。</description><guid isPermaLink="true">https://longxiucai.github.io/post/82.html</guid><pubDate>Thu, 04 Sep 2025 03:28:34 +0000</pubDate></item><item><title>libvirt使用ovs桥接，ipv6测试无法连通问题分析</title><link>https://longxiucai.github.io/post/81.html</link><description>nmcli connection modify enp1s0 ipv6.method manual ipv6.addresses 2003:db8::37/64
 nmcli connection up enp1s0 
 
 
