@@ -12,7 +12,7 @@
     </script>
 <meta name="description" content="修改/etc/ssh/ssh_config (参考https://linux.die.net/man/5/ssh_config)
 ```
-Host *git*  ##此次选择是否配置，git命令如果使用秘钥pull或者push会报错
+Host *git*  ##此次按需选择是否配置，git命令如果使用ssh协议的远端报错
     PermitLocalCommand no
 
 Host *
@@ -24,7 +24,7 @@ Host *
 <meta property="og:title" content="命令行ssh之后自动修改标题">
 <meta property="og:description" content="修改/etc/ssh/ssh_config (参考https://linux.die.net/man/5/ssh_config)
 ```
-Host *git*  ##此次选择是否配置，git命令如果使用秘钥pull或者push会报错
+Host *git*  ##此次按需选择是否配置，git命令如果使用ssh协议的远端报错
     PermitLocalCommand no
 
 Host *
@@ -98,7 +98,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
     <div id="content">
 <div class="markdown-body" id="postBody"><p>修改/etc/ssh/ssh_config (参考<a href="https://linux.die.net/man/5/ssh_config" rel="nofollow">https://linux.die.net/man/5/ssh_config</a>)</p>
-<pre class="notranslate"><code class="notranslate">Host *git*  ##此次选择是否配置，git命令如果使用秘钥pull或者push会报错
+<pre class="notranslate"><code class="notranslate">Host *git*  ##此次按需选择是否配置，git命令如果使用ssh协议的远端报错
     PermitLocalCommand no
 
 Host *

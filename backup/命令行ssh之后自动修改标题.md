@@ -1,6 +1,6 @@
 修改/etc/ssh/ssh_config (参考https://linux.die.net/man/5/ssh_config)
 ```
-Host *git*  ##此次选择是否配置，git命令如果使用秘钥pull或者push会报错
+Host *git*  ##此次按需选择是否配置，git命令如果使用ssh协议的远端报错
     PermitLocalCommand no
 
 Host *
