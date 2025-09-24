@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://avatars.githubusercontent.com/u/43312586"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="测试版本：ingress-nginx-controller:v1.7.0-2
+## 开启access_by_lua_block，让acess阶段执行插件（适用于优先级分流）
+```
+kubectl exec -it  -n ingress-nginx ingress-nginx-controller-qdwws    -- cat template/nginx.tmpl > nginx.tmpl
+```
+修改nginx.tmpl，下列access_by_lua_block部分是被注释掉的，去掉注释，增加plugins.run()
+```
+location {{ $path }} {
+    ...
+            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
+            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
+            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
+            access_by_lua_block {
+                plugins.run()
+            }
+
+```
+将nginx.tmpl文件放到configmap中
+```
+kubectl create cm -n ingress-nginx nginx-custom-template-config --from-file nginx.tmpl
+```
+修改ingress-nginx-controller的ds，增加nginx-configmap的挂载，保存如下文件为ingress-volume-patch.yaml后执行`kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller  --patch-file ingress-volume-patch.yaml`
+```
+spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: nginx-custom-template
+          mountPath: /etc/nginx/template/nginx.tmpl
+          subPath: nginx.tmpl
+      volumes:
+      - name: nginx-custom-template
+        configMap:
+          name: nginx-custom-template-config
+```
+
+## 增加自定义插件并启用
+### 增加插件（插件中代码还需要调试优化）
+创建如下ConfigMap，必须为main.lua，通过定义并返回`_M`来导出函数
+
+脚本说明:
+* 配置加载机制：
+    * 从缓存获取配置，缓存过期时间为 30 秒
+    * 缓存未命中时从文件读取配置并更新缓存
+* 核心逻辑：
+    * 判断当前请求的域名是否属于低优先级列表
+    * 增加全局连接计数和（如果是低优先级）低优先级连接计数
+    * 当全局连接数超过8000且低优先级连接数超过3000，返回 503 错误
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-plugins
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/component: controller
+data:
+  main.lua: |
+    local ngx = ngx
+    local cjson = require 'cjson'
+    local _M = {}
+    local CONFIG_TTL = 30
+
+    -- 读取配置
+    local function get_config()
+      local CONFIG_PATH = '/etc/nginx/conf.d/conn_limit_config.json'
+      local config_cache = ngx.shared.config_cache
+      local cached = config_cache:get('config')
+      if cached then
+          return cjson.decode(cached)
+      end
+      local file = io.open(CONFIG_PATH, 'r')
+      if not file then
+          ngx.log(ngx.ERR, '无法读取配置文件: ', CONFIG_PATH)
+          ngx.exit(500)
+      end
+      local content = file:read('*a')
+      file:close()
+      local config = cjson.decode(content)
+      config_cache:set('config', content, CONFIG_TTL)
+      return config
+    end
+
+    -- 判断域名是否在列表中
+    local function is_in_list(domain, list)
+      for _, d in ipairs(list) do
+          if d == domain then return true end
+      end
+      return false
+    end
+
+    -- 清理计数
+    local function cleanup(is_low, host)
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local new_global = global_conns:incr('total', -1, 0) or 0
+      local new_low = is_low and (low_conns:incr('count', -1, 0) or 0) or 0
+      ngx.log(ngx.INFO, '[结束阶段计数] Host: ', host or '',
+              ' | 全局连接=', new_global,
+              ' | 低优连接=', new_low)
+    end
+
+    -- access 阶段：连接数统计与限流
+    function _M.access()
+      ngx.log(ngx.INFO, '[conn-limit-TEST] access 阶段执行！')  -- 新增测试日志
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local config = get_config()
+      local host = ngx.var.host or ''
+      local is_low = is_in_list(host, config.low_priority.domains or {})
+
+      local global_threshold = config.global_threshold or 1
+      local low_max = config.low_priority.max_conns or 1
+
+      -- 增加计数
+      local current_global = global_conns:incr('total', 1, 0)
+      local current_low = is_low and low_conns:incr('count', 1, 0) or 0
+
+      ngx.log(ngx.INFO, '[访问阶段计数] Host: ', host,
+              ' | 全局连接=', current_global,
+              ' | 低优连接=', current_low)
+
+      -- 限制低优请求
+      if current_global >= global_threshold and is_low and current_low > low_max then
+          ngx.log(ngx.WARN, '[拒绝请求] Host=', host,
+                  ' | 全局=', current_global,
+                  ' | 低优=', current_low)
+          cleanup(is_low, host)
+          ngx.status = 503
+          ngx.say('Service busy (low-prio quota exceeded: ', current_low, '/', low_max, ')')
+          return ngx.exit(503)
+      end
+
+      -- 保存上下文
+      ngx.ctx.host = host
+      ngx.ctx.is_low = is_low
+    end
+
+    -- log 阶段：连接数释放
+    function _M.log()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          cleanup(is_low, host)
+      end
+    end
+    -- 客户端中断处理
+    function on_abort_phase()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          ngx.log(ngx.WARN, '[客户端中断] Host=', host)
+          cleanup(is_low, host)
+      end
+    end
+    return _M
+```
+挂载到ingress-nginx-controller的ds中，保存如下文件为ingress-plugins-patch.yaml后执行`kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller --patch-file ingress-plugins-patch.yaml`
+```
+spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: plugin-volume
+          mountPath: /etc/nginx/lua/plugins/dynamic_conn_limit/main.lua ##必须在/etc/nginx/lua/plugins/下面，目录为插件名称，文件为main.lua
+          subPath: main.lua
+      volumes:
+      - name: plugin-volume
+        configMap:
+          name: ingress-nginx-plugins
+```
+### 启用插件
+修改ingress-nginx-controller的配置`kubectl edit cm -n ingress-nginx ingress-nginx`增加字段`plugins: dynamic_conn_limit`以及`lua-shared-dicts: global_conns:10m,low_conns:10m,config_cache:10m`增加共享内存
+### 配置文件
+创建如下ConfigMap,配置全局连接数为8000，nginx1.org为高优域名，nginx.org为低优域名，低优域名最大连接数为3000，实现
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-conn-config
+  namespace: ingress-nginx
+data:
+  conn_limit_config.json: |
+    {
+      'global_threshold': 8000,
+      'high_priority_domains': ['nginx1.org'],
+      'low_priority': {
+        'domains': ['nginx.org'],
+        'max_conns': 3000
+      }
+    }
+```
+
+##  注解中插入lua脚本即可在access阶段执行下面脚本（不适用优先级分流）
+```
+     nginx.ingress.kubernetes.io/server-snippet: |
+      access_by_lua_file /etc/nginx/lua/scripts/dynamic-conn-limit.lua;
+```
+手动将脚本挂载进去即可，具体步骤参考文档上面，此种方法只能在access阶段执行，当连接释放时，存储的连接数变量无法减少。">
+<meta property="og:title" content="ingress-nginx-controller插件开发">
+<meta property="og:description" content="测试版本：ingress-nginx-controller:v1.7.0-2
+## 开启access_by_lua_block，让acess阶段执行插件（适用于优先级分流）
+```
+kubectl exec -it  -n ingress-nginx ingress-nginx-controller-qdwws    -- cat template/nginx.tmpl > nginx.tmpl
+```
+修改nginx.tmpl，下列access_by_lua_block部分是被注释掉的，去掉注释，增加plugins.run()
+```
+location {{ $path }} {
+    ...
+            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
+            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
+            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
+            access_by_lua_block {
+                plugins.run()
+            }
+
+```
+将nginx.tmpl文件放到configmap中
+```
+kubectl create cm -n ingress-nginx nginx-custom-template-config --from-file nginx.tmpl
+```
+修改ingress-nginx-controller的ds，增加nginx-configmap的挂载，保存如下文件为ingress-volume-patch.yaml后执行`kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller  --patch-file ingress-volume-patch.yaml`
+```
+spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: nginx-custom-template
+          mountPath: /etc/nginx/template/nginx.tmpl
+          subPath: nginx.tmpl
+      volumes:
+      - name: nginx-custom-template
+        configMap:
+          name: nginx-custom-template-config
+```
+
+## 增加自定义插件并启用
+### 增加插件（插件中代码还需要调试优化）
+创建如下ConfigMap，必须为main.lua，通过定义并返回`_M`来导出函数
+
+脚本说明:
+* 配置加载机制：
+    * 从缓存获取配置，缓存过期时间为 30 秒
+    * 缓存未命中时从文件读取配置并更新缓存
+* 核心逻辑：
+    * 判断当前请求的域名是否属于低优先级列表
+    * 增加全局连接计数和（如果是低优先级）低优先级连接计数
+    * 当全局连接数超过8000且低优先级连接数超过3000，返回 503 错误
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-plugins
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/component: controller
+data:
+  main.lua: |
+    local ngx = ngx
+    local cjson = require 'cjson'
+    local _M = {}
+    local CONFIG_TTL = 30
+
+    -- 读取配置
+    local function get_config()
+      local CONFIG_PATH = '/etc/nginx/conf.d/conn_limit_config.json'
+      local config_cache = ngx.shared.config_cache
+      local cached = config_cache:get('config')
+      if cached then
+          return cjson.decode(cached)
+      end
+      local file = io.open(CONFIG_PATH, 'r')
+      if not file then
+          ngx.log(ngx.ERR, '无法读取配置文件: ', CONFIG_PATH)
+          ngx.exit(500)
+      end
+      local content = file:read('*a')
+      file:close()
+      local config = cjson.decode(content)
+      config_cache:set('config', content, CONFIG_TTL)
+      return config
+    end
+
+    -- 判断域名是否在列表中
+    local function is_in_list(domain, list)
+      for _, d in ipairs(list) do
+          if d == domain then return true end
+      end
+      return false
+    end
+
+    -- 清理计数
+    local function cleanup(is_low, host)
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local new_global = global_conns:incr('total', -1, 0) or 0
+      local new_low = is_low and (low_conns:incr('count', -1, 0) or 0) or 0
+      ngx.log(ngx.INFO, '[结束阶段计数] Host: ', host or '',
+              ' | 全局连接=', new_global,
+              ' | 低优连接=', new_low)
+    end
+
+    -- access 阶段：连接数统计与限流
+    function _M.access()
+      ngx.log(ngx.INFO, '[conn-limit-TEST] access 阶段执行！')  -- 新增测试日志
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local config = get_config()
+      local host = ngx.var.host or ''
+      local is_low = is_in_list(host, config.low_priority.domains or {})
+
+      local global_threshold = config.global_threshold or 1
+      local low_max = config.low_priority.max_conns or 1
+
+      -- 增加计数
+      local current_global = global_conns:incr('total', 1, 0)
+      local current_low = is_low and low_conns:incr('count', 1, 0) or 0
+
+      ngx.log(ngx.INFO, '[访问阶段计数] Host: ', host,
+              ' | 全局连接=', current_global,
+              ' | 低优连接=', current_low)
+
+      -- 限制低优请求
+      if current_global >= global_threshold and is_low and current_low > low_max then
+          ngx.log(ngx.WARN, '[拒绝请求] Host=', host,
+                  ' | 全局=', current_global,
+                  ' | 低优=', current_low)
+          cleanup(is_low, host)
+          ngx.status = 503
+          ngx.say('Service busy (low-prio quota exceeded: ', current_low, '/', low_max, ')')
+          return ngx.exit(503)
+      end
+
+      -- 保存上下文
+      ngx.ctx.host = host
+      ngx.ctx.is_low = is_low
+    end
+
+    -- log 阶段：连接数释放
+    function _M.log()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          cleanup(is_low, host)
+      end
+    end
+    -- 客户端中断处理
+    function on_abort_phase()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          ngx.log(ngx.WARN, '[客户端中断] Host=', host)
+          cleanup(is_low, host)
+      end
+    end
+    return _M
+```
+挂载到ingress-nginx-controller的ds中，保存如下文件为ingress-plugins-patch.yaml后执行`kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller --patch-file ingress-plugins-patch.yaml`
+```
+spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: plugin-volume
+          mountPath: /etc/nginx/lua/plugins/dynamic_conn_limit/main.lua ##必须在/etc/nginx/lua/plugins/下面，目录为插件名称，文件为main.lua
+          subPath: main.lua
+      volumes:
+      - name: plugin-volume
+        configMap:
+          name: ingress-nginx-plugins
+```
+### 启用插件
+修改ingress-nginx-controller的配置`kubectl edit cm -n ingress-nginx ingress-nginx`增加字段`plugins: dynamic_conn_limit`以及`lua-shared-dicts: global_conns:10m,low_conns:10m,config_cache:10m`增加共享内存
+### 配置文件
+创建如下ConfigMap,配置全局连接数为8000，nginx1.org为高优域名，nginx.org为低优域名，低优域名最大连接数为3000，实现
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-conn-config
+  namespace: ingress-nginx
+data:
+  conn_limit_config.json: |
+    {
+      'global_threshold': 8000,
+      'high_priority_domains': ['nginx1.org'],
+      'low_priority': {
+        'domains': ['nginx.org'],
+        'max_conns': 3000
+      }
+    }
+```
+
+##  注解中插入lua脚本即可在access阶段执行下面脚本（不适用优先级分流）
+```
+     nginx.ingress.kubernetes.io/server-snippet: |
+      access_by_lua_file /etc/nginx/lua/scripts/dynamic-conn-limit.lua;
+```
+手动将脚本挂载进去即可，具体步骤参考文档上面，此种方法只能在access阶段执行，当连接释放时，存储的连接数变量无法减少。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://longxiucai.github.io/post/83.html">
+<meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
+<title>ingress-nginx-controller插件开发</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+<style>@import url('https://longxiucai.github.io/spoiler.css');</style>
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">ingress-nginx-controller插件开发</h1>
+<div class="title-right">
+    <a href="https://longxiucai.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>测试版本：ingress-nginx-controller:v1.7.0-2</p>
+<h2>开启access_by_lua_block，让acess阶段执行插件（适用于优先级分流）</h2>
+<pre class="notranslate"><code class="notranslate">kubectl exec -it  -n ingress-nginx ingress-nginx-controller-qdwws    -- cat template/nginx.tmpl &gt; nginx.tmpl
+</code></pre>
+<p>修改nginx.tmpl，下列access_by_lua_block部分是被注释掉的，去掉注释，增加plugins.run()</p>
+<pre class="notranslate"><code class="notranslate">location {{ $path }} {
+    ...
+            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
+            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
+            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
+            access_by_lua_block {
+                plugins.run()
+            }
+
+</code></pre>
+<p>将nginx.tmpl文件放到configmap中</p>
+<pre class="notranslate"><code class="notranslate">kubectl create cm -n ingress-nginx nginx-custom-template-config --from-file nginx.tmpl
+</code></pre>
+<p>修改ingress-nginx-controller的ds，增加nginx-configmap的挂载，保存如下文件为ingress-volume-patch.yaml后执行<code class="notranslate">kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller  --patch-file ingress-volume-patch.yaml</code></p>
+<pre class="notranslate"><code class="notranslate">spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: nginx-custom-template
+          mountPath: /etc/nginx/template/nginx.tmpl
+          subPath: nginx.tmpl
+      volumes:
+      - name: nginx-custom-template
+        configMap:
+          name: nginx-custom-template-config
+</code></pre>
+<h2>增加自定义插件并启用</h2>
+<h3>增加插件（插件中代码还需要调试优化）</h3>
+<p>创建如下ConfigMap，必须为main.lua，通过定义并返回<code class="notranslate">_M</code>来导出函数</p>
+<p>脚本说明:</p>
+<ul>
+<li>配置加载机制：
+<ul>
+<li>从缓存获取配置，缓存过期时间为 30 秒</li>
+<li>缓存未命中时从文件读取配置并更新缓存</li>
+</ul>
+</li>
+<li>核心逻辑：
+<ul>
+<li>判断当前请求的域名是否属于低优先级列表</li>
+<li>增加全局连接计数和（如果是低优先级）低优先级连接计数</li>
+<li>当全局连接数超过8000且低优先级连接数超过3000，返回 503 错误</li>
+</ul>
+</li>
+</ul>
+<pre class="notranslate"><code class="notranslate">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-plugins
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/component: controller
+data:
+  main.lua: |
+    local ngx = ngx
+    local cjson = require "cjson"
+    local _M = {}
+    local CONFIG_TTL = 30
+
+    -- 读取配置
+    local function get_config()
+      local CONFIG_PATH = "/etc/nginx/conf.d/conn_limit_config.json"
+      local config_cache = ngx.shared.config_cache
+      local cached = config_cache:get("config")
+      if cached then
+          return cjson.decode(cached)
+      end
+      local file = io.open(CONFIG_PATH, "r")
+      if not file then
+          ngx.log(ngx.ERR, "无法读取配置文件: ", CONFIG_PATH)
+          ngx.exit(500)
+      end
+      local content = file:read("*a")
+      file:close()
+      local config = cjson.decode(content)
+      config_cache:set("config", content, CONFIG_TTL)
+      return config
+    end
+
+    -- 判断域名是否在列表中
+    local function is_in_list(domain, list)
+      for _, d in ipairs(list) do
+          if d == domain then return true end
+      end
+      return false
+    end
+
+    -- 清理计数
+    local function cleanup(is_low, host)
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local new_global = global_conns:incr("total", -1, 0) or 0
+      local new_low = is_low and (low_conns:incr("count", -1, 0) or 0) or 0
+      ngx.log(ngx.INFO, "[结束阶段计数] Host: ", host or "",
+              " | 全局连接=", new_global,
+              " | 低优连接=", new_low)
+    end
+
+    -- access 阶段：连接数统计与限流
+    function _M.access()
+      ngx.log(ngx.INFO, "[conn-limit-TEST] access 阶段执行！")  -- 新增测试日志
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local config = get_config()
+      local host = ngx.var.host or ""
+      local is_low = is_in_list(host, config.low_priority.domains or {})
+
+      local global_threshold = config.global_threshold or 1
+      local low_max = config.low_priority.max_conns or 1
+
+      -- 增加计数
+      local current_global = global_conns:incr("total", 1, 0)
+      local current_low = is_low and low_conns:incr("count", 1, 0) or 0
+
+      ngx.log(ngx.INFO, "[访问阶段计数] Host: ", host,
+              " | 全局连接=", current_global,
+              " | 低优连接=", current_low)
+
+      -- 限制低优请求
+      if current_global &gt;= global_threshold and is_low and current_low &gt; low_max then
+          ngx.log(ngx.WARN, "[拒绝请求] Host=", host,
+                  " | 全局=", current_global,
+                  " | 低优=", current_low)
+          cleanup(is_low, host)
+          ngx.status = 503
+          ngx.say("Service busy (low-prio quota exceeded: ", current_low, "/", low_max, ")")
+          return ngx.exit(503)
+      end
+
+      -- 保存上下文
+      ngx.ctx.host = host
+      ngx.ctx.is_low = is_low
+    end
+
+    -- log 阶段：连接数释放
+    function _M.log()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          cleanup(is_low, host)
+      end
+    end
+    -- 客户端中断处理
+    function on_abort_phase()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          ngx.log(ngx.WARN, "[客户端中断] Host=", host)
+          cleanup(is_low, host)
+      end
+    end
+    return _M
+</code></pre>
+<p>挂载到ingress-nginx-controller的ds中，保存如下文件为ingress-plugins-patch.yaml后执行<code class="notranslate">kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller --patch-file ingress-plugins-patch.yaml</code></p>
+<pre class="notranslate"><code class="notranslate">spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: plugin-volume
+          mountPath: /etc/nginx/lua/plugins/dynamic_conn_limit/main.lua ##必须在/etc/nginx/lua/plugins/下面，目录为插件名称，文件为main.lua
+          subPath: main.lua
+      volumes:
+      - name: plugin-volume
+        configMap:
+          name: ingress-nginx-plugins
+</code></pre>
+<h3>启用插件</h3>
+<p>修改ingress-nginx-controller的配置<code class="notranslate">kubectl edit cm -n ingress-nginx ingress-nginx</code>增加字段<code class="notranslate">plugins: dynamic_conn_limit</code>以及<code class="notranslate">lua-shared-dicts: global_conns:10m,low_conns:10m,config_cache:10m</code>增加共享内存</p>
+<h3>配置文件</h3>
+<p>创建如下ConfigMap,配置全局连接数为8000，nginx1.org为高优域名，nginx.org为低优域名，低优域名最大连接数为3000，实现</p>
+<pre class="notranslate"><code class="notranslate">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-conn-config
+  namespace: ingress-nginx
+data:
+  conn_limit_config.json: |
+    {
+      "global_threshold": 8000,
+      "high_priority_domains": ["nginx1.org"],
+      "low_priority": {
+        "domains": ["nginx.org"],
+        "max_conns": 3000
+      }
+    }
+</code></pre>
+<h2>注解中插入lua脚本即可在access阶段执行下面脚本（不适用优先级分流）</h2>
+<pre class="notranslate"><code class="notranslate">     nginx.ingress.kubernetes.io/server-snippet: |
+      access_by_lua_file /etc/nginx/lua/scripts/dynamic-conn-limit.lua;
+</code></pre>
+<p>手动将脚本挂载进去即可，具体步骤参考文档上面，此种方法只能在access阶段执行，当连接释放时，存储的连接数变量无法减少。</p>
+<h2>存在问题</h2>
+<p>不知道是版本过低还是ingress-nginx-controller的bug，配置完成之后经常出现插件或者lua脚本注入执行不生效的问题，任何日志没打印，导致脚本的功能无法生效。但是脚本中存在错误的时候加载会报错，当多次者修改配置再还原，重启等操作之后，插件或者lua脚本功能<strong>可能</strong>会生效。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://longxiucai.github.io">龙某的小本本</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","longxiucai/longxiucai.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>
+
+</html>
