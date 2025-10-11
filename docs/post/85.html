@@ -21,7 +21,7 @@
 3. 下载[nginx-1.24.0.tar.gz](http://nginx.org/download/nginx-1.24.0.tar.gz)到/root/下
 4. 解压 tar xzfm nginx-1.24.0.tar.gz
 5. 进入目录 cd /root/nginx-1.24.0
-6. 编辑auto/lib/openssl/conf，将全部$OPENSSL/.openssl/修改为$OPENSSL/并保存
+6. 编辑auto/lib/openssl/conf，将全部$OPENSSL/.openssl/修改为$OPENSSL/并保存(sed -i 's|$OPENSSL/.openssl/|$OPENSSL/|g'  auto/lib/openssl/conf)
 7. 编译配置
 ```
 ./configure \
@@ -131,7 +131,7 @@ server
 3. 下载[nginx-1.24.0.tar.gz](http://nginx.org/download/nginx-1.24.0.tar.gz)到/root/下
 4. 解压 tar xzfm nginx-1.24.0.tar.gz
 5. 进入目录 cd /root/nginx-1.24.0
-6. 编辑auto/lib/openssl/conf，将全部$OPENSSL/.openssl/修改为$OPENSSL/并保存
+6. 编辑auto/lib/openssl/conf，将全部$OPENSSL/.openssl/修改为$OPENSSL/并保存(sed -i 's|$OPENSSL/.openssl/|$OPENSSL/|g'  auto/lib/openssl/conf)
 7. 编译配置
 ```
 ./configure \
@@ -305,7 +305,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li>下载<a href="http://nginx.org/download/nginx-1.24.0.tar.gz" rel="nofollow">nginx-1.24.0.tar.gz</a>到/root/下</li>
 <li>解压 tar xzfm nginx-1.24.0.tar.gz</li>
 <li>进入目录 cd /root/nginx-1.24.0</li>
-<li>编辑auto/lib/openssl/conf，将全部$OPENSSL/.openssl/修改为$OPENSSL/并保存</li>
+<li>编辑auto/lib/openssl/conf，将全部$OPENSSL/.openssl/修改为$OPENSSL/并保存(sed -i 's|$OPENSSL/.openssl/|$OPENSSL/|g'  auto/lib/openssl/conf)</li>
 <li>编译配置</li>
 </ol>
 <pre class="notranslate"><code class="notranslate">./configure \
