@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Sat, 11 Oct 2025 02:40:47 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>国密版nginx</title><link>https://longxiucai.github.io/post/85.html</link><description># 编译部署（nginx-1.24为例）
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Sat, 11 Oct 2025 02:41:25 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>国密版nginx</title><link>https://longxiucai.github.io/post/85.html</link><description># 编译部署（nginx-1.24为例）
 1. 下载gmssl_openssl_1.1_bxx.tar.gz到/root/下
 
 打开地址 https://www.gmssl.cn/gmssl/index.jsp 
@@ -65,11 +65,11 @@ http {
     server {
         listen 443 ssl;
         # 自己的证书
-	ssl_certificate /usr/local/nginx/conf/cert/nginx-sm2.cert;
-	ssl_certificate_key /usr/local/nginx/conf/cert/nginx-sm2.decrypted.pem; ##解密之后的key
-	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+        ssl_certificate /usr/local/nginx/conf/cert/nginx-sm2.cert;
+        ssl_certificate_key /usr/local/nginx/conf/cert/nginx-sm2.decrypted.pem; ##解密之后的key
+        ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
 	#配置ssl证书所需的加密套件
-	ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:AES128-SHA:DES-CBC3-SHA:ECC-SM4-CBC-SM3:ECC-SM4-GCM-SM3;
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:AES128-SHA:DES-CBC3-SHA:ECC-SM4-CBC-SM3:ECC-SM4-GCM-SM3;
         ssl_verify_client off;
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 10m;
