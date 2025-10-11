@@ -71,12 +71,10 @@ http {
     keepalive_timeout  65;
     server {
         listen 80;
-        server_name nginx.example1.kylinos.cn;
         return 301 https://$host$request_uri;
     }
     server {
         listen 443 ssl;
-        server_name nginx.example1.kylinos.cn;
         # 自己的证书
 	ssl_certificate /usr/local/nginx/conf/cert/nginx-sm2.cert;
 	ssl_certificate_key /usr/local/nginx/conf/cert/nginx-sm2.decrypted.pem; ##解密之后的key
@@ -84,9 +82,8 @@ http {
        
 	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
 	#配置ssl证书所需的加密套件
-	ssl_ciphers ECC-SM4-SM3:ECDH:AESGCM:HIGH:MEDIUM:!RC4:!DH:!MD5:!aNULL:!eNULL;
+	ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:AES128-SHA:DES-CBC3-SHA:ECC-SM4-CBC-SM3:ECC-SM4-GCM-SM3;
         ssl_verify_client off;
-        # SM2相关加密配置
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 10m;
 
@@ -186,12 +183,10 @@ http {
     keepalive_timeout  65;
     server {
         listen 80;
-        server_name nginx.example1.kylinos.cn;
         return 301 https://$host$request_uri;
     }
     server {
         listen 443 ssl;
-        server_name nginx.example1.kylinos.cn;
         # 自己的证书
 	ssl_certificate /usr/local/nginx/conf/cert/nginx-sm2.cert;
 	ssl_certificate_key /usr/local/nginx/conf/cert/nginx-sm2.decrypted.pem; ##解密之后的key
@@ -199,9 +194,8 @@ http {
        
 	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
 	#配置ssl证书所需的加密套件
-	ssl_ciphers ECC-SM4-SM3:ECDH:AESGCM:HIGH:MEDIUM:!RC4:!DH:!MD5:!aNULL:!eNULL;
+	ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:AES128-SHA:DES-CBC3-SHA:ECC-SM4-CBC-SM3:ECC-SM4-GCM-SM3;
         ssl_verify_client off;
-        # SM2相关加密配置
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 10m;
 
@@ -365,12 +359,10 @@ http {
     keepalive_timeout  65;
     server {
         listen 80;
-        server_name nginx.example1.kylinos.cn;
         return 301 https://$host$request_uri;
     }
     server {
         listen 443 ssl;
-        server_name nginx.example1.kylinos.cn;
         # 自己的证书
 	ssl_certificate /usr/local/nginx/conf/cert/nginx-sm2.cert;
 	ssl_certificate_key /usr/local/nginx/conf/cert/nginx-sm2.decrypted.pem; ##解密之后的key
@@ -378,9 +370,8 @@ http {
        
 	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
 	#配置ssl证书所需的加密套件
-	ssl_ciphers ECC-SM4-SM3:ECDH:AESGCM:HIGH:MEDIUM:!RC4:!DH:!MD5:!aNULL:!eNULL;
+	ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:AES128-SHA:DES-CBC3-SHA:ECC-SM4-CBC-SM3:ECC-SM4-GCM-SM3;
         ssl_verify_client off;
-        # SM2相关加密配置
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 10m;
 
