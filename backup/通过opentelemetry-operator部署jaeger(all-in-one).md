@@ -1,5 +1,7 @@
+集群中需要有cert-manager。
 
 kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml 
+
 再创建如下资源：
 ```
 apiVersion: opentelemetry.io/v1beta1

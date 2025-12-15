@@ -1,45 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 15 Dec 2025 07:13:01 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>通过opentelemetry-operator部署jaeger(all-in-one)</title><link>https://longxiucai.github.io/post/87.html</link><description>
-kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml 
-再创建如下资源：
-```
-apiVersion: opentelemetry.io/v1beta1
-kind: OpenTelemetryCollector
-metadata:
-  name: jaeger-inmemory-instance
-spec:
-  upgradeStrategy: automatic
-  image: registry.your-registry.org/jaegertracing/jaeger:2.0.0-rc2
-  ports:
-  - name: jaeger
-    port: 16686
-  config:
-    service:
-      extensions: [jaeger_storage, jaeger_query]
-      pipelines:
-        traces:
-          receivers: [otlp]    
-          exporters: [jaeger_storage_exporter]
-    extensions:
-      jaeger_query:
-        storage:
-          traces: memstore
-      jaeger_storage:
-        backends:
-          memstore:
-            memory:
-              max_traces: 100000
-    receivers:
-      otlp:
-        protocols:
-          grpc:
-            endpoint: 0.0.0.0:4317
-          http:
-            endpoint: 0.0.0.0:4318
-    exporters:
-      jaeger_storage_exporter:
-        trace_storage: memstore
-```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/87.html</guid><pubDate>Mon, 15 Dec 2025 07:12:33 +0000</pubDate></item><item><title>kubectl top命令报错error: metrics not available yet排查思路</title><link>https://longxiucai.github.io/post/86.html</link><description>1、检查apiservice
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 15 Dec 2025 07:13:30 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>通过opentelemetry-operator部署jaeger(all-in-one)</title><link>https://longxiucai.github.io/post/87.html</link><description>集群中需要有cert-manager。</description><guid isPermaLink="true">https://longxiucai.github.io/post/87.html</guid><pubDate>Mon, 15 Dec 2025 07:12:33 +0000</pubDate></item><item><title>kubectl top命令报错error: metrics not available yet排查思路</title><link>https://longxiucai.github.io/post/86.html</link><description>1、检查apiservice
 ```
 [root@master1 ~]# kubectl get apiservice v1beta1.metrics.k8s.io
 NAME                     SERVICE                         AVAILABLE   AGE
