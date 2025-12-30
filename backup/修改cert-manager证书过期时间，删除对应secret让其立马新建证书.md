@@ -2,7 +2,9 @@
 #!/bin/bash
 
 # 配置部分 - 在这里设置目标月数
-TARGET_MONTHS=120  # 例如36个月=3年
+TARGET_MONTHS=240  # 例如240个月=20年
+# 备份目录
+BACKUP_DIR="./secret_backups"
 
 # 计算小时数（1个月按30天计算，1天=24小时）
 HOURS_PER_MONTH=$((30 * 24))  # 720小时/月
@@ -11,10 +13,33 @@ TARGET_DURATION=$((TARGET_MONTHS * HOURS_PER_MONTH))"h"
 # 创建日志文件
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="certificate_update_${TIMESTAMP}.log"
+# ===== 新增：自动创建备份目录 & 初始化日志 =====
+mkdir -p ${BACKUP_DIR} && chmod 755 ${BACKUP_DIR}
 echo "===== 证书更新操作日志 - $(date) =====" > "$LOG_FILE"
 echo "目标有效期: $TARGET_MONTHS 个月 ($TARGET_DURATION)" >> "$LOG_FILE"
+echo "Secret备份目录: $(realpath ${BACKUP_DIR})" >> "$LOG_FILE"
 echo "====================================" >> "$LOG_FILE"
 echo "" >> "$LOG_FILE"
+
+mkdir -p $BACKUP_DIR
+
+backup_secret() {
+    local ns=$1
+    local secret=$2
+    local backup_file="${BACKUP_DIR}/${ns}_${secret}_${TIMESTAMP}.yaml"
+    
+    echo "  📦 备份secret $ns/$secret 到本地..."
+    # 完整备份Secret的所有内容（YAML格式，可直接kubectl apply恢复）
+    if kubectl get secret "$secret" -n "$ns" -o yaml > "${backup_file}" 2>&1; then
+        echo "  ✅ 备份成功: ${backup_file}"
+        echo "  备份Secret成功: $(realpath ${backup_file})" >> "$LOG_FILE"
+        return 0
+    else
+        echo "  ⚠️ 警告：secret $ns/$secret 备份失败！"
+        echo "  警告：Secret备份失败 $ns/$secret" >> "$LOG_FILE"
+        return 1
+    fi
+}
 
 # 函数：等待secret创建
 wait_for_secret() {
@@ -71,6 +96,8 @@ check_cert_expiry() {
 
 # 获取所有命名空间
 namespaces=$(kubectl get namespaces -o jsonpath='{.items[*].metadata.name}')
+# 指定命名ns
+# namespaces="test1  test2"
 
 # 记录总数统计
 total_certs=0
@@ -79,6 +106,7 @@ failed_certs=0
 
 echo "===== 开始证书更新流程 ====="
 echo "目标有效期: $TARGET_MONTHS 个月 ($TARGET_DURATION)"
+echo "Secret备份目录: $(realpath ${BACKUP_DIR})"
 echo "日志将保存至: $LOG_FILE"
 echo ""
 
@@ -118,9 +146,12 @@ for ns in $namespaces; do
         # 如果当前duration与目标不同，则进行更新
         if [ "$current_duration" != "$TARGET_DURATION" ]; then
             # 使用kubectl patch更新duration
+                backup_secret "$ns" "$secret_name"
             if kubectl patch certificate "$cert" -n "$ns" --type=merge -p "{\"spec\":{\"duration\":\"$TARGET_DURATION\"}}"; then
                 echo "  ✅ 已更新 $ns/$cert: $current_duration -> $TARGET_DURATION"
                 echo "  已更新: $current_duration -> $TARGET_DURATION" >> "$LOG_FILE"
+                
+                backup_secret "$ns" "$secret_name"
                 
                 # 删除secret触发更新
                 echo "  删除secret $secret_name 以触发证书更新..."
@@ -160,6 +191,7 @@ echo "===== 操作完成 ====="
 echo "总处理Certificate资源: $total_certs"
 echo "成功更新: $updated_certs"
 echo "更新失败: $failed_certs"
+echo "Secret备份目录: $(realpath ${BACKUP_DIR})"
 echo "Certificate资源如下"
 kubectl get certificates --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.name}{" "}{.spec.duration}{"\n"}{end}'
 echo "详细日志: $LOG_FILE"
@@ -169,5 +201,7 @@ echo "更新总结:" >> "$LOG_FILE"
 echo "总处理Certificate资源: $total_certs" >> "$LOG_FILE"
 echo "成功更新: $updated_certs" >> "$LOG_FILE"
 echo "更新失败: $failed_certs" >> "$LOG_FILE"
+echo "Secret备份目录: $(realpath ${BACKUP_DIR})" >> "$LOG_FILE"
 echo "操作完成时间: $(date)" >> "$LOG_FILE"
+
 ```
