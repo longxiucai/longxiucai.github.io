@@ -23,13 +23,19 @@ import (
 
 // 选主核心配置
 const (
-	leaderLockName      = "lyx-leader-lock"
+	leaderLockName      = "alertmanager-webhook-leader-lock"
 	leaderLockNamespace = "monitoring"
-	leaseDuration       = 15 * time.Second
-	renewDeadline       = 10 * time.Second
-	retryPeriod         = 2 * time.Second
-	reElectDelay        = 1 * time.Second
-	logFilePath         = "/file/go/src/test/log/leader-election.log"
+	// Leader 身份的「最大有效期」 / Lease 锁的「租期时长」
+	leaseDuration = 15 * time.Second
+	// Leader 的「续约超时时间」 / 「身份续命窗口期」
+	renewDeadline = 10 * time.Second
+
+	// 两种场景下的「重试间隔」（最灵活的参数，控制集群抢主效率），覆盖所有非 Leader 实例 + Leader 续约失败场景：
+	// 场景①：Follower 实例（非 Leader）的「抢主重试间隔」。未当选 Leader 的实例，会每隔 retryPeriod 时间，主动查询 K8s 中的 Lease 锁状态
+	// 场景②：Leader 实例的「续约重试间隔」。Leader 实例会在「续约窗口期（renewDeadline）」内，每隔 retryPeriod 时间，主动发起 Lease 锁续约请求，直到续约成功
+	retryPeriod  = 2 * time.Second
+	reElectDelay = 1 * time.Second
+	logFilePath  = "/file/go/src/test/log/leader-election.log"
 )
 
 var (
