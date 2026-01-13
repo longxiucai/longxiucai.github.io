@@ -18,10 +18,20 @@ kind: ServiceAccount
 metadata:
   name: test
   namespace: kube-system
+---
+# sa-token-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-sa-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: test
+type: kubernetes.io/service-account-token
 ```
 2. 执行下面命令(替换`KUBE_API`为实际)
 ```
-JWT_TOKEN_KUBESYSTEM_DEFAULT=`kubectl get -n kube-system secret $(kubectl get serviceaccount -n kube-system test -o jsonpath='{.secrets[0].name}') -o jsonpath='{.data.token}' | base64 --decode`
+JWT_TOKEN_KUBESYSTEM_DEFAULT=`kubectl get secret test-sa-token -n kube-system -o jsonpath='{.data.token}' | base64 -d`
 KUBE_API=https://172.20.187.11:6443
 ```
 3. 请求

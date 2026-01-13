@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 05 Jan 2026 09:46:08 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>go程序利用k8s leaderelection选举（日志滚存+日志打印控制台+选举+多任务）</title><link>https://longxiucai.github.io/post/88.html</link><description># 日志滚存+日志打印控制台+选举+多任务（一个常驻任务、一个leader执行任务）
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 13 Jan 2026 06:07:29 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>go程序利用k8s leaderelection选举（日志滚存+日志打印控制台+选举+多任务）</title><link>https://longxiucai.github.io/post/88.html</link><description># 日志滚存+日志打印控制台+选举+多任务（一个常驻任务、一个leader执行任务）
 ```
 package main
 
@@ -2498,35 +2498,45 @@ ALL                   # discNum （ALL表示只有一张安装盘）&#13;
 &#13;
 packages就是存放包的目录，对这个目录执行createrepo命令就会生成一个repodata的目录，这个repodata就是yum源，里面的文件基本都是xml格式，记录了Packages中所有包的基本信息，如包名、包信息、包版本、包中的文件清单等等；&#13;
 &#13;
-。</description><guid isPermaLink="true">https://longxiucai.github.io/post/15.html</guid><pubDate>Tue, 02 Jul 2024 06:18:07 +0000</pubDate></item><item><title>curl k8s api</title><link>https://longxiucai.github.io/post/14.html</link><description>1. apply下面的资源文件&#13;
-```&#13;
-apiVersion: rbac.authorization.k8s.io/v1&#13;
-kind: ClusterRoleBinding&#13;
-metadata:&#13;
-  name: test&#13;
-roleRef:&#13;
-  apiGroup: rbac.authorization.k8s.io&#13;
-  kind: ClusterRole&#13;
-  name: cluster-admin&#13;
-subjects:&#13;
-  - kind: ServiceAccount&#13;
-    name: test&#13;
-    namespace: kube-system&#13;
----&#13;
-apiVersion: v1&#13;
-kind: ServiceAccount&#13;
-metadata:&#13;
-  name: test&#13;
-  namespace: kube-system&#13;
-```&#13;
-2. 执行下面命令(替换`KUBE_API`为实际)&#13;
-```&#13;
-JWT_TOKEN_KUBESYSTEM_DEFAULT=`kubectl get -n kube-system secret $(kubectl get serviceaccount -n kube-system test -o jsonpath='{.secrets[0].name}') -o jsonpath='{.data.token}' | base64 --decode`&#13;
-KUBE_API=https://172.20.187.11:6443&#13;
-```&#13;
-3. 请求&#13;
-```&#13;
-curl  $KUBE_API/apis/apps/v1/deployments  --header 'Authorization: Bearer $JWT_TOKEN_KUBESYSTEM_DEFAULT' -k&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/15.html</guid><pubDate>Tue, 02 Jul 2024 06:18:07 +0000</pubDate></item><item><title>curl k8s api</title><link>https://longxiucai.github.io/post/14.html</link><description>1. apply下面的资源文件
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: test
+    namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: test
+  namespace: kube-system
+---
+# sa-token-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-sa-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: test
+type: kubernetes.io/service-account-token
+```
+2. 执行下面命令(替换`KUBE_API`为实际)
+```
+JWT_TOKEN_KUBESYSTEM_DEFAULT=`kubectl get secret test-sa-token -n kube-system -o jsonpath='{.data.token}' | base64 -d`
+KUBE_API=https://172.20.187.11:6443
+```
+3. 请求
+```
+curl  $KUBE_API/apis/apps/v1/deployments  --header 'Authorization: Bearer $JWT_TOKEN_KUBESYSTEM_DEFAULT' -k
 ```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/14.html</guid><pubDate>Tue, 02 Jul 2024 06:13:16 +0000</pubDate></item><item><title>linux家目录下的中文目录修改为英文</title><link>https://longxiucai.github.io/post/13.html</link><description>1. 将这些目录修改为英文名，如：  mv 桌面 Desktop &#13;
 &#13;
 2. 修改配置文件`~/.config/user-dirs.dirs`，将对应的路径改为英文名（要和1中修改的英文名对应）&#13;
