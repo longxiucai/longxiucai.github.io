@@ -269,7 +269,7 @@ awk '!a[$0]++' /path/to/file
 <meta property="og:url" content="https://longxiucai.github.io/post/52.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
 <title>运维常用命令/脚本</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -343,11 +343,12 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <ol start="3">
 <li>通过<code class="notranslate">ping</code>获取丢包率与平均延迟</li>
 </ol>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 执行ping命令并获取统计信息</span>
-ping_result=<span class="pl-s"><span class="pl-pds">$(</span>ping -c 5 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$target</span><span class="pl-pds">"</span></span> <span class="pl-k">|</span> tail -2<span class="pl-pds">)</span></span>
-<span class="pl-c"><span class="pl-c">#</span> 提取丢包率和平均延迟</span>
-packet_loss=<span class="pl-s"><span class="pl-pds">$(</span>echo <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$ping_result</span><span class="pl-pds">"</span></span> <span class="pl-k">|</span> grep -oP <span class="pl-s"><span class="pl-pds">'</span>\d+(?=% packet loss)<span class="pl-pds">'</span></span><span class="pl-pds">)</span></span>
-avg_latency=<span class="pl-s"><span class="pl-pds">$(</span>echo <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$ping_result</span><span class="pl-pds">"</span></span> <span class="pl-k">|</span> grep -oP <span class="pl-s"><span class="pl-pds">'</span>(?&lt;=rtt min/avg/max/mdev = )[\d.]+/[\d.]+/[\d.]+/[\d.]+<span class="pl-pds">'</span></span> <span class="pl-k">|</span> awk -F <span class="pl-s"><span class="pl-pds">'</span>/<span class="pl-pds">'</span></span> <span class="pl-s"><span class="pl-pds">'</span>{print $2}<span class="pl-pds">'</span></span><span class="pl-pds">)</span></span></pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate"># 执行ping命令并获取统计信息
+ping_result=$(ping -c 5 "$target" | tail -2)
+# 提取丢包率和平均延迟
+packet_loss=$(echo "$ping_result" | grep -oP '\d+(?=% packet loss)')
+avg_latency=$(echo "$ping_result" | grep -oP '(?&lt;=rtt min/avg/max/mdev = )[\d.]+/[\d.]+/[\d.]+/[\d.]+' | awk -F '/' '{print $2}')
+</code></pre>
 <ol start="4">
 <li>cpu使用率</li>
 </ol>
