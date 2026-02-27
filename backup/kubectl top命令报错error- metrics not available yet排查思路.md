@@ -86,6 +86,7 @@ spec:
   queryLogFile: /dev/stdout
 ```
 * 不是operator参考prometheus的query_log_file（https://prometheus.io/docs/guides/query-log/）功能
+
 5、执行`kubectl top node --v 8`可以查看具体哪里报错，之后马上查看日志`kubectl logs prometheus-k8s-0 -n monitoring |grep windows-exporter`
 ```
 {"httpRequest":{"clientIP":"10.42.39.185","method":"GET","path":"/api/v1/query"},"params":{"end":"2025-11-19T07:49:47.921Z","query":"sum by (instance) (\n  node_memory_MemTotal_bytes{job=\"node-exporter\",instance=~\"node2|node3|master1|master2|master3|node1\"}\n  -\n  node_memory_MemAvailable_bytes{job=\"node-exporter\",instance=~\"node2|node3|master1|master2|master3|node1\"}\n)\nor sum by (instance) (\n  windows_cs_physical_memory_bytes{job=\"windows-exporter\",instance=~\"node2|node3|master1|master2|master3|node1\"}\n  -\n  windows_memory_available_bytes{job=\"windows-exporter\",instance=~\"node2|node3|master1|master2|master3|node1\"}\n)\n","start":"2025-11-19T07:49:47.921Z","step":0},"spanID":"0000000000000000","stats":{"timings":{"evalTotalTime":0.001010732,"resultSortTime":0,"queryPreparationTime":0.000504346,"innerEvalTime":0.000476046,"execQueueTime":0.000034521,"execTotalTime":0.001062394},"samples":{"totalQueryableSamples":12,"peakSamples":30}},"ts":"2025-11-19T07:49:47.924Z"}
