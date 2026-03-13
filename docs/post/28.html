@@ -23,7 +23,7 @@
 <meta property="og:url" content="https://longxiucai.github.io/post/28.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
 <title>MarkDown语法</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -465,16 +465,11 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 具体代码<br>
 <code class="notranslate">```</code></p>
 <h3>效果</h3>
-<pre lang="Java" class="notranslate"><code class="notranslate">public static void main(String[]args){} //Java
-</code></pre>
-<pre lang="c" class="notranslate"><code class="notranslate">int main(int argc, char *argv[]) //C
-</code></pre>
-<pre lang="Bash" class="notranslate"><code class="notranslate">echo "hello GitHub" #Bash
-</code></pre>
-<pre lang="javascript" class="notranslate"><code class="notranslate">document.getElementById("myH1").innerHTML="Welcome to my Homepage"; //javascipt
-</code></pre>
-<pre lang="cpp" class="notranslate"><code class="notranslate">string &amp;operator+(const string&amp; A,const string&amp; B) //cpp
-</code></pre>
+<div class="highlight highlight-source-java"><pre class="notranslate"><span class="pl-k">public</span> <span class="pl-k">static</span> <span class="pl-smi">void</span> <span class="pl-en">main</span>(<span class="pl-smi">String</span>[]<span class="pl-s1">args</span>){} <span class="pl-c">//Java</span></pre></div>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> <span class="pl-en">main</span>(<span class="pl-smi">int</span> <span class="pl-s1">argc</span>, <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">argv</span>[]) <span class="pl-c">//C</span></pre></div>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>hello GitHub<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span>Bash</span></pre></div>
+<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-smi">document</span><span class="pl-kos">.</span><span class="pl-en">getElementById</span><span class="pl-kos">(</span><span class="pl-s">"myH1"</span><span class="pl-kos">)</span><span class="pl-kos">.</span><span class="pl-c1">innerHTML</span><span class="pl-c1">=</span><span class="pl-s">"Welcome to my Homepage"</span><span class="pl-kos">;</span> <span class="pl-c">//javascipt</span></pre></div>
+<div class="highlight highlight-source-c++"><pre class="notranslate">string &amp;<span class="pl-k">operator</span>+(<span class="pl-k">const</span> string&amp; A,<span class="pl-k">const</span> string&amp; B) <span class="pl-c"><span class="pl-c">//</span>cpp</span></pre></div>
 <h2>表格</h2>
 <pre class="notranslate"><code class="notranslate">表头1  | 表头2|
 --------- | --------|
@@ -592,11 +587,10 @@ GFM中可以显示的展示diff效果。使用绿色表示新增，红色表示�
 并且其内容中，可以用 <code class="notranslate">+ </code>开头表示新增，<code class="notranslate">- </code>开头表示删除。<br>
 另外还有有 <code class="notranslate">!</code>和<code class="notranslate">#</code>的语法。</p>
 <h4>效果</h4>
-<pre lang="diff" class="notranslate"><code class="notranslate">+ 人闲桂花落，
-- 夜静春山空。
-! 月出惊山鸟，
-# 时鸣春涧中。
-</code></pre>
+<div class="highlight highlight-source-diff"><pre class="notranslate"><span class="pl-mi1"><span class="pl-mi1">+</span> 人闲桂花落，</span>
+<span class="pl-md"><span class="pl-md">-</span> 夜静春山空。</span>
+<span class="pl-mc"><span class="pl-mc">!</span> 月出惊山鸟，</span>
+<span class="pl-c"><span class="pl-c">#</span> 时鸣春涧中。</span></pre></div>
 <h2>常用HTML语法</h2>
 <p>markdown是支持HTML语法的，虽然不鼓励大量使用HTML语法，毕竟那样就丧失了markdown的意义，但是有一些HTML语法在写README的时候是很少的补充。</p>
 <h3>折叠</h3>
