@@ -17,7 +17,7 @@
 <meta property="og:url" content="https://longxiucai.github.io/post/63.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
 <title>.gitignore用法</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -84,7 +84,8 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li>
 <p><strong>创建 <code class="notranslate">.gitignore</code> 文件</strong><br>
 在 Git 仓库的根目录下创建一个 <code class="notranslate">.gitignore</code> 文件：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">touch .gitignore</pre></div>
+<pre lang="bash" class="notranslate"><code class="notranslate">touch .gitignore
+</code></pre>
 </li>
 <li>
 <p><strong>添加忽略规则</strong><br>
@@ -105,8 +106,9 @@ secret-config.json
 <li>
 <p><strong>提交 <code class="notranslate">.gitignore</code> 文件</strong><br>
 <code class="notranslate">.gitignore</code> 也是 Git 版本管理的一部分，应该提交到仓库：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">git add .gitignore
-git commit -m <span class="pl-s"><span class="pl-pds">"</span>添加 gitignore 规则<span class="pl-pds">"</span></span></pre></div>
+<pre lang="bash" class="notranslate"><code class="notranslate">git add .gitignore
+git commit -m "添加 gitignore 规则"
+</code></pre>
 </li>
 </ol>
 <hr>
@@ -143,7 +145,8 @@ git commit -m <span class="pl-s"><span class="pl-pds">"</span>添加 gitignore �
 <hr>
 <h2><strong>已经被 Git 追踪的文件无法被忽略</strong></h2>
 <p>如果某个文件已经被 Git 追踪，即使后来加到 <code class="notranslate">.gitignore</code>，它仍然不会被忽略。可以使用以下命令删除缓存：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">git rm -r --cached file_or_dir</pre></div>
+<pre lang="bash" class="notranslate"><code class="notranslate">git rm -r --cached file_or_dir
+</code></pre>
 <p>然后重新提交。</p>
 <hr>
 <h2><strong>常见的 <code class="notranslate">.gitignore</code> 示例</strong></h2>
