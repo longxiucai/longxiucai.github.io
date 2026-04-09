@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Thu, 05 Mar 2026 09:15:55 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>docker buildx使用代理</title><link>https://longxiucai.github.io/post/89.html</link><description>```
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Thu, 09 Apr 2026 08:27:48 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>docker buildx使用代理</title><link>https://longxiucai.github.io/post/89.html</link><description>```
 # 创建buildx构建器实例（如果不存在）
 BUILDER_NAME='build-multiarch'
 if ! docker-buildx ls | grep -q $BUILDER_NAME; then
@@ -1705,133 +1705,133 @@ echo '已完成处理，结果保存到 $output_file'
 。</description><guid isPermaLink="true">https://longxiucai.github.io/post/54.html</guid><pubDate>Thu, 16 Jan 2025 02:17:33 +0000</pubDate></item><item><title>kubernetes dnsPolicy</title><link>https://longxiucai.github.io/post/53.html</link><description># dnsPolicy的4种用法&#13;
 策略名称 | 说明 | 特点 | 适用场景&#13;
 -- | -- | -- | --&#13;
-ClusterFirst | 默认策略，优先通过集群的 DNS 解析 Kubernetes 服务域名，无法解析时退回到宿主机的 DNS 设置。</description><guid isPermaLink="true">https://longxiucai.github.io/post/53.html</guid><pubDate>Wed, 08 Jan 2025 06:37:27 +0000</pubDate></item><item><title>运维常用命令/脚本</title><link>https://longxiucai.github.io/post/52.html</link><description>1. 获取kubernetes cluster master节点ip地址&#13;
-```&#13;
-kubectl get nodes --selector=node-role.kubernetes.io/control-plane='' -o=jsonpath='{.items[*].status.addresses[?(@.type=='InternalIP')].address}'&#13;
-&#13;
-```&#13;
-2.  获取kubernetes cluster node节点ip地址&#13;
-```&#13;
-kubectl get nodes --selector=node-role.kubernetes.io/node='' -o=jsonpath='{.items[*].status.addresses[?(@.type=='InternalIP')].address}'&#13;
-```&#13;
-3. 通过`ping`获取丢包率与平均延迟&#13;
-```shell&#13;
-# 执行ping命令并获取统计信息&#13;
-ping_result=$(ping -c 5 '$target' | tail -2)&#13;
-# 提取丢包率和平均延迟&#13;
-packet_loss=$(echo '$ping_result' | grep -oP '\d+(?=% packet loss)')&#13;
-avg_latency=$(echo '$ping_result' | grep -oP '(?&lt;=rtt min/avg/max/mdev = )[\d.]+/[\d.]+/[\d.]+/[\d.]+' | awk -F '/' '{print $2}')&#13;
-```&#13;
-4. cpu使用率&#13;
-```&#13;
-top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%* id.*/\1/' | awk '{print 100 - $1}'&#13;
-```&#13;
-5. 内存使用率&#13;
-```&#13;
-free | awk 'FNR==2{printf '%.2f', $3/$2*100}'&#13;
-```&#13;
-6. 随机选择一个ip地址&#13;
-```&#13;
-echo $IPs | tr ' ' '\n' | shuf -n 1&#13;
-```&#13;
-7. 文件数量限制，清除多余文件&#13;
-```&#13;
-cleanup_old_files() {&#13;
-  local DIR='$1'&#13;
-  local MAX_FILES='$2'&#13;
-&#13;
-  # 检查目录是否存在&#13;
-  if [ ! -d '$DIR' ]; then&#13;
-    echo 'Directory $DIR does not exist.'&#13;
-    return 1&#13;
-  fi&#13;
-&#13;
-  # 获取所有文件，并按时间排序&#13;
-  FILES=$(ls -1t '$DIR')&#13;
-&#13;
-  COUNT=$(echo '$FILES' | wc -l)&#13;
-&#13;
-  # 如果文件数量超过最大限制，则删除最旧的文件&#13;
-  if [ $COUNT -gt $MAX_FILES ]; then&#13;
-    # 获取最旧的文件&#13;
-    OLD_FILES=$(echo '$FILES' | tail -n $((COUNT - MAX_FILES)))&#13;
-    # 删除这些旧的文件&#13;
-    for FILE in $OLD_FILES; do&#13;
-      rm '$DIR/$FILE'&#13;
-      echo 'Deleted old file: $FILE'&#13;
-    done&#13;
-  fi&#13;
-}&#13;
-## 例如目录/opt/test中只保留5份：&#13;
-cleanup_old_files /opt/test 5&#13;
-```&#13;
-例如需要通过ssh远端调用此函数&#13;
-```&#13;
-ssh -q -o StrictHostKeyChecking=no 'root@10.20.30.40' '$(typeset -f cleanup_old_files); cleanup_old_files /opt/test 5'&#13;
-```&#13;
-8. `dd`测试写速率&#13;
-```&#13;
-# dd输出如下&#13;
-[root@abcdefg01 ~]# dd if=/dev/zero of=.tmp.test bs=1M count=100&#13;
-记录了100+0 的读入&#13;
-记录了100+0 的写出&#13;
-104857600字节（105 MB，100 MiB）已复制，0.233213 s，450 MB/s&#13;
-# 输出写速率&#13;
-dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?\s+[A-Za-z]+/s'&#13;
-# 不要单位&#13;
-dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'&#13;
-```&#13;
-9. alertmanager告警接口，产生告警&#13;
-```&#13;
-curl -X POST http://172.20.41.32:30300/api/v2/alerts \&#13;
-  -H 'Content-Type: application/json' \&#13;
-  -d '[&#13;
-    {&#13;
-      'labels': {&#13;
-        'alertname': '系统连续崩溃，已经出现雪崩状况！',&#13;
-        'dev': 'sda1',&#13;
-        'instance': '实例1',&#13;
-        'msgtype': 'testing'&#13;
-      },&#13;
-      'annotations': {&#13;
-        'info': '程序员小王提示您：这个系统雪崩了，快处理！',&#13;
-        'summary': '请检查实例示例1'&#13;
-      }&#13;
-    },&#13;
-    {&#13;
-      'labels': {&#13;
-        'alertname': '管理系统损坏',&#13;
-        'dev': 'sda2',&#13;
-        'instance': '实例1',&#13;
-        'msgtype': 'testing'&#13;
-      },&#13;
-      'annotations': {&#13;
-        'info': '程序员小王提示您：电子商务管理系统中订单，仓库模块已经雪崩，快处理！',&#13;
-        'summary': '请检查实例示例1',&#13;
-        'runbook': '以下链接http://192.168.5.128:9093/api/v2/alerts应该是可点击的'&#13;
-      }&#13;
-    }&#13;
-  ]'&#13;
-&#13;
-```&#13;
-10. 集群中全部容器运行date命令检查时区（date命令不存在的情况下报错）&#13;
-```&#13;
-kubectl get pods -A -o 'jsonpath={range .items[*]}{.metadata.namespace}{'\t'}{.metadata.name}{'\t'}{range .spec.containers[*]}{.name}{'\t'}{end}{'\n'}{end}' | while IFS=$'\t' read -r namespace pod containers; do&#13;
-    for container in $containers; do&#13;
-        if [[ -z '$container' ]]; then&#13;
-            echo -e '$namespace,$pod,No container found,-'&#13;
-            continue&#13;
-        fi&#13;
-        output=$(kubectl exec -n '$namespace' '$pod' -c '$container' -- date 2&gt;&amp;1)&#13;
-        echo -e '$namespace,$pod,$container,$output'&#13;
-    done&#13;
-done&#13;
-```&#13;
-11. 去除重复行&#13;
-```&#13;
-awk '!a[$0]++' /path/to/file&#13;
-```&#13;
-12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。</description><guid isPermaLink="true">https://longxiucai.github.io/post/52.html</guid><pubDate>Tue, 10 Dec 2024 07:49:40 +0000</pubDate></item><item><title>calico network policy只开通pod间tcp流量</title><link>https://longxiucai.github.io/post/51.html</link><description># 资源文件&#13;
+ClusterFirst | 默认策略，优先通过集群的 DNS 解析 Kubernetes 服务域名，无法解析时退回到宿主机的 DNS 设置。</description><guid isPermaLink="true">https://longxiucai.github.io/post/53.html</guid><pubDate>Wed, 08 Jan 2025 06:37:27 +0000</pubDate></item><item><title>运维常用命令/脚本</title><link>https://longxiucai.github.io/post/52.html</link><description>1. 获取kubernetes cluster master节点ip地址
+```
+kubectl get nodes --selector=node-role.kubernetes.io/control-plane='' -o=jsonpath='{.items[*].status.addresses[?(@.type=='InternalIP')].address}'
+
+```
+2.  获取kubernetes cluster node节点ip地址
+```
+kubectl get nodes --selector=node-role.kubernetes.io/node='' -o=jsonpath='{.items[*].status.addresses[?(@.type=='InternalIP')].address}'
+```
+3. 通过`ping`获取丢包率与平均延迟
+```shell
+# 执行ping命令并获取统计信息
+ping_result=$(ping -c 5 '$target' | tail -2)
+# 提取丢包率和平均延迟
+packet_loss=$(echo '$ping_result' | grep -oP '\d+(?=% packet loss)')
+avg_latency=$(echo '$ping_result' | grep -oP '(?&lt;=rtt min/avg/max/mdev = )[\d.]+/[\d.]+/[\d.]+/[\d.]+' | awk -F '/' '{print $2}')
+```
+4. cpu使用率
+```
+top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%* id.*/\1/' | awk '{print 100 - $1}'
+```
+5. 内存使用率
+```
+free | awk 'FNR==2{printf '%.2f', $3/$2*100}'
+```
+6. 随机选择一个ip地址
+```
+echo $IPs | tr ' ' '\n' | shuf -n 1
+```
+7. 文件数量限制，清除多余文件
+```
+cleanup_old_files() {
+  local DIR='$1'
+  local MAX_FILES='$2'
+
+  # 检查目录是否存在
+  if [ ! -d '$DIR' ]; then
+    echo 'Directory $DIR does not exist.'
+    return 1
+  fi
+
+  # 获取所有文件，并按时间排序
+  FILES=$(ls -1t '$DIR')
+
+  COUNT=$(echo '$FILES' | wc -l)
+
+  # 如果文件数量超过最大限制，则删除最旧的文件
+  if [ $COUNT -gt $MAX_FILES ]; then
+    # 获取最旧的文件
+    OLD_FILES=$(echo '$FILES' | tail -n $((COUNT - MAX_FILES)))
+    # 删除这些旧的文件
+    for FILE in $OLD_FILES; do
+      rm '$DIR/$FILE'
+      echo 'Deleted old file: $FILE'
+    done
+  fi
+}
+## 例如目录/opt/test中只保留5份：
+cleanup_old_files /opt/test 5
+```
+例如需要通过ssh远端调用此函数
+```
+ssh -q -o StrictHostKeyChecking=no 'root@10.20.30.40' '$(typeset -f cleanup_old_files); cleanup_old_files /opt/test 5'
+```
+8. `dd`测试写速率
+```
+# dd输出如下
+[root@abcdefg01 ~]# dd if=/dev/zero of=.tmp.test bs=1M count=100
+记录了100+0 的读入
+记录了100+0 的写出
+104857600字节（105 MB，100 MiB）已复制，0.233213 s，450 MB/s
+# 输出写速率
+dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?\s+[A-Za-z]+/s'
+# 不要单位
+dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'
+```
+9. alertmanager告警接口，产生告警
+```
+curl -X POST http://172.20.41.32:30300/api/v2/alerts \
+  -H 'Content-Type: application/json' \
+  -d '[
+    {
+      'labels': {
+        'alertname': '系统连续崩溃，已经出现雪崩状况！',
+        'dev': 'sda1',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：这个系统雪崩了，快处理！',
+        'summary': '请检查实例示例1'
+      }
+    },
+    {
+      'labels': {
+        'alertname': '管理系统损坏',
+        'dev': 'sda2',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：电子商务管理系统中订单，仓库模块已经雪崩，快处理！',
+        'summary': '请检查实例示例1',
+        'runbook': '以下链接http://192.168.5.128:9093/api/v2/alerts应该是可点击的'
+      }
+    }
+  ]'
+
+```
+10. 集群中全部容器运行date命令检查时区（date命令不存在的情况下报错）
+```
+kubectl get pods -A -o 'jsonpath={range .items[*]}{.metadata.namespace}{'\t'}{.metadata.name}{'\t'}{range .spec.containers[*]}{.name}{'\t'}{end}{'\n'}{end}' | while IFS=$'\t' read -r namespace pod containers; do
+    for container in $containers; do
+        if [[ -z '$container' ]]; then
+            echo -e '$namespace,$pod,No container found,-'
+            continue
+        fi
+        output=$(kubectl exec -n '$namespace' '$pod' -c '$container' -- date 2&gt;&amp;1)
+        echo -e '$namespace,$pod,$container,$output'
+    done
+done
+```
+11. 去除重复行
+```
+awk '!a[$0]++' /path/to/file
+```
+12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi（可以通过skopeo自动实现）。</description><guid isPermaLink="true">https://longxiucai.github.io/post/52.html</guid><pubDate>Tue, 10 Dec 2024 07:49:40 +0000</pubDate></item><item><title>calico network policy只开通pod间tcp流量</title><link>https://longxiucai.github.io/post/51.html</link><description># 资源文件&#13;
 ```&#13;
 apiVersion: v1&#13;
 kind: Pod&#13;

@@ -136,7 +136,7 @@ done
 ```
 awk '!a[$0]++' /path/to/file
 ```
-12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。">
+12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi（可以通过skopeo自动实现）。">
 <meta property="og:title" content="运维常用命令/脚本">
 <meta property="og:description" content="1. 获取kubernetes cluster master节点ip地址
 ```
@@ -264,7 +264,7 @@ done
 ```
 awk '!a[$0]++' /path/to/file
 ```
-12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。">
+12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi（可以通过skopeo自动实现）。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://longxiucai.github.io/post/52.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/43312586">
@@ -465,7 +465,7 @@ done
 <pre class="notranslate"><code class="notranslate">awk '!a[$0]++' /path/to/file
 </code></pre>
 <ol start="12">
-<li>拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi。</li>
+<li>拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi（可以通过skopeo自动实现）。</li>
 </ol>
 <pre class="notranslate"><code class="notranslate">image=registry.k8s.io/kube-proxy:v1.29.10
 set -e
@@ -494,6 +494,11 @@ docker push $amd_image
 docker manifest create $local_repo/$image --amend $arm_image --amend $amd_image
 docker manifest push $local_repo/$image
 docker manifest rm $local_repo/$image
+</code></pre>
+<ol start="13">
+<li>通过命令查看各pod的limit情况</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">kubectl get pods -A -o custom-columns=NAMESPACE:.metadata.namespace,POD:.metadata.name,CONTAINERS:.spec.containers[*].name,CPU_LIMIT:.spec.containers[*].resources.limits.cpu,MEM_LIMIT:.spec.containers[*].resources.limits.memory
 </code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
