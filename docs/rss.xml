@@ -1,2 +1,3266 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Mon, 27 Apr 2026 17:36:43 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster></channel></rss>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>龙某的小本本</title><link>https://longxiucai.github.io</link><description> </description><copyright>龙某的小本本</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/43312586</url><title>avatar</title><link>https://longxiucai.github.io</link></image><lastBuildDate>Tue, 28 Apr 2026 17:53:31 +0000</lastBuildDate><managingEditor>龙某的小本本</managingEditor><ttl>60</ttl><webMaster>龙某的小本本</webMaster><item><title>docker buildx使用代理</title><link>https://longxiucai.github.io/post/89.html</link><description>```
+# 创建buildx构建器实例（如果不存在）
+BUILDER_NAME='build-multiarch'
+if ! docker-buildx ls | grep -q $BUILDER_NAME; then
+    echo '📦 创建多架构构建器...'
+    docker-buildx create --name $BUILDER_NAME --driver-opt network=host \
+        --driver-opt env.http_proxy=http://127.0.0.1:7890 \
+        --driver-opt env.https_proxy=http://127.0.0.1:7890 \
+        --driver-opt env.HTTP_PROXY=http://127.0.0.1:7890 \
+        --driver-opt env.HTTPS_PROXY=http://127.0.0.1:7890 \
+        --use
+else
+    echo '📦 使用已存在的构建器: $BUILDER_NAME'
+    docker-buildx use $BUILDER_NAME
+fi
+
+# 启用binfmt_misc支持（用于交叉编译）
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/89.html</guid><pubDate>Thu, 05 Mar 2026 09:15:22 +0000</pubDate></item><item><title>go程序利用k8s leaderelection选举（日志滚存+日志打印控制台+选举+多任务）</title><link>https://longxiucai.github.io/post/88.html</link><description># 日志滚存+日志打印控制台+选举+多任务（一个常驻任务、一个leader执行任务）
+```
+package main
+
+import (
+	'context'
+	'fmt'
+	'io'
+	'os'
+	'os/signal'
+	'syscall'
+	'time'
+
+	'github.com/labstack/gommon/log'
+	'gopkg.in/natefinch/lumberjack.v2'
+	metav1 'k8s.io/apimachinery/pkg/apis/meta/v1'
+	'k8s.io/client-go/kubernetes'
+	'k8s.io/client-go/rest'
+	'k8s.io/client-go/tools/clientcmd'
+	'k8s.io/client-go/tools/leaderelection'
+	'k8s.io/client-go/tools/leaderelection/resourcelock'
+)
+
+// 选主核心配置
+const (
+	leaderLockName      = 'alertmanager-webhook-leader-lock'
+	leaderLockNamespace = 'monitoring'
+	// Leader 身份的「最大有效期」 / Lease 锁的「租期时长」
+	leaseDuration = 15 * time.Second
+	// Leader 的「续约超时时间」 / 「身份续命窗口期」
+	renewDeadline = 10 * time.Second
+
+	// 两种场景下的「重试间隔」（最灵活的参数，控制集群抢主效率），覆盖所有非 Leader 实例 + Leader 续约失败场景：
+	// 场景①：Follower 实例（非 Leader）的「抢主重试间隔」。</description><guid isPermaLink="true">https://longxiucai.github.io/post/88.html</guid><pubDate>Mon, 05 Jan 2026 09:44:12 +0000</pubDate></item><item><title>通过opentelemetry-operator部署jaeger(all-in-one)</title><link>https://longxiucai.github.io/post/87.html</link><description>集群中需要有cert-manager。</description><guid isPermaLink="true">https://longxiucai.github.io/post/87.html</guid><pubDate>Mon, 15 Dec 2025 07:12:33 +0000</pubDate></item><item><title>kubectl top命令报错error: metrics not available yet排查思路</title><link>https://longxiucai.github.io/post/86.html</link><description>1、检查apiservice
+```
+[root@master1 ~]# kubectl get apiservice v1beta1.metrics.k8s.io
+NAME                     SERVICE                         AVAILABLE   AGE
+v1beta1.metrics.k8s.io   monitoring/prometheus-adapter   True        173d
+```
+旧的版本可能为`kube-system/metrics-server`
+2、检查prometheus-adapter运行参数是否正确从prometheus中获取指标数据
+```
+kubectl get deployment.apps/prometheus-adapter -n monitoring  -oyaml
+```
+3、检查prometheus-adapter配置
+```
+[root@master1 ~]# kubectl get cm -n monitoring  adapter-config -oyaml
+apiVersion: v1
+data:
+  config.yaml: |-
+    'resourceRules':
+      'cpu':
+        'containerLabel': 'container'
+        'containerQuery': |
+          sum by (&lt;&lt;.GroupBy&gt;&gt;) (
+            irate (
+                container_cpu_usage_seconds_total{&lt;&lt;.LabelMatchers&gt;&gt;,container!='',pod!=''}[120s]
+            )
+          )
+        'nodeQuery': |
+          sum by (&lt;&lt;.GroupBy&gt;&gt;) (
+            1 - irate(
+              node_cpu_seconds_total{mode='idle'}[60s]
+            )
+            * on(namespace, pod) group_left(node) (
+              node_namespace_pod:kube_pod_info:{&lt;&lt;.LabelMatchers&gt;&gt;}
+            )
+          )
+          or sum by (&lt;&lt;.GroupBy&gt;&gt;) (
+            1 - irate(
+              windows_cpu_time_total{mode='idle', job='windows-exporter',&lt;&lt;.LabelMatchers&gt;&gt;}[4m]
+            )
+          )
+        'resources':
+          'overrides':
+            'namespace':
+              'resource': 'namespace'
+            'node':
+              'resource': 'node'
+            'pod':
+              'resource': 'pod'
+      'memory':
+        'containerLabel': 'container'
+        'containerQuery': |
+          sum by (&lt;&lt;.GroupBy&gt;&gt;) (
+            container_memory_working_set_bytes{&lt;&lt;.LabelMatchers&gt;&gt;,container!='',pod!=''}
+          )
+        'nodeQuery': |
+          sum by (&lt;&lt;.GroupBy&gt;&gt;) (
+            node_memory_MemTotal_bytes{job='node-exporter',&lt;&lt;.LabelMatchers&gt;&gt;}
+            -
+            node_memory_MemAvailable_bytes{job='node-exporter',&lt;&lt;.LabelMatchers&gt;&gt;}
+          )
+          or sum by (&lt;&lt;.GroupBy&gt;&gt;) (
+            windows_cs_physical_memory_bytes{job='windows-exporter',&lt;&lt;.LabelMatchers&gt;&gt;}
+            -
+            windows_memory_available_bytes{job='windows-exporter',&lt;&lt;.LabelMatchers&gt;&gt;}
+          )
+        'resources':
+          'overrides':
+            'instance':
+              'resource': 'node'
+            'namespace':
+              'resource': 'namespace'
+            'pod':
+              'resource': 'pod'
+      'window': '5m'
+kind: ConfigMap
+metadata:
+  annotations:
+...
+```
+可知kube top命令所显示的数据应当是由上述配置文件中的promQL提供，kube top命令无法显示数据是因为上述查询语句没有数据返回。</description><guid isPermaLink="true">https://longxiucai.github.io/post/86.html</guid><pubDate>Wed, 19 Nov 2025 08:00:02 +0000</pubDate></item><item><title>国密版nginx</title><link>https://longxiucai.github.io/post/85.html</link><description># 编译部署（nginx-1.24为例）
+1. 下载gmssl_openssl_1.1_bxx.tar.gz到/root/下
+
+打开地址 https://www.gmssl.cn/gmssl/index.jsp 
+选择架构下载
+&lt;img width='1558' height='613' alt='Image' src='https://github.com/user-attachments/assets/3e9a0e6b-59ca-4d79-a11d-fed3ffe9e979' /&gt;
+
+2. 解压 tar xzfm gmssl_openssl_1.1_bxx.tar.gz -C /usr/local
+3. 下载[nginx-1.24.0.tar.gz](http://nginx.org/download/nginx-1.24.0.tar.gz)到/root/下
+4. 解压 tar xzfm nginx-1.24.0.tar.gz
+5. 进入目录 cd /root/nginx-1.24.0
+6. 编辑auto/lib/openssl/conf，将全部$OPENSSL/.openssl/修改为$OPENSSL/并保存(sed -i 's|$OPENSSL/.openssl/|$OPENSSL/|g'  auto/lib/openssl/conf)
+7. 编译配置
+```
+./configure \
+--without-http_gzip_module \
+--with-http_ssl_module \
+--with-http_stub_status_module \
+--with-http_v2_module \
+--with-stream \
+--with-file-aio \
+--with-openssl='/usr/local/gmssl'
+```
+8. 编译安装
+```
+make install
+```
+9. /usr/local/nginx即为生成的nginx目录
+&gt; [ !TIP ]
+&gt; 可能需要使用`yum install -y zlib zlib-devel pcre pcre-devel`或者`apt-get install libpcre3 libpcre3-dev zlib1g zlib1g-dev`
+
+# 直接下载
+打开地址 https://www.gmssl.cn/gmssl/index.jsp 
+&lt;img width='1443' height='611' alt='Image' src='https://github.com/user-attachments/assets/a1574f62-f243-4fd8-9b99-edac252708ae' /&gt;
+
+# 测试：
+自己使用gmssl生成证书，即根据[sm2国密证书创建](https://longxiucai.github.io/post/84.html)文中提供的方法
+需要到下面地址中解密nginx-sm2.key之后nginx才能使用
+https://www.gmcrt.cn/gmcrt/index.jsp
+&lt;img width='1595' height='519' alt='Image' src='https://github.com/user-attachments/assets/6a4120c0-2608-4271-9994-cf27f790da3c' /&gt;
+
+将nginx-sm2.cert与nginx-sm2.decrypted.pem放到/usr/local/nginx/conf/cert/下
+
+/usr/local/nginx/conf/nginx.conf配置如下
+```
+worker_processes  auto;
+error_log  /var/log/nginx/error.log;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+    server {
+        listen 80;
+        return 301 https://$host$request_uri;
+    }
+    server {
+        listen 443 ssl;
+        # 自己的证书
+        ssl_certificate /usr/local/nginx/conf/cert/nginx-sm2.cert;
+        ssl_certificate_key /usr/local/nginx/conf/cert/nginx-sm2.decrypted.pem; ##解密之后的key
+        ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+	#配置ssl证书所需的加密套件
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:AES128-SHA:DES-CBC3-SHA:ECC-SM4-CBC-SM3:ECC-SM4-GCM-SM3;
+        ssl_verify_client off;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        root /usr/local/nginx/html;
+        index index.html;
+        location / {
+            try_files $uri $uri/ =404;
+        }
+    }
+}
+
+```
+
+# nginx配置
+## 配置示例(国密单向)
+```
+server
+{
+  listen 0.0.0.0:1443 ssl;
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+  ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:AES128-SHA:DES-CBC3-SHA:ECC-SM4-CBC-SM3:ECC-SM4-GCM-SM3;
+  ssl_verify_client off;
+  
+  ssl_certificate keystore/sm2.demo1.gmssl.cn.sig.crt.pem;
+  ssl_certificate_key keystore/sm2.demo1.gmssl.cn.sig.key.pem;
+  
+  ssl_certificate keystore/sm2.demo1.gmssl.cn.enc.crt.pem;
+  ssl_certificate_key keystore/sm2.demo1.gmssl.cn.enc.key.pem;
+  
+  location /
+  {
+    root html;
+    index index.html index.htm;
+  }
+}
+```
+注释：测试证书使用[www.gmcrt.cn](https://www.gmcrt.cn/)签发。</description><guid isPermaLink="true">https://longxiucai.github.io/post/85.html</guid><pubDate>Sat, 11 Oct 2025 02:12:18 +0000</pubDate></item><item><title>sm2国密证书创建</title><link>https://longxiucai.github.io/post/84.html</link><description>参考：http://gmssl.org/docs/quickstart.html
+# GmSSL的编译、安装
+
+### 下载源代码([zip](https://github.com/guanzhi/GmSSL/archive/master.zip))，解压缩至当前工作目录
+```
+$ unzip GmSSL-master.zip
+```
+### 编译与安装
+
+#### Linux平台
+```
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+$ make test
+$ sudo make install
+```
+安装之后可以执行gmssl命令行工具检查是否成功
+```
+$ gmssl version
+GmSSL 3.1.0 Dev
+```
+# 证书创建
+```
+COMMOMARG='-C CN -ST Beijing -O KylinSoft -OU kylincloud -pass 1234'
+# 1.1 生成 SM2 根 CA 私钥（密码 1234，存储为 rootcakey.pem）
+gmssl sm2keygen -pass 1234 -out rootca.key
+
+# 1.2 生成根 CA 自签名证书（有效期 10 年，支持签发证书和 CRL）
+gmssl certgen $COMMOMARG\
+  -days 3650 \
+  -CN 'KylinSoft SM2 Root CA' \
+  -key rootca.key \
+  -out rootca.cert \
+  -key_usage keyCertSign \
+  -key_usage cRLSign
+
+# 1.3 解析根 CA 证书，验证信息（可选，确认生成正确）
+gmssl certparse -in rootca.cert
+
+
+# 2.1 生成二级 CA 私钥（密码 1234，存储为 cakey.pem）
+gmssl sm2keygen -pass 1234 -out ca.key
+
+# 2.2 生成二级 CA 的证书请求（CSR，向根 CA 申请签名）
+gmssl reqgen $COMMOMARG\
+  -CN 'KylinSoft SM2 Root CA' \
+  -key ca.key \
+  -out ca.csr       # 输出 CSR 文件
+
+# 2.3 用根 CA 签名二级 CA 请求，生成二级 CA 证书
+gmssl reqsign \
+  -in ca.csr  \
+  -days 3650    \
+  -key_usage keyCertSign \
+  -path_len_constraint 0  \
+  -cacert rootca.cert  \
+  -key rootca.key   \
+  -pass 1234          \
+  -out ca.cert          # 输出二级 CA 证书
+
+# 2.4 解析二级 CA 证书，验证信息（可选）
+gmssl certparse -in ca.cert
+
+
+# 3.1 生成服务端 SM2 私钥（密码 1234，存储为 nginx-sm2-key.pem）
+gmssl sm2keygen -pass 1234 -out nginx-sm2.key
+
+# 3.2 生成服务端证书请求（CSR，关键：CN 填主域名，支持多 DNS 名称）
+#                        # 主域名（必须正确，匹配服务端域名）  关联服务端私钥           输出服务端 CSR
+gmssl reqgen $COMMOMARG -CN 'nginx.example1.kylinos.cn'      -key nginx-sm2.key   -out nginx-sm2.csr
+
+# 3.3 用二级 CA 签名服务端请求，生成服务端证书
+gmssl reqsign \
+  -in nginx-sm2.csr \
+  -subject_dns_name 'nginx.example1.kylinos.cn' \
+  -subject_dns_name 'server1.nginx.local' \
+  -days 365 \
+  -key_usage digitalSignature \
+  -key_usage keyEncipherment \
+  -cacert ca.cert   \
+  -key ca.key   \
+  -pass 1234      \
+  -out nginx-sm2.cert
+
+# 3.4 解析服务端证书，验证域名和用途（关键！确认配置正确）
+gmssl certparse -in nginx-sm2.cert
+
+# 3.5 验证证书
+gmssl certverify -in nginx-sm2.cert -cacert ca.cert
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/84.html</guid><pubDate>Fri, 10 Oct 2025 05:25:09 +0000</pubDate></item><item><title>ingress-nginx-controller插件开发</title><link>https://longxiucai.github.io/post/83.html</link><description>测试版本：ingress-nginx-controller:v1.7.0-2
+## 开启access_by_lua_block，让acess阶段执行插件（适用于优先级分流）
+```
+kubectl exec -it  -n ingress-nginx ingress-nginx-controller-qdwws    -- cat template/nginx.tmpl &gt; nginx.tmpl
+```
+修改nginx.tmpl，下列access_by_lua_block部分是被注释掉的，去掉注释，增加plugins.run()
+```
+location {{ $path }} {
+    ...
+            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
+            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
+            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
+            access_by_lua_block {
+                plugins.run()
+            }
+
+```
+将nginx.tmpl文件放到configmap中
+```
+kubectl create cm -n ingress-nginx nginx-custom-template-config --from-file nginx.tmpl
+```
+修改ingress-nginx-controller的ds，增加nginx-configmap的挂载，保存如下文件为ingress-volume-patch.yaml后执行`kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller  --patch-file ingress-volume-patch.yaml`
+```
+spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: nginx-custom-template
+          mountPath: /etc/nginx/template/nginx.tmpl
+          subPath: nginx.tmpl
+      volumes:
+      - name: nginx-custom-template
+        configMap:
+          name: nginx-custom-template-config
+```
+
+## 增加自定义插件并启用
+### 增加插件（插件中代码还需要调试优化）
+创建如下ConfigMap，必须为main.lua，通过定义并返回`_M`来导出函数
+
+脚本说明:
+* 配置加载机制：
+    * 从缓存获取配置，缓存过期时间为 30 秒
+    * 缓存未命中时从文件读取配置并更新缓存
+* 核心逻辑：
+    * 判断当前请求的域名是否属于低优先级列表
+    * 增加全局连接计数和（如果是低优先级）低优先级连接计数
+    * 当全局连接数超过8000且低优先级连接数超过3000，返回 503 错误
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-plugins
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/component: controller
+data:
+  main.lua: |
+    local ngx = ngx
+    local cjson = require 'cjson'
+    local _M = {}
+    local CONFIG_TTL = 30
+
+    -- 读取配置
+    local function get_config()
+      local CONFIG_PATH = '/etc/nginx/conf.d/conn_limit_config.json'
+      local config_cache = ngx.shared.config_cache
+      local cached = config_cache:get('config')
+      if cached then
+          return cjson.decode(cached)
+      end
+      local file = io.open(CONFIG_PATH, 'r')
+      if not file then
+          ngx.log(ngx.ERR, '无法读取配置文件: ', CONFIG_PATH)
+          ngx.exit(500)
+      end
+      local content = file:read('*a')
+      file:close()
+      local config = cjson.decode(content)
+      config_cache:set('config', content, CONFIG_TTL)
+      return config
+    end
+
+    -- 判断域名是否在列表中
+    local function is_in_list(domain, list)
+      for _, d in ipairs(list) do
+          if d == domain then return true end
+      end
+      return false
+    end
+
+    -- 清理计数
+    local function cleanup(is_low, host)
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local new_global = global_conns:incr('total', -1, 0) or 0
+      local new_low = is_low and (low_conns:incr('count', -1, 0) or 0) or 0
+      ngx.log(ngx.INFO, '[结束阶段计数] Host: ', host or '',
+              ' | 全局连接=', new_global,
+              ' | 低优连接=', new_low)
+    end
+
+    -- access 阶段：连接数统计与限流
+    function _M.access()
+      ngx.log(ngx.INFO, '[conn-limit-TEST] access 阶段执行！')  -- 新增测试日志
+      local low_conns = ngx.shared.low_conns
+      local global_conns = ngx.shared.global_conns
+      local config = get_config()
+      local host = ngx.var.host or ''
+      local is_low = is_in_list(host, config.low_priority.domains or {})
+
+      local global_threshold = config.global_threshold or 1
+      local low_max = config.low_priority.max_conns or 1
+
+      -- 增加计数
+      local current_global = global_conns:incr('total', 1, 0)
+      local current_low = is_low and low_conns:incr('count', 1, 0) or 0
+
+      ngx.log(ngx.INFO, '[访问阶段计数] Host: ', host,
+              ' | 全局连接=', current_global,
+              ' | 低优连接=', current_low)
+
+      -- 限制低优请求
+      if current_global &gt;= global_threshold and is_low and current_low &gt; low_max then
+          ngx.log(ngx.WARN, '[拒绝请求] Host=', host,
+                  ' | 全局=', current_global,
+                  ' | 低优=', current_low)
+          cleanup(is_low, host)
+          ngx.status = 503
+          ngx.say('Service busy (low-prio quota exceeded: ', current_low, '/', low_max, ')')
+          return ngx.exit(503)
+      end
+
+      -- 保存上下文
+      ngx.ctx.host = host
+      ngx.ctx.is_low = is_low
+    end
+
+    -- log 阶段：连接数释放
+    function _M.log()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          cleanup(is_low, host)
+      end
+    end
+    -- 客户端中断处理
+    function on_abort_phase()
+      local host = ngx.ctx.host
+      local is_low = ngx.ctx.is_low
+      if host then
+          ngx.log(ngx.WARN, '[客户端中断] Host=', host)
+          cleanup(is_low, host)
+      end
+    end
+    return _M
+```
+挂载到ingress-nginx-controller的ds中，保存如下文件为ingress-plugins-patch.yaml后执行`kubectl patch -n ingress-nginx daemonsets.apps ingress-nginx-controller --patch-file ingress-plugins-patch.yaml`
+```
+spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-nginx-controller
+        volumeMounts:
+        - name: plugin-volume
+          mountPath: /etc/nginx/lua/plugins/dynamic_conn_limit/main.lua ##必须在/etc/nginx/lua/plugins/下面，目录为插件名称，文件为main.lua
+          subPath: main.lua
+      volumes:
+      - name: plugin-volume
+        configMap:
+          name: ingress-nginx-plugins
+```
+### 启用插件
+修改ingress-nginx-controller的配置`kubectl edit cm -n ingress-nginx ingress-nginx`增加字段`plugins: dynamic_conn_limit`以及`lua-shared-dicts: global_conns:10m,low_conns:10m,config_cache:10m`增加共享内存
+### 配置文件
+创建如下ConfigMap,配置全局连接数为8000，nginx1.org为高优域名，nginx.org为低优域名，低优域名最大连接数为3000，实现
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-conn-config
+  namespace: ingress-nginx
+data:
+  conn_limit_config.json: |
+    {
+      'global_threshold': 8000,
+      'high_priority_domains': ['nginx1.org'],
+      'low_priority': {
+        'domains': ['nginx.org'],
+        'max_conns': 3000
+      }
+    }
+```
+
+##  注解中插入lua脚本即可在access阶段执行下面脚本（不适用优先级分流）
+```
+     nginx.ingress.kubernetes.io/server-snippet: |
+      access_by_lua_file /etc/nginx/lua/scripts/dynamic-conn-limit.lua;
+```
+手动将脚本挂载进去即可，具体步骤参考文档上面，此种方法只能在access阶段执行，当连接释放时，存储的连接数变量无法减少。</description><guid isPermaLink="true">https://longxiucai.github.io/post/83.html</guid><pubDate>Wed, 24 Sep 2025 05:35:34 +0000</pubDate></item><item><title>命令行ssh之后自动修改标题</title><link>https://longxiucai.github.io/post/82.html</link><description>修改/etc/ssh/ssh_config (参考https://linux.die.net/man/5/ssh_config)
+```
+Host *git*  ##此次按需选择是否配置，git命令如果使用ssh协议的远端报错
+    PermitLocalCommand no
+
+Host *
+    PermitLocalCommand yes
+    LocalCommand echo -ne '\033]0;$(echo %r@%h)\007' 
+```
+
+这个命令之所以以修改终端标题，是因为它利用了终端支持的**ANSI转义序列**（ANSI escape codes）来与终端进行通信，指示终端执行特定操作（这里是修改窗口标题）。</description><guid isPermaLink="true">https://longxiucai.github.io/post/82.html</guid><pubDate>Thu, 04 Sep 2025 03:28:34 +0000</pubDate></item><item><title>libvirt使用ovs桥接，ipv6测试无法连通问题分析</title><link>https://longxiucai.github.io/post/81.html</link><description>nmcli connection modify enp1s0 ipv6.method manual ipv6.addresses 2003:db8::37/64
+nmcli connection up enp1s0 
+
+
+
+虚拟机网卡配置，多台虚拟机使用此配置桥接到ovs-br0，配置ipv6（无网关）之后，ipv6之间不通。</description><guid isPermaLink="true">https://longxiucai.github.io/post/81.html</guid><pubDate>Tue, 26 Aug 2025 05:24:29 +0000</pubDate></item><item><title>apisix-controller黑白名单配置</title><link>https://longxiucai.github.io/post/80.html</link><description>参考： https://apache-apisix.netlify.app/docs/apisix/3.10/plugins/ip-restriction/
+# 部署nginx的pod并配置apisix资源
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx-example2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: nginx-example2
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.23.1
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: nginx-example2
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort
+---
+# nginx-upstream.yaml
+apiVersion: apisix.apache.org/v2beta3
+kind: ApisixUpstream
+metadata:
+  name: nginx-service
+  namespace: nginx-example2
+spec:
+  timeout:
+    connect: 600s
+    read: 600s
+    send: 600s
+---
+# nginx-route.yaml
+apiVersion: apisix.apache.org/v2beta3
+kind: ApisixRoute
+metadata:
+  name: nginx-route
+  namespace: nginx-example2
+spec:
+  http:
+    - name: nginx-route
+      match:
+        hosts:
+          - server2.nginx.local
+        paths:
+          - /*
+      backends:
+        - serviceName: nginx-service
+          servicePort: 80
+      plugins:
+        - config:
+#            blacklist:
+#              - '10.42.120.46'
+            whitelist:
+              - '10.42.189.0/24'
+            message: 'Access denied' #拒绝访问时返回的消息
+          enable: true
+          name: ip-restriction #不能改，插件的名字，固定
+```
+# 说明
+blacklist配置黑名单、whitelist配置白名单，值都是列表，支持单个ip地址以及cidr（xx.xx.xx.xx/xx）
+## 白名单
+上述关键配置如下，**需要给哪个路由配置黑白名单，则直接edit对应的资源添加如下plugins字段即可**：
+```
+      plugins:
+        - config:
+#            blacklist:
+#              - '10.42.120.46'
+            whitelist:
+              - '10.42.189.0/24'
+            message: 'Access denied'  #拒绝访问时返回的消息
+          enable: true
+          name: ip-restriction  #不能改，插件的名字，固定
+```
+配置了`10.42.189.0/24`网段白名单，只能这个网段能访问
+执行`curl -H 'Host: server2.nginx.local' master-ip:apisix网关端口`验证访问
+* 在10.42.189.30上执行请求成功
+* 在10.42.189.34上执行请求成功
+* 在10.42.120.46上执行请求失败，返回：`{'message':'Access denied'}`
+
+## 黑名单
+```
+      plugins:
+        - config:
+            blacklist:
+              - '10.42.120.46'
+            message: 'Access denied' #拒绝访问时返回的消息
+          enable: true
+          name: ip-restriction #不能改，插件的名字，固定
+```
+验证：
+* 在10.42.120.46上执行请求失败，返回：`{'message':'Access denied'}`
+* 其他任意ip均能访问。</description><guid isPermaLink="true">https://longxiucai.github.io/post/80.html</guid><pubDate>Fri, 22 Aug 2025 02:53:35 +0000</pubDate></item><item><title>修改cert-manager证书过期时间，删除对应secret让其立马新建证书</title><link>https://longxiucai.github.io/post/79.html</link><description>```
+#!/bin/bash
+
+# 配置部分 - 在这里设置目标月数
+TARGET_MONTHS=240  # 例如240个月=20年
+# 备份目录
+BACKUP_DIR='./secret_backups'
+
+# 计算小时数（1个月按30天计算，1天=24小时）
+HOURS_PER_MONTH=$((30 * 24))  # 720小时/月
+TARGET_DURATION=$((TARGET_MONTHS * HOURS_PER_MONTH))'h'
+
+# 创建日志文件
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE='certificate_update_${TIMESTAMP}.log'
+# ===== 新增：自动创建备份目录 &amp; 初始化日志 =====
+mkdir -p ${BACKUP_DIR} &amp;&amp; chmod 755 ${BACKUP_DIR}
+echo '===== 证书更新操作日志 - $(date) =====' &gt; '$LOG_FILE'
+echo '目标有效期: $TARGET_MONTHS 个月 ($TARGET_DURATION)' &gt;&gt; '$LOG_FILE'
+echo 'Secret备份目录: $(realpath ${BACKUP_DIR})' &gt;&gt; '$LOG_FILE'
+echo '====================================' &gt;&gt; '$LOG_FILE'
+echo '' &gt;&gt; '$LOG_FILE'
+
+mkdir -p $BACKUP_DIR
+
+backup_secret() {
+    local ns=$1
+    local secret=$2
+    local backup_file='${BACKUP_DIR}/${ns}_${secret}_${TIMESTAMP}.yaml'
+    
+    echo '  📦 备份secret $ns/$secret 到本地...'
+    # 完整备份Secret的所有内容（YAML格式，可直接kubectl apply恢复）
+    if kubectl get secret '$secret' -n '$ns' -o yaml &gt; '${backup_file}' 2&gt;&amp;1; then
+        echo '  ✅ 备份成功: ${backup_file}'
+        echo '  备份Secret成功: $(realpath ${backup_file})' &gt;&gt; '$LOG_FILE'
+        return 0
+    else
+        echo '  ⚠️ 警告：secret $ns/$secret 备份失败！'
+        echo '  警告：Secret备份失败 $ns/$secret' &gt;&gt; '$LOG_FILE'
+        return 1
+    fi
+}
+
+# 函数：等待secret创建
+wait_for_secret() {
+    local ns=$1
+    local secret=$2
+    local timeout=30
+    local interval=2
+    local count=0
+    
+    echo '  等待secret $ns/$secret 生成...'
+    while ! kubectl get secret '$secret' -n '$ns' &gt;/dev/null 2&gt;&amp;1; do
+        sleep $interval
+        count=$((count + interval))
+        if [ $count -ge $timeout ]; then
+            echo '  ⚠️ 超时：secret $ns/$secret 未在 $timeout 秒内生成'
+            echo '超时：secret $ns/$secret 未生成' &gt;&gt; '$LOG_FILE'
+            return 1
+        fi
+    done
+    echo '  ✅ secret $ns/$secret 已生成'
+    return 0
+}
+
+# 函数：检查证书过期时间
+check_cert_expiry() {
+    local ns=$1
+    local secret=$2
+    
+    # 提取并解码证书
+    cert_data=$(kubectl get secret '$secret' -n '$ns' -o jsonpath='{.data.tls\.crt}')
+    if [ -z '$cert_data' ]; then
+        echo '  ❌ 无法从 $ns/$secret 获取证书数据'
+        echo '错误：无法从 $ns/$secret 获取证书数据' &gt;&gt; '$LOG_FILE'
+        return 1
+    fi
+    
+    # 解码并检查有效期
+    expiry_date=$(echo '$cert_data' | base64 -d | openssl x509 -noout -enddate | cut -d= -f2)
+    if [ -z '$expiry_date' ]; then
+        echo '  ❌ 无法解析 $ns/$secret 的证书过期时间'
+        echo '错误：无法解析 $ns/$secret 的证书过期时间' &gt;&gt; '$LOG_FILE'
+        return 1
+    fi
+    
+    # 转换为时间戳以便计算
+    expiry_timestamp=$(date -d '$expiry_date' +%s)
+    current_timestamp=$(date +%s)
+    days_remaining=$(( (expiry_timestamp - current_timestamp) / 86400 ))
+    
+    echo '  ******** 证书 $ns/$secret 过期时间: $expiry_date (约 $days_remaining 天)'
+    echo '$ns/$secret 过期时间: $expiry_date (约 $days_remaining 天)' &gt;&gt; '$LOG_FILE'
+    return 0
+}
+
+# 获取所有命名空间
+namespaces=$(kubectl get namespaces -o jsonpath='{.items[*].metadata.name}')
+# 指定命名ns
+# namespaces='test1  test2'
+
+# 记录总数统计
+total_certs=0
+updated_certs=0
+failed_certs=0
+
+echo '===== 开始证书更新流程 ====='
+echo '目标有效期: $TARGET_MONTHS 个月 ($TARGET_DURATION)'
+echo 'Secret备份目录: $(realpath ${BACKUP_DIR})'
+echo '日志将保存至: $LOG_FILE'
+echo ''
+
+# 遍历所有命名空间
+for ns in $namespaces; do
+    echo '处理命名空间: $ns'
+    echo '处理命名空间: $ns' &gt;&gt; '$LOG_FILE'
+    
+    # 获取当前命名空间中的所有Certificate资源
+    certs=$(kubectl get certificates -n '$ns' -o jsonpath='{.items[*].metadata.name}')
+    
+    if [ -z '$certs' ]; then
+        echo '  未发现Certificate资源，跳过'
+        echo '  未发现Certificate资源，跳过' &gt;&gt; '$LOG_FILE'
+        echo ''
+        continue
+    fi
+    
+    # 遍历每个Certificate资源
+    for cert in $certs; do
+        total_certs=$((total_certs + 1))
+        echo '  处理Certificate: $cert'
+        echo '  处理Certificate: $cert' &gt;&gt; '$LOG_FILE'
+        
+        # 获取当前duration
+        current_duration=$(kubectl get certificate '$cert' -n '$ns' -o jsonpath='{.spec.duration}')
+        
+        # 获取关联的secret名称
+        secret_name=$(kubectl get certificate '$cert' -n '$ns' -o jsonpath='{.spec.secretName}')
+        if [ -z '$secret_name' ]; then
+            echo '  ❌ 无法获取 $ns/$cert 关联的secret名称'
+            echo '  错误：无法获取关联的secret名称' &gt;&gt; '$LOG_FILE'
+            failed_certs=$((failed_certs + 1))
+            continue
+        fi
+        
+        # 如果当前duration与目标不同，则进行更新
+        if [ '$current_duration' != '$TARGET_DURATION' ]; then
+            # 使用kubectl patch更新duration
+                backup_secret '$ns' '$secret_name'
+            if kubectl patch certificate '$cert' -n '$ns' --type=merge -p '{\'spec\':{\'duration\':\'$TARGET_DURATION\'}}'; then
+                echo '  ✅ 已更新 $ns/$cert: $current_duration -&gt; $TARGET_DURATION'
+                echo '  已更新: $current_duration -&gt; $TARGET_DURATION' &gt;&gt; '$LOG_FILE'
+                
+                backup_secret '$ns' '$secret_name'
+                
+                # 删除secret触发更新
+                echo '  删除secret $secret_name 以触发证书更新...'
+                if kubectl delete secret '$secret_name' -n '$ns' &gt;/dev/null 2&gt;&amp;1; then
+                    echo '  已删除secret $secret_name'
+                    echo '  已删除secret: $secret_name' &gt;&gt; '$LOG_FILE'
+                    
+                    # 等待新secret生成
+                    if wait_for_secret '$ns' '$secret_name'; then
+                        # 检查新证书的过期时间
+                        check_cert_expiry '$ns' '$secret_name'
+                    fi
+                    updated_certs=$((updated_certs + 1))
+                else
+                    echo '  ❌ 无法删除secret $secret_name'
+                    echo '  错误：无法删除secret $secret_name' &gt;&gt; '$LOG_FILE'
+                    failed_certs=$((failed_certs + 1))
+                fi
+            else
+                echo '  ❌ 更新 $ns/$cert 失败'
+                echo '  错误：更新Certificate失败' &gt;&gt; '$LOG_FILE'
+                failed_certs=$((failed_certs + 1))
+            fi
+        else
+            echo '  ⏭️ $ns/$cert 已为目标有效期，无需更新'
+            echo '  无需更新：已为目标有效期' &gt;&gt; '$LOG_FILE'
+            # 检查当前证书的过期时间
+            check_cert_expiry '$ns' '$secret_name'
+        fi
+        echo ''
+        echo '' &gt;&gt; '$LOG_FILE'
+    done
+done
+
+# 输出总结信息
+echo '===== 操作完成 ====='
+echo '总处理Certificate资源: $total_certs'
+echo '成功更新: $updated_certs'
+echo '更新失败: $failed_certs'
+echo 'Secret备份目录: $(realpath ${BACKUP_DIR})'
+echo 'Certificate资源如下'
+kubectl get certificates --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{'/'}{.metadata.name}{' '}{.spec.duration}{'\n'}{end}'
+echo '详细日志: $LOG_FILE'
+
+echo ''
+echo '更新总结:' &gt;&gt; '$LOG_FILE'
+echo '总处理Certificate资源: $total_certs' &gt;&gt; '$LOG_FILE'
+echo '成功更新: $updated_certs' &gt;&gt; '$LOG_FILE'
+echo '更新失败: $failed_certs' &gt;&gt; '$LOG_FILE'
+echo 'Secret备份目录: $(realpath ${BACKUP_DIR})' &gt;&gt; '$LOG_FILE'
+echo '操作完成时间: $(date)' &gt;&gt; '$LOG_FILE'
+
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/79.html</guid><pubDate>Thu, 21 Aug 2025 05:35:05 +0000</pubDate></item><item><title>导出cert-manager创建的证书</title><link>https://longxiucai.github.io/post/78.html</link><description>```
+#!/bin/bash
+
+# 创建一个目录存放导出的证书
+mkdir -p exported_certificates
+cd exported_certificates || exit
+
+# 获取所有命名空间
+namespaces=$(kubectl get namespaces -o jsonpath='{.items[*].metadata.name}')
+
+# 遍历每个命名空间
+for ns in $namespaces; do
+    echo 'Processing namespace: $ns'
+    
+    # 获取该命名空间中所有包含tls证书的secret（使用临时文件避免管道为空的问题）
+    temp_file=$(mktemp)
+    kubectl get secrets -n '$ns' -o jsonpath='{range .items[?(@.type=='kubernetes.io/tls')]}{.metadata.name}{'\n'}{end}' 2&gt;/dev/null &gt; '$temp_file'
+    secrets=$(cat '$temp_file')
+    rm '$temp_file'
+    
+    # 如果有符合条件的secret，进行处理
+    if [ -n '$secrets' ]; then
+        # 为每个命名空间创建子目录
+        mkdir -p '$ns'
+        cd '$ns' || continue
+        
+        # 遍历每个secret
+        while IFS= read -r secret; do
+            echo '  Exporting secret: $secret'
+            
+            # 导出CA证书（如果存在）
+            if kubectl get secret '$secret' -n '$ns' -o jsonpath='{.data.ca\.crt}' &gt; /dev/null 2&gt;&amp;1; then
+                kubectl get secret '$secret' -n '$ns' -o jsonpath='{.data.ca\.crt}' | base64 -d &gt; '${ns}_${secret}_ca.crt'
+            fi
+            
+            # 导出tls证书
+            kubectl get secret '$secret' -n '$ns' -o jsonpath='{.data.tls\.crt}' | base64 -d &gt; '${ns}_${secret}_tls.crt'
+            
+            # 导出tls私钥
+            kubectl get secret '$secret' -n '$ns' -o jsonpath='{.data.tls\.key}' | base64 -d &gt; '${ns}_${secret}_tls.key'
+        done &lt;&lt;&lt; '$secrets'
+        
+        cd .. || exit
+    else
+        echo '  No TLS secrets found in namespace: $ns'
+    fi
+done
+
+echo 'Certificate export completed. Files are in exported_certificates directory.'
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/78.html</guid><pubDate>Thu, 21 Aug 2025 03:41:33 +0000</pubDate></item><item><title>kubernetes Canary</title><link>https://longxiucai.github.io/post/77.html</link><description>参考 ： https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#canary
+## 创建2个nginx版本分别为v1与v2
+```
+# Nginx v1 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-v1
+data:
+  index.html: |
+    &lt;p class='version'&gt;This is Nginx Version 1.0&lt;/p&gt;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v1
+    spec:
+      containers:
+      - name: nginx
+        image: registry.kylincloud.org:4001/kcc/images/nginx:1.23.1
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-html-v1
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-html-v1
+        configMap:
+          name: nginx-config-v1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-v1
+spec:
+  selector:
+    app: nginx
+    version: v1
+  ports:
+  - port: 80
+    targetPort: 80
+  type: NodePort
+---
+
+# Nginx v2 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-v2
+data:
+  index.html: |
+    &lt;p class='version'&gt;This is Nginx Version 2.0&lt;/p&gt;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-v2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v2
+    spec:
+      containers:
+      - name: nginx
+        image: registry.kylincloud.org:4001/kcc/images/nginx:1.23.1
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-html-v2
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-html-v2
+        configMap:
+          name: nginx-config-v2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-v2
+spec:
+  selector:
+    app: nginx
+    version: v2
+  ports:
+  - port: 80
+    targetPort: 80
+  type: NodePort
+```
+
+## 创建ingress
+```
+# 第一个Ingress定义，用于常规服务
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-v1  # 定义Ingress的名称
+spec:
+  ingressClassName: ingress-nginx
+  rules:
+  - host: nginx.lyx.com  # 设置主机名，所有的请求都会被转发到这个域名下的服务
+    http:
+      paths:
+      - backend:
+          service:
+            name: nginx-service-v1
+            port:
+              number: 80  # 指定后端服务监听的端口
+        path: /  # 所有访问根路径的请求都会被转发到此服务
+        pathType: Prefix  # 路径类型为前缀，表示所有以'/'开头的请求都将被转发到此服务
+```
+## 流量切分
+canary规则按优先级顺序进行评估。</description><guid isPermaLink="true">https://longxiucai.github.io/post/77.html</guid><pubDate>Mon, 11 Aug 2025 07:57:21 +0000</pubDate></item><item><title>promethues数据导入与导出</title><link>https://longxiucai.github.io/post/76.html</link><description>
+# 数据导出
+## 方式一、通过快照的方法
+### 启动admin api
+先判断当前是否启用了admin api，如果没有启用，需要启用，判断方法：
+```
+kubectl get pod -n monitoring prometheus-k8s-0 -oyaml|grep admin
+```
+看是否有`    - --web.enable-admin-api`，如果没有则需要启用，启用方法：
+```
+kubectl -n monitoring patch prometheus k8s --type merge --patch '{'spec':{'enableAdminAPI':true}}'
+```
+### 通过api创建快照
+```
+curl -XPOST http://&lt;masterip&gt;:30200/api/v1/admin/tsdb/snapshot
+```
+返回:{'status':'success','data':{'name':'20250609T091200Z-462edddd226ddbd5'}} 可以在容器中/prometheus/snapshots/中找到这个name 的目录
+### 将快照数据拷贝出来（下面方法二选一）
+#### kubectl cp
+```
+kubectl cp -n monitoring prometheus-k8s-0:/prometheus/snapshots  .
+```
+&gt; [!TIP]
+&gt; 通过kubectl cp方式时，当前目录会存在`&lt;snapshots-name&gt;`，这里面直接是元数据，例如`ls 20250610T022906Z-610813546f16aadd`可以看到很多目录。</description><guid isPermaLink="true">https://longxiucai.github.io/post/76.html</guid><pubDate>Tue, 10 Jun 2025 03:13:51 +0000</pubDate></item><item><title>ingress代理另一个集群中ingress代理服务</title><link>https://longxiucai.github.io/post/75.html</link><description>前提条件：A环境中能够解析B提供服务的域名
+
+1.在A环境增加一条内部“svc-B”的service资源，“svc-B”的spec.type为ExternalName、spec.externalName为集群B中服务的域名地址。</description><guid isPermaLink="true">https://longxiucai.github.io/post/75.html</guid><pubDate>Thu, 22 May 2025 07:14:41 +0000</pubDate></item><item><title>域名解析的原理与故障排查</title><link>https://longxiucai.github.io/post/74.html</link><description># 原理
+如图所示，域名是一种树状结构，最顶层的域名是根域名（注意是一个点“.”，它是 .root 的含义，不过现在“.root”已经默认被隐藏），然后是顶级域名（Top Level Domain，简写 TLD，例如 .com），再是二级域名（例如 google.com）。</description><guid isPermaLink="true">https://longxiucai.github.io/post/74.html</guid><pubDate>Mon, 12 May 2025 06:06:39 +0000</pubDate></item><item><title>curl命令对HTTPS请求的各个阶输出详细的延迟</title><link>https://longxiucai.github.io/post/73.html</link><description># curl -w参数说明
+curl 命令提供了 -w 参数，允许按照指定的格式打印与请求相关的信息，其中部分信息可以通过特定的变量表示，如 status_code、size_download、time_namelookup 等等。</description><guid isPermaLink="true">https://longxiucai.github.io/post/73.html</guid><pubDate>Mon, 12 May 2025 05:52:00 +0000</pubDate></item><item><title>promethues operator中alertmanager挂载自定义模板</title><link>https://longxiucai.github.io/post/72.html</link><description>1. 创建模板为configmap，内容如下，根据实际需求修改，kubectl apply即可
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-templates
+  namespace: monitoring  # 根据你的 Alertmanager 命名空间调整
+data:
+  kubediag.tmpl: |
+    {{ define 'kubediag.payload' }}
+    {{ .Alerts }}
+    {{ end }}
+```  
+2. 修改alertmanager资源添加configMaps配置项（配置会挂载到`/etc/alertmanager/configmaps`中），patch.yaml文件内容如下
+```
+spec:
+  configMaps:
+  - alertmanager-templates
+```
+执行命令`kubectl patch alertmanager main -n monitoring --type=merge --patch-file patch.yaml`
+3. 修改alertmanager的配置，根据实际情况，我的环境为kubectl get secrets -n monitoring  alertmanager-main这个secret。</description><guid isPermaLink="true">https://longxiucai.github.io/post/72.html</guid><pubDate>Tue, 29 Apr 2025 08:36:50 +0000</pubDate></item><item><title>promethues operator中alertmanagerconfig的使用</title><link>https://longxiucai.github.io/post/71.html</link><description>1. `kubectl patch alertmanager main -n monitoring --type=merge --patch-file patch.yaml`配置选择哪些alertmanagerConfig
+
+patch.yaml文件内容如下
+```
+spec:
+  alertmanagerConfigSelector:
+    matchLabels:
+      alertmanagerConfig: main
+```
+2. 创建alertmanagerConfig资源，资源需要有上述label：`alertmanagerConfig: main`
+```
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: kubediag-config
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: main
+spec:
+  route:
+    receiver: 'kubediag'
+    routes:
+      - receiver: 'kubediag'
+        matchers: 
+        - name: 'strategy_type'
+          value: 'user_strategy'
+        - name: 'namespace'
+          value: default
+  receivers:
+    - name: 'kubediag'
+      webhookConfigs:
+       - url: 'http://kubediag-master.kubediag.svc.cluster.local:8089/api/v1/alerts'
+          sendResolved: true
+          httpConfig:
+            tlsConfig:
+              insecureSkipVerify: true
+          maxAlerts: 0
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/71.html</guid><pubDate>Tue, 29 Apr 2025 08:29:49 +0000</pubDate></item><item><title>k8s pod日志默认存储大小</title><link>https://longxiucai.github.io/post/70.html</link><description>kubeadm有参数containerLogMaxSize（默认10M） containerLogMaxFiles(默认5)
+
+containerd本身没有管理容器日志分割与限制大小的功能，kubelet有参数`--container-log-max-files=5 --container-log-max-size=100Mi`与配置`'containerLogMaxSize': '100Mi','containerLogMaxFiles': 5`，验证kubelet对日志控制的功能，默认为400M 4个备份，压缩之后30M，不存在空间爆满的情况。</description><guid isPermaLink="true">https://longxiucai.github.io/post/70.html</guid><pubDate>Wed, 02 Apr 2025 08:21:39 +0000</pubDate></item><item><title>k6性能测试工具（笔记）</title><link>https://longxiucai.github.io/post/69.html</link><description># Load test types
+
+## Smoke testing
+
+```
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+export const options = {
+  vus: 3, // Key for Smoke test. Keep it at 2, 3, max 5 VUs
+  duration: '1m', // This can be shorter or just a few iterations
+};
+export default () =&gt; {
+  const urlRes = http.get('https://quickpizza.grafana.com');
+  sleep(1);
+  // MORE STEPS
+  // Add only the processes that will be on high demand
+  // Step1
+  // Step2
+  // etc.
+};
+```
+
+![The shape of the smoke test as configured in the preceding script](https://grafana.com/media/docs/k6-oss/chart-smoke-test-k6-script-example.png)
+
+## Average-load testing
+
+```
+import http from 'k6/http';
+import { sleep } from 'k6';
+export const options = {
+  // Key configurations for avg load test in this section
+  stages: [
+    { duration: '5m', target: 100 }, // traffic ramp-up from 1 to 100 users over 5 minutes.
+    { duration: '30m', target: 100 }, // stay at 100 users for 30 minutes
+    { duration: '5m', target: 0 }, // ramp-down to 0 users
+  ],
+};
+export default () =&gt; {
+  const urlRes = http.get('https://quickpizza.grafana.com');
+  sleep(1);
+};
+```
+
+![The shape of the average-load test as configured in the preceding script](https://grafana.com/media/docs/k6-oss/chart-average-load-test-k6-script-example.png)
+
+## Stress testing
+
+```
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  // Key configurations for Stress in this section
+  stages: [
+    { duration: '10m', target: 200 }, // traffic ramp-up from 1 to a higher 200 users over 10 minutes.
+    { duration: '30m', target: 200 }, // stay at higher 200 users for 30 minutes
+    { duration: '5m', target: 0 }, // ramp-down to 0 users
+  ],
+};
+
+export default () =&gt; {
+  const urlRes = http.get('https://quickpizza.grafana.com');
+  sleep(1);
+};
+```
+
+![The shape of the stress test as configured in the preceding script](https://grafana.com/media/docs/k6-oss/chart-stress-test-k6-script-example.png)
+
+## Soak testing
+
+```
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  // Key configurations for Soak test in this section
+  stages: [
+    { duration: '5m', target: 100 }, // traffic ramp-up from 1 to 100 users over 5 minutes.
+    { duration: '8h', target: 100 }, // stay at 100 users for 8 hours!!!
+    { duration: '5m', target: 0 }, // ramp-down to 0 users
+  ],
+};
+
+export default () =&gt; {
+  const urlRes = http.get('https://quickpizza.grafana.com');
+  sleep(1);
+};
+```
+
+![The shape of the soak test as configured in the preceding script](https://grafana.com/media/docs/k6-oss/chart-soak-test-k6-script-example.png)
+
+## Spike testing
+
+```
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  // Key configurations for spike in this section
+  stages: [
+    { duration: '2m', target: 2000 }, // fast ramp-up to a high point
+    // No plateau
+    { duration: '1m', target: 0 }, // quick ramp-down to 0 users
+  ],
+};
+
+export default () =&gt; {
+  const urlRes = http.get('https://quickpizza.grafana.com');
+  sleep(1);
+};
+```
+
+![The shape of the spike test as configured in the preceding script](https://grafana.com/media/docs/k6-oss/chart-spike-test-k6-script-example.png)
+
+## Breakpoint testing
+
+```
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  // Key configurations for breakpoint in this section
+  executor: 'ramping-arrival-rate', //Assure load increase if the system slows
+  stages: [
+    { duration: '2h', target: 20000 }, // just slowly ramp-up to a HUGE load
+  ],
+};
+
+export default () =&gt; {
+  const urlRes = http.get('https://quickpizza.grafana.com');
+  sleep(1);
+};
+```
+
+![The shape of the breakpoint test as configured in the preceding script](https://grafana.com/media/docs/k6-oss/chart-breakpoint-test-k6-script-example.png)
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/69.html</guid><pubDate>Wed, 05 Mar 2025 05:58:33 +0000</pubDate></item><item><title>ingress controller黑白名单</title><link>https://longxiucai.github.io/post/68.html</link><description>参考: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
+
+黑名单
+根据实际情况，修改需要配置黑白名单的ingress资源，示例：
+kubectl  edit  ingresses.networking.k8s.io -n xx xxxxx
+
+增加annotations：
+nginx.ingress.kubernetes.io/denylist-source-range: ip1/mask,ip2/mask
+
+白名单
+使用上述方法，增加annotations：
+nginx.ingress.kubernetes.io/whitelist-source-range: ip1/mask,ip2/mask
+
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/68.html</guid><pubDate>Tue, 04 Mar 2025 08:02:53 +0000</pubDate></item><item><title>Gmeek中文字spoiler剧透效果</title><link>https://longxiucai.github.io/post/67.html</link><description>#### 参考
+https://hellodk.cn/post/1187
+
+#### 配置
+```
+    'style':'&lt;style&gt;@import url('https://longxiucai.github.io/spoiler.css');&lt;/style&gt;'
+```
+#### 使用
+```
+我才知道周也的父亲是叫`Gmeek-html&lt;span class='spoiler'&gt;周秦快&lt;/span&gt;`。</description><guid isPermaLink="true">https://longxiucai.github.io/post/67.html</guid><pubDate>Mon, 03 Mar 2025 08:28:42 +0000</pubDate></item><item><title>mysqld-exporter部署（promethues operator|multi-target）</title><link>https://longxiucai.github.io/post/66.html</link><description>准备
+--
+
+您也可以在您的云服务器中通过执行以下命令进行授权。</description><guid isPermaLink="true">https://longxiucai.github.io/post/66.html</guid><pubDate>Mon, 03 Mar 2025 06:50:36 +0000</pubDate></item><item><title>删除k8s namespace卡住</title><link>https://longxiucai.github.io/post/65.html</link><description>1. `kubectl get ns &lt;对应命名空间名称&gt; -o json   &gt;   abc.json`
+执行完这条命令后，当前文件夹会出现abc.json这个文件，打开这个文件，删除字段spec和finalizers这两个字段包含的内容。</description><guid isPermaLink="true">https://longxiucai.github.io/post/65.html</guid><pubDate>Wed, 26 Feb 2025 06:55:24 +0000</pubDate></item><item><title>nfs-client-provisioner以及local-path-provisioner部署</title><link>https://longxiucai.github.io/post/64.html</link><description># nfs-client
+注意修改镜像地址（spec.image）、nfs的IP地址与共享路径（volumes与env两处）
+```
+# Source: pre-resource/templates/nfs.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: nfs-client-provisioner-common
+  namespace: nfs-storage
+---
+# Source: pre-resource/templates/nfs.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storage
+provisioner: common-nfs-storage
+parameters:
+  archiveOnDelete: 'true'
+---
+# Source: pre-resource/templates/nfs.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-client-provisioner-runner-common
+rules:
+  - apiGroups: ['']
+    resources: ['persistentvolumes']
+    verbs: ['get', 'list', 'watch', 'create', 'delete']
+  - apiGroups: ['']
+    resources: ['persistentvolumeclaims']
+    verbs: ['get', 'list', 'watch', 'update']
+  - apiGroups: ['storage.k8s.io']
+    resources: ['storageclasses']
+    verbs: ['get', 'list', 'watch']
+  - apiGroups: ['']
+    resources: ['events']
+    verbs: ['create', 'update', 'patch']
+---
+# Source: pre-resource/templates/nfs.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-nfs-client-provisioner-common
+  namespace: nfs-storage
+subjects:
+  - kind: ServiceAccount
+    name: nfs-client-provisioner-common
+    namespace: nfs-storage
+roleRef:
+  kind: ClusterRole
+  name: nfs-client-provisioner-runner-common
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: pre-resource/templates/nfs.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner-common
+  namespace: nfs-storage
+rules:
+  - apiGroups: ['']
+    resources: ['endpoints']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch']
+---
+# Source: pre-resource/templates/nfs.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner-common
+  namespace: nfs-storage
+subjects:
+  - kind: ServiceAccount
+    name: nfs-client-provisioner-common
+    namespace: nfs-storage
+roleRef:
+  kind: Role
+  name: leader-locking-nfs-client-provisioner-common
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: pre-resource/templates/nfs.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-client-provisioner-common
+  namespace: nfs-storage
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      k8s-app: nfs-client-provisioner-common
+  template:
+    metadata:
+      labels:
+        k8s-app: nfs-client-provisioner-common
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      serviceAccountName: nfs-client-provisioner-common
+      containers:
+        - name: nfs-client-provisioner-common
+          image: nfs-client-provisioner:20230912
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+            - mountPath: /etc/localtime
+              name: localtime              
+          ports:
+            - containerPort: 9200
+          env:
+            - name: PROVISIONER_NAME
+              value: common-nfs-storage 
+            - name: NFS_SERVER
+              value: XX.XX.XX.XX
+            - name: NFS_PATH
+              value: /XX/xx
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: XX.XX.XX.XX
+            path: /XX/xx
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+
+```
+# local-path
+注意修改路径（config.json）
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-path-storage
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-path-provisioner-service-account
+  namespace: local-path-storage
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: local-path-provisioner-role
+rules:
+  - apiGroups: [ '' ]
+    resources: [ 'nodes', 'persistentvolumeclaims', 'configmaps' ]
+    verbs: [ 'get', 'list', 'watch' ]
+  - apiGroups: [ '' ]
+    resources: [ 'endpoints', 'persistentvolumes', 'pods' ]
+    verbs: [ '*' ]
+  - apiGroups: [ '' ]
+    resources: [ 'events' ]
+    verbs: [ 'create', 'patch' ]
+  - apiGroups: [ 'storage.k8s.io' ]
+    resources: [ 'storageclasses' ]
+    verbs: [ 'get', 'list', 'watch' ]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: local-path-provisioner-bind
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: local-path-provisioner-role
+subjects:
+  - kind: ServiceAccount
+    name: local-path-provisioner-service-account
+    namespace: local-path-storage
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-path-provisioner
+  namespace: local-path-storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-path-provisioner
+  template:
+    metadata:
+      labels:
+        app: local-path-provisioner
+    spec:
+      serviceAccountName: local-path-provisioner-service-account
+      containers:
+        - name: local-path-provisioner
+          image: local-path-provisioner:v0.0.24
+          imagePullPolicy: IfNotPresent
+          command:
+            - local-path-provisioner
+            - --debug
+            - start
+            - --config
+            - /etc/config/config.json
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config/
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+      volumes:
+        - name: config-volume
+          configMap:
+            name: local-path-config
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: local-path-config
+  namespace: local-path-storage
+data:
+  config.json: |-
+    {
+            'nodePathMap':[
+            {
+                    'node':'DEFAULT_PATH_FOR_NON_LISTED_NODES',
+                    'paths':['/opt/local-path-provisioner']
+            }
+            ]
+    }
+  setup: |-
+    #!/bin/sh
+    set -eu
+    mkdir -m 0777 -p '$VOL_DIR'
+  teardown: |-
+    #!/bin/sh
+    set -eu
+    rm -rf '$VOL_DIR'
+  helperPod.yaml: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: helper-pod
+    spec:
+      containers:
+      - name: helper-pod
+        image: busybox:1.36.0
+        imagePullPolicy: IfNotPresent
+
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/64.html</guid><pubDate>Wed, 26 Feb 2025 03:27:22 +0000</pubDate></item><item><title>.gitignore用法</title><link>https://longxiucai.github.io/post/63.html</link><description>`.gitignore` 文件用于告诉 Git 忽略哪些文件或目录，使其不会被 Git 追踪和提交。</description><guid isPermaLink="true">https://longxiucai.github.io/post/63.html</guid><pubDate>Fri, 21 Feb 2025 02:56:35 +0000</pubDate></item><item><title>【go】slog使用以及配合第三方库实现log rotation</title><link>https://longxiucai.github.io/post/62.html</link><description># 示例
+使用slog将日志保存到文件，同时输出到控制台。</description><guid isPermaLink="true">https://longxiucai.github.io/post/62.html</guid><pubDate>Tue, 18 Feb 2025 01:06:38 +0000</pubDate></item><item><title>apisix2.10&amp;apisix-ingress-controller1.4.0配置路由过滤</title><link>https://longxiucai.github.io/post/59.html</link><description>参考：https://625a9090d04b9a6953165811--2-11-old-docs-apache-apisix.netlify.app/zh/docs/apisix/2.10/plugins/uri-blocker
+使用uri-blocker插件，该插件可帮助我们拦截用户请求，只需要指定block_rules即可。</description><guid isPermaLink="true">https://longxiucai.github.io/post/59.html</guid><pubDate>Tue, 11 Feb 2025 01:54:30 +0000</pubDate></item><item><title>node-exporter各collector指标</title><link>https://longxiucai.github.io/post/58.html</link><description>|     |     |     |     |     |
+| --- | --- | --- | --- | --- |
+| Description | metrics中的信息 | 指标名称（release-1.3） | 值的来源 | 备注  |
+| Exposes ARP statistics from/proc/net/arp. | 正常  | node\_arp\_entries | /proc/net/arp |     |
+| Exposes the number of configured and active slaves of Linux bonding interfaces. | 正常  | node\_bonding\_active  &lt;br&gt;node\_bonding\_slaves | /sys/class/net/&lt;bond name&gt;/\* |     |
+| Exposes btrfs statistics | 正常  | node\_btrfs\_allocation\_ratio  &lt;br&gt;node\_btrfs\_device\_size\_bytes  &lt;br&gt;node\_btrfs\_global\_rsv\_size\_bytes  &lt;br&gt;node\_btrfs\_info  &lt;br&gt;node\_btrfs\_reserved\_bytes  &lt;br&gt;node\_btrfs\_size\_bytes  &lt;br&gt;node\_btrfs\_used\_bytes | /sys/fs/btrfs/\*-\*/ |     |
+| Exposes statistics of memory fragments as reported by /proc/buddyinfo. | 正常  | node\_buddyinfo\_blocks | /proc/buddyinfo |     |
+| Shows conntrack statistics (does nothing if no/proc/sys/net/netfilter/present). | 正常  | node\_nf\_conntrack\_entries  &lt;br&gt;node\_nf\_conntrack\_entries\_limit  &lt;br&gt;node\_nf\_conntrack\_stat\_found  &lt;br&gt;node\_nf\_conntrack\_stat\_invalid  &lt;br&gt;node\_nf\_conntrack\_stat\_ignore  &lt;br&gt;node\_nf\_conntrack\_stat\_insert  &lt;br&gt;node\_nf\_conntrack\_stat\_insert\_failed  &lt;br&gt;node\_nf\_conntrack\_stat\_drop  &lt;br&gt;node\_nf\_conntrack\_stat\_early\_drop  &lt;br&gt;node\_nf\_conntrack\_stat\_search\_restart | /proc/net/stat/nf\_conntrack |     |
+| Exposes CPU statistics | 正常  | node\_cpu\_seconds\_total  &lt;br&gt;node\_cpu\_info  &lt;br&gt;node\_cpu\_flag\_info  &lt;br&gt;node\_cpu\_bug\_info  &lt;br&gt;node\_cpu\_guest\_seconds\_total  &lt;br&gt;node\_cpu\_core\_throttles\_total  &lt;br&gt;node\_cpu\_package\_throttles\_total | /proc/cpuinfo |     |
+| Exposes disk I/O statistics. | 正常  | node\_disk\_reads\_completed\_total  &lt;br&gt;node\_disk\_read\_bytes\_total  &lt;br&gt;node\_disk\_writes\_completed\_total  &lt;br&gt;node\_disk\_written\_bytes\_total  &lt;br&gt;node\_disk\_io\_time\_seconds\_total  &lt;br&gt;node\_disk\_read\_time\_seconds\_total  &lt;br&gt;node\_disk\_write\_time\_seconds\_total  &lt;br&gt;node\_disk\_info  &lt;br&gt;node\_disk\_reads\_merged\_total  &lt;br&gt;node\_disk\_writes\_merged\_total  &lt;br&gt;node\_disk\_io\_now  &lt;br&gt;node\_disk\_io\_time\_weighted\_seconds\_total  &lt;br&gt;node\_disk\_discards\_completed\_total  &lt;br&gt;node\_disk\_discards\_merged\_total  &lt;br&gt;node\_disk\_discarded\_sectors\_total  &lt;br&gt;node\_disk\_discard\_time\_seconds\_total  &lt;br&gt;node\_disk\_flush\_requests\_total  &lt;br&gt;node\_disk\_flush\_requests\_time\_seconds\_total | /proc/diskstats |     |
+| Expose Desktop Management Interface (DMI) info from/sys/class/dmi/id/ | 正常  | node\_dmi\_info | /sys/class/dmi/id/ |     |
+| Exposes available entropy. | 正常  | node\_entropy\_available\_bits  &lt;br&gt;node\_entropy\_pool\_size\_bits | /proc/sys/kernel/random/ |     |
+| Exposes file descriptor statistics from/proc/sys/fs/file-nr. | 正常  | node\_filefd\_allocated  &lt;br&gt;node\_filefd\_maximum | /proc/sys/fs/file-nr |     |
+| Exposes filesystem statistics, such as disk space used. | 正常  | node\_filesystem\_size\_bytes  &lt;br&gt;node\_filesystem\_free\_bytes  &lt;br&gt;node\_filesystem\_avail\_bytes  &lt;br&gt;node\_filesystem\_files  &lt;br&gt;node\_filesystem\_files\_free  &lt;br&gt;node\_filesystem\_readonly  &lt;br&gt;node\_filesystem\_device\_error | /proc/1/mounts |     |
+| Exposes detailed interrupts statistics. | 正常  | node\_interrupts\_total | /proc/interrupts |     |
+| Exposes IPVS status from/proc/net/ip\_vsand stats from/proc/net/ip\_vs\_stats. | 正常  | node\_ipvs\_connections\_total  &lt;br&gt;node\_ipvs\_incoming\_packets\_total  &lt;br&gt;node\_ipvs\_outgoing\_packets\_total  &lt;br&gt;node\_ipvs\_incoming\_bytes\_total  &lt;br&gt;node\_ipvs\_outgoing\_bytes\_total  &lt;br&gt;node\_ipvs\_backend\_connections\_active  &lt;br&gt;node\_ipvs\_backend\_connections\_inactive  &lt;br&gt;node\_ipvs\_backend\_weight | /proc/net/ip\_vs  &lt;br&gt;/proc/net/ip\_vs\_stats |     |
+| Exposes stats from/proc/net/stat/. | 正常  | node\_lnstat\_allocs\_total  &lt;br&gt;node\_lnstat\_delete\_list\_total  &lt;br&gt;node\_lnstat\_delete\_total  &lt;br&gt;node\_lnstat\_destroys\_total  &lt;br&gt;node\_lnstat\_drop\_total  &lt;br&gt;node\_lnstat\_early\_drop\_total  &lt;br&gt;node\_lnstat\_entries\_total  &lt;br&gt;node\_lnstat\_expect\_create\_total  &lt;br&gt;node\_lnstat\_expect\_delete\_total  &lt;br&gt;node\_lnstat\_expect\_new\_total  &lt;br&gt;node\_lnstat\_forced\_gc\_runs\_total  &lt;br&gt;node\_lnstat\_found\_total  &lt;br&gt;node\_lnstat\_gc\_dst\_overflow\_total  &lt;br&gt;node\_lnstat\_gc\_goal\_miss\_total  &lt;br&gt;node\_lnstat\_gc\_ignored\_total  &lt;br&gt;node\_lnstat\_gc\_total\_total  &lt;br&gt;node\_lnstat\_hash\_grows\_total  &lt;br&gt;node\_lnstat\_hits\_total  &lt;br&gt;node\_lnstat\_icmp\_error\_total  &lt;br&gt;node\_lnstat\_ignore\_total  &lt;br&gt;node\_lnstat\_in\_brd\_total  &lt;br&gt;node\_lnstat\_in\_hit\_total  &lt;br&gt;node\_lnstat\_in\_hlist\_search\_total  &lt;br&gt;node\_lnstat\_in\_martian\_dst\_total&lt;br&gt;node\_lnstat\_in\_martian\_src\_total  &lt;br&gt;node\_lnstat\_in\_no\_route\_total  &lt;br&gt;node\_lnstat\_in\_slow\_mc\_total  &lt;br&gt;node\_lnstat\_in\_slow\_tot\_total  &lt;br&gt;node\_lnstat\_insert\_failed\_total  &lt;br&gt;node\_lnstat\_insert\_total  &lt;br&gt;node\_lnstat\_invalid\_total  &lt;br&gt;node\_lnstat\_lookups\_total  &lt;br&gt;node\_lnstat\_new\_total  &lt;br&gt;node\_lnstat\_out\_hit\_total  &lt;br&gt;node\_lnstat\_out\_hlist\_search\_total  &lt;br&gt;node\_lnstat\_out\_slow\_mc\_total  &lt;br&gt;node\_lnstat\_out\_slow\_tot\_total  &lt;br&gt;node\_lnstat\_periodic\_gc\_runs\_total  &lt;br&gt;node\_lnstat\_rcv\_probes\_mcast\_total  &lt;br&gt;node\_lnstat\_rcv\_probes\_ucast\_total  &lt;br&gt;node\_lnstat\_res\_failed\_total  &lt;br&gt;node\_lnstat\_search\_restart\_total  &lt;br&gt;node\_lnstat\_searched\_total  &lt;br&gt;node\_lnstat\_table\_fulls\_total  &lt;br&gt;node\_lnstat\_unresolved\_discards\_total| /proc/net/stat/ | 指标名称根据/proc/net/stat/\*第一行 |
+| Exposes load average. | 正常  | node\_load1  &lt;br&gt;node\_load15  &lt;br&gt;node\_load5 | /proc/loadavg |     |
+| Exposes memory statistics. | 正常  | node\_memory\_Active\_anon\_bytes  &lt;br&gt;node\_memory\_Active\_bytes  &lt;br&gt;node\_memory\_Active\_file\_bytes  &lt;br&gt;node\_memory\_AnonHugePages\_bytes  &lt;br&gt;node\_memory\_AnonPages\_bytes  &lt;br&gt;node\_memory\_Bounce\_bytes  &lt;br&gt;node\_memory\_Buffers\_bytes  &lt;br&gt;node\_memory\_Cached\_bytes  &lt;br&gt;node\_memory\_CommitLimit\_bytes  &lt;br&gt;node\_memory\_Committed\_AS\_bytes  &lt;br&gt;node\_memory\_DirectMap1G\_bytes  &lt;br&gt;node\_memory\_DirectMap2M\_bytes  &lt;br&gt;node\_memory\_DirectMap4k\_bytes  &lt;br&gt;node\_memory\_Dirty\_bytes  &lt;br&gt;node\_memory\_HardwareCorrupted\_bytes  &lt;br&gt;node\_memory\_HugePages\_Free  &lt;br&gt;node\_memory\_HugePages\_Rsvd  &lt;br&gt;node\_memory\_HugePages\_Surp  &lt;br&gt;node\_memory\_HugePages\_Total  &lt;br&gt;node\_memory\_Hugepagesize\_bytes  &lt;br&gt;node\_memory\_Hugetlb\_bytes  &lt;br&gt;node\_memory\_Inactive\_anon\_bytes  &lt;br&gt;node\_memory\_Inactive\_bytes   &lt;br&gt;node\_memory\_Inactive\_file\_bytes  &lt;br&gt;node\_memory\_KernelStack\_bytes  &lt;br&gt;node\_memory\_Mapped\_bytes  &lt;br&gt;node\_memory\_MemAvailable\_bytes  &lt;br&gt;node\_memory\_MemFree\_bytes  &lt;br&gt;node\_memory\_MemTotal\_bytes  &lt;br&gt;node\_memory\_Mlocked\_bytes  &lt;br&gt;node\_memory\_NFS\_Unstable\_bytes  &lt;br&gt;node\_memory\_PageTables\_bytes  &lt;br&gt;node\_memory\_Percpu\_bytes  &lt;br&gt;node\_memory\_SReclaimable\_bytes  &lt;br&gt;node\_memory\_SUnreclaim\_bytes  &lt;br&gt;node\_memory\_ShmemHugePages\_bytes  &lt;br&gt;node\_memory\_ShmemPmdMapped\_bytes  &lt;br&gt;node\_memory\_Shmem\_bytes  &lt;br&gt;node\_memory\_Slab\_bytes  &lt;br&gt;node\_memory\_SwapCached\_bytes  &lt;br&gt;node\_memory\_SwapFree\_bytes  &lt;br&gt;node\_memory\_SwapTotal\_bytes  &lt;br&gt;node\_memory\_Unevictable\_bytes  &lt;br&gt;node\_memory\_VmallocChunk\_bytes  &lt;br&gt;node\_memory\_VmallocTotal\_bytes  &lt;br&gt;node\_memory\_VmallocUsed\_bytes  &lt;br&gt;node\_memory\_WritebackTmp\_bytes  &lt;br&gt;node\_memory\_Writeback\_bytes| /proc/meminfo | 指标名称根据/proc/meminfo第一列 |
+| Exposes memory statistics from/proc/meminfo\_numa. | 正常  | node\_memory\_numa\_Active  &lt;br&gt;node\_memory\_numa\_Active\_anon  &lt;br&gt;node\_memory\_numa\_Active\_file  &lt;br&gt;node\_memory\_numa\_AnonHugePages  &lt;br&gt;node\_memory\_numa\_AnonPages  &lt;br&gt;node\_memory\_numa\_Bounce  &lt;br&gt;node\_memory\_numa\_Dirty  &lt;br&gt;node\_memory\_numa\_FilePages  &lt;br&gt;node\_memory\_numa\_HugePages\_Free  &lt;br&gt;node\_memory\_numa\_HugePages\_Surp  &lt;br&gt;node\_memory\_numa\_HugePages\_Total  &lt;br&gt;node\_memory\_numa\_Inactive  &lt;br&gt;node\_memory\_numa\_Inactive\_anon  &lt;br&gt;node\_memory\_numa\_Inactive\_file  &lt;br&gt;node\_memory\_numa\_KernelStack  &lt;br&gt;node\_memory\_numa\_Mapped  &lt;br&gt;node\_memory\_numa\_MemFree  &lt;br&gt;node\_memory\_numa\_MemTotal&lt;br&gt; node\_memory\_numa\_MemUsed  &lt;br&gt;node\_memory\_numa\_Mlocked  &lt;br&gt;node\_memory\_numa\_NFS\_Unstable  &lt;br&gt;node\_memory\_numa\_PageTables  &lt;br&gt;node\_memory\_numa\_SReclaimable  &lt;br&gt;node\_memory\_numa\_SUnreclaim  &lt;br&gt;node\_memory\_numa\_Shmem  &lt;br&gt;node\_memory\_numa\_ShmemHugePages  &lt;br&gt;node\_memory\_numa\_ShmemPmdMapped  &lt;br&gt;node\_memory\_numa\_Slab  &lt;br&gt;node\_memory\_numa\_Unevictable  &lt;br&gt;node\_memory\_numa\_Writeback  &lt;br&gt;node\_memory\_numa\_WritebackTmp  &lt;br&gt;node\_memory\_numa\_interleave\_hit\_total  &lt;br&gt;node\_memory\_numa\_local\_node\_total  &lt;br&gt;node\_memory\_numa\_numa\_foreign\_total  &lt;br&gt;node\_memory\_numa\_numa\_hit\_total  &lt;br&gt;node\_memory\_numa\_numa\_miss\_total  &lt;br&gt;node\_memory\_numa\_other\_node\_total&lt;br&gt; node\_memory\_numa\_MemUsed  &lt;br&gt;node\_memory\_numa\_Mlocked  &lt;br&gt;node\_memory\_numa\_NFS\_Unstable  &lt;br&gt;node\_memory\_numa\_PageTables  &lt;br&gt;node\_memory\_numa\_SReclaimable  &lt;br&gt;node\_memory\_numa\_SUnreclaim  &lt;br&gt;node\_memory\_numa\_Shmem  &lt;br&gt;node\_memory\_numa\_ShmemHugePages  &lt;br&gt;node\_memory\_numa\_ShmemPmdMapped  &lt;br&gt;node\_memory\_numa\_Slab  &lt;br&gt;node\_memory\_numa\_Unevictable  &lt;br&gt;node\_memory\_numa\_Writeback  &lt;br&gt;node\_memory\_numa\_WritebackTmp  &lt;br&gt;node\_memory\_numa\_interleave\_hit\_total  &lt;br&gt;node\_memory\_numa\_local\_node\_total  &lt;br&gt;node\_memory\_numa\_numa\_foreign\_total  &lt;br&gt;node\_memory\_numa\_numa\_hit\_total  &lt;br&gt;node\_memory\_numa\_numa\_miss\_total  &lt;br&gt;node\_memory\_numa\_other\_node\_total | /proc/meminfo\_numa | 指标名称根据/sys/devices/system/node/node\[0-9\]/meminfo |
+| Exposes network interface info from/sys/class/net/ | 正常  | node\_network\_info  &lt;br&gt;node\_network\_up  &lt;br&gt;node\_network\_address\_assign\_type  &lt;br&gt;node\_network\_carrier  &lt;br&gt;node\_network\_carrier\_changes\_total  &lt;br&gt;node\_network\_carrier\_up\_changes\_total  &lt;br&gt;node\_network\_carrier\_down\_changes\_total  &lt;br&gt;node\_network\_device\_id  &lt;br&gt;node\_network\_dormant  &lt;br&gt;node\_network\_flags  &lt;br&gt;node\_network\_iface\_id  &lt;br&gt;node\_network\_iface\_link  &lt;br&gt;node\_network\_iface\_link\_mode  &lt;br&gt;node\_network\_mtu\_bytes  &lt;br&gt;node\_network\_name\_assign\_type  &lt;br&gt;node\_network\_net\_dev\_group  &lt;br&gt;node\_network\_speed\_bytes  &lt;br&gt;node\_network\_transmit\_queue\_length  &lt;br&gt;node\_network\_protocol\_type | /sys/class/net/ |     |
+| Exposes network interface statistics such as bytes transferred. | 正常  | node\_network\_receive\_bytes\_total  &lt;br&gt;node\_network\_receive\_packets\_total  &lt;br&gt;node\_network\_receive\_errs\_total  &lt;br&gt;node\_network\_receive\_drop\_total  &lt;br&gt;node\_network\_receive\_fifo\_total  &lt;br&gt;node\_network\_receive\_frame\_total  &lt;br&gt;node\_network\_receive\_compressed\_total  &lt;br&gt;node\_network\_receive\_multicast\_total  &lt;br&gt;node\_network\_transmit\_bytes\_total  &lt;br&gt;node\_network\_transmit\_packets\_total  &lt;br&gt;node\_network\_transmit\_errs\_total  &lt;br&gt;node\_network\_transmit\_drop\_total  &lt;br&gt;node\_network\_transmit\_fifo\_total  &lt;br&gt;node\_network\_transmit\_frame\_total  &lt;br&gt;node\_network\_transmit\_compressed\_total  &lt;br&gt;node\_network\_transmit\_multicast\_total | /proc/net/dev | 指标名称根据/proc/net/dev |
+| Exposes network statistics from/proc/net/netstat. This is the same information asnetstat -s. | 正常  | node\_netstat\_Icmp6\_InErrors  &lt;br&gt;node\_netstat\_Icmp6\_InMsgs  &lt;br&gt;node\_netstat\_Icmp6\_OutMsgs  &lt;br&gt;node\_netstat\_Icmp\_InErrors  &lt;br&gt;node\_netstat\_Icmp\_InMsgs  &lt;br&gt;node\_netstat\_Icmp\_OutMsgs  &lt;br&gt;node\_netstat\_Ip6\_InOctets  &lt;br&gt;node\_netstat\_Ip6\_OutOctets  &lt;br&gt;node\_netstat\_IpExt\_InOctets  &lt;br&gt;node\_netstat\_IpExt\_OutOctets  &lt;br&gt;node\_netstat\_Ip\_Forwarding  &lt;br&gt;node\_netstat\_TcpExt\_ListenDrops  &lt;br&gt;node\_netstat\_TcpExt\_ListenOverflows  &lt;br&gt;node\_netstat\_TcpExt\_SyncookiesFailed  &lt;br&gt;node\_netstat\_TcpExt\_SyncookiesRecv  &lt;br&gt;node\_netstat\_TcpExt\_SyncookiesSent  &lt;br&gt;node\_netstat\_TcpExt\_TCPSynRetrans  &lt;br&gt;node\_netstat\_TcpExt\_TCPTimeouts  &lt;br&gt;node\_netstat\_Tcp\_ActiveOpens  &lt;br&gt;node\_netstat\_Tcp\_CurrEstab  &lt;br&gt;node\_netstat\_Tcp\_InErrs  &lt;br&gt;node\_netstat\_Tcp\_InSegs  &lt;br&gt;node\_netstat\_Tcp\_OutRsts  &lt;br&gt;node\_netstat\_Tcp\_OutSegs  &lt;br&gt;node\_netstat\_Tcp\_PassiveOpens  &lt;br&gt;node\_netstat\_Tcp\_RetransSegs  &lt;br&gt;node\_netstat\_Udp6\_InDatagrams  &lt;br&gt;node\_netstat\_Udp6\_InErrors  &lt;br&gt;node\_netstat\_Udp6\_NoPorts  &lt;br&gt;node\_netstat\_Udp6\_OutDatagrams  &lt;br&gt;node\_netstat\_Udp6\_RcvbufErrors  &lt;br&gt;node\_netstat\_Udp6\_SndbufErrors  &lt;br&gt;node\_netstat\_UdpLite6\_InErrors  &lt;br&gt;node\_netstat\_UdpLite\_InErrors  &lt;br&gt;node\_netstat\_Udp\_InDatagrams  &lt;br&gt;node\_netstat\_Udp\_InErrors  &lt;br&gt;node\_netstat\_Udp\_NoPorts  &lt;br&gt;node\_netstat\_Udp\_OutDatagrams  &lt;br&gt;node\_netstat\_Udp\_RcvbufErrors  &lt;br&gt;node\_netstat\_Udp\_SndbufErrors| /proc/net/netstat | 指标名称根据/proc/net/snmp、/proc/net/netstat、/proc/net/snmp6 |
+| Exposes the routing table as metrics | 正常  | node\_network\_route\_info  &lt;br&gt;node\_network\_routes | [github.com/mdlayher/netlink](https://github.com/mdlayher/netlink 'https://github.com/mdlayher/netlink') |     |
+| Exposes NFS client statistics from/proc/net/rpc/nfs. This is the same information asnfsstat -c. | 正常  | node\_nfs\_packets\_total  &lt;br&gt;node\_nfs\_connections\_total  &lt;br&gt;node\_nfs\_rpcs\_total  &lt;br&gt;node\_nfs\_rpc\_retransmissions\_total  &lt;br&gt;node\_nfs\_rpc\_authentication\_refreshes\_total  &lt;br&gt;node\_nfs\_requests\_total | /proc/net/rpc/nfs |     |
+| Exposes NFS kernel server statistics from/proc/net/rpc/nfsd. This is the same information asnfsstat -s. | 正常  | node\_nfsd\_requests\_total  &lt;br&gt;node\_nfsd\_reply\_cache\_hits\_total  &lt;br&gt;node\_nfsd\_reply\_cache\_misses\_total  &lt;br&gt;node\_nfsd\_reply\_cache\_nocache\_total  &lt;br&gt;node\_nfsd\_file\_handles\_stale\_total  &lt;br&gt;node\_nfsd\_disk\_bytes\_read\_total  &lt;br&gt;node\_nfsd\_disk\_bytes\_written\_total  &lt;br&gt;node\_nfsd\_server\_threads  &lt;br&gt;node\_nfsd\_read\_ahead\_cache\_size\_blocks  &lt;br&gt;node\_nfsd\_read\_ahead\_cache\_not\_found\_total  &lt;br&gt;node\_nfsd\_packets\_total  &lt;br&gt;node\_nfsd\_connections\_total  &lt;br&gt;node\_nfsd\_rpc\_errors\_total  &lt;br&gt;node\_nfsd\_server\_rpcs\_total | /proc/net/rpc/nfsd |     |
+| Expose OS release info from/etc/os-releaseor/usr/lib/os-release | 正常  | node\_os\_info  &lt;br&gt;node\_os\_version | /etc/os-release  &lt;br&gt;/usr/lib/os-release | /etc/os-release中VERSION\_ID的值不符合正则\`^\[0-9\]+\\.?\[0-9\]\*\`所以没有node\_os\_version指标 |
+| Exposes aggregate process statistics from/proc. | 正常  | node\_processes\_max\_processes  &lt;br&gt;node\_processes\_max\_threads  &lt;br&gt;node\_processes\_pids  &lt;br&gt;node\_processes\_state  &lt;br&gt;node\_processes\_threads  &lt;br&gt;node\_processes\_threads\_state | /proc/\* |     |
+| Exposesqueuing disciplinestatistics | 正常  | node\_qdisc\_backlog  &lt;br&gt;node\_qdisc\_bytes\_total  &lt;br&gt;node\_qdisc\_current\_queue\_length  &lt;br&gt;node\_qdisc\_drops\_total  &lt;br&gt;node\_qdisc\_overlimits\_total  &lt;br&gt;node\_qdisc\_packets\_total  &lt;br&gt;node\_qdisc\_requeues\_total | [github.com/mdlayher/netlink](https://github.com/mdlayher/netlink 'github.com/mdlayher/netlink') |     |
+| Exposes task scheduler statistics from/proc/schedstat. | 正常  | node\_schedstat\_timeslices\_total  &lt;br&gt;node\_schedstat\_waiting\_seconds\_total  &lt;br&gt;node\_schedstat\_running\_seconds\_total | /proc/schedstat |     |
+| Exposes various statistics from/proc/net/sockstat. | 正常  | node\_sockstat\_FRAG6\_inuse  &lt;br&gt;node\_sockstat\_FRAG6\_memory  &lt;br&gt;node\_sockstat\_FRAG\_inuse  &lt;br&gt;node\_sockstat\_FRAG\_memory  &lt;br&gt;node\_sockstat\_RAW6\_inuse  &lt;br&gt;node\_sockstat\_RAW\_inuse  &lt;br&gt;node\_sockstat\_TCP6\_inuse  &lt;br&gt;node\_sockstat\_TCP\_alloc  &lt;br&gt;node\_sockstat\_TCP\_inuse  &lt;br&gt;node\_sockstat\_TCP\_mem  &lt;br&gt;node\_sockstat\_TCP\_mem\_bytes  &lt;br&gt;node\_sockstat\_TCP\_orphan  &lt;br&gt;node\_sockstat\_TCP\_tw  &lt;br&gt;node\_sockstat\_UDP6\_inuse  &lt;br&gt;node\_sockstat\_UDPLITE6\_inuse  &lt;br&gt;node\_sockstat\_UDPLITE\_inuse  &lt;br&gt;node\_sockstat\_UDP\_inuse  &lt;br&gt;node\_sockstat\_UDP\_mem  &lt;br&gt;node\_sockstat\_UDP\_mem\_bytes  &lt;br&gt;node\_sockstat\_sockets\_used | /proc/net/sockstat |     |
+| Exposes statistics from/proc/net/softnet\_stat. | 正常  | node\_softnet\_dropped\_total  &lt;br&gt;node\_softnet\_processed\_total  &lt;br&gt;node\_softnet\_times\_squeezed\_total | /proc/net/softnet\_stat |     |
+| Exposes various statistics from/proc/stat. This includes boot time, forks and interrupts. | 正常  | node\_intr\_total  &lt;br&gt;node\_context\_switches\_total  &lt;br&gt;node\_forks\_total  &lt;br&gt;node\_boot\_time\_seconds  &lt;br&gt;node\_procs\_running  &lt;br&gt;node\_procs\_blocked | /proc/stat |     |
+| Exposes TCP connection status information from/proc/net/tcpand/proc/net/tcp6. (Warning: the current version has potential performance issues in high load situations.) | 正常  | node\_tcp\_connection\_states | /proc/net/tcp  &lt;br&gt;/proc/net/tcp6 |     |
+| Exposes statistics read from local disk. The\--collector.textfile.directoryflag must be set. | 正常  | node\_textfile\_mtime\_seconds  &lt;br&gt;node\_textfile\_scrape\_error | 根据参数指定的文件 |     |
+| Exposes thermal zone &amp; cooling device statistics from/sys/class/thermal. | 正常  | node\_thermal\_zone\_temp  &lt;br&gt;node\_cooling\_device\_cur\_state  &lt;br&gt;node\_cooling\_device\_max\_state | /sys/class/thermal |     |
+| Exposes the current system time. | 正常  | node\_time\_seconds  &lt;br&gt;node\_time\_zone\_offset\_seconds  &lt;br&gt;node\_time\_clocksource\_available\_info  &lt;br&gt;node\_time\_clocksource\_current\_info | /sys/devices/system/clocksource/ |     |
+| Exposes selected adjtimex(2) system call stats. | 正常  | node\_timex\_estimated\_error\_seconds  &lt;br&gt;node\_timex\_frequency\_adjustment\_ratio  &lt;br&gt;node\_timex\_loop\_time\_constant  &lt;br&gt;node\_timex\_maxerror\_seconds  &lt;br&gt;node\_timex\_offset\_seconds  &lt;br&gt;node\_timex\_pps\_calibration\_total  &lt;br&gt;node\_timex\_pps\_error\_total  &lt;br&gt;node\_timex\_pps\_frequency\_hertz  &lt;br&gt;node\_timex\_pps\_jitter\_seconds  &lt;br&gt;node\_timex\_pps\_jitter\_total  &lt;br&gt;node\_timex\_pps\_shift\_seconds  &lt;br&gt;node\_timex\_pps\_stability\_exceeded\_total  &lt;br&gt;node\_timex\_pps\_stability\_hertz  &lt;br&gt;node\_timex\_status  &lt;br&gt;node\_timex\_sync\_status  &lt;br&gt;node\_timex\_tai\_offset\_seconds  &lt;br&gt;node\_timex\_tick\_seconds | unix.Adjtimex |     |
+| Exposes UDP total lengths of the rx\_queue and tx\_queue from/proc/net/udpand/proc/net/udp6. | 正常  | node\_udp\_queues | /proc/net/udp  &lt;br&gt;/proc/net/udp6 |     |
+| Exposes system information as provided by the uname system call. | 正常  | node\_uname\_info | unix.Uname |     |
+| Exposes statistics from/proc/vmstat. | 正常  | node\_vmstat\_oom\_kill  &lt;br&gt;node\_vmstat\_pgfault  &lt;br&gt;node\_vmstat\_pgmajfault  &lt;br&gt;node\_vmstat\_pgpgin  &lt;br&gt;node\_vmstat\_pgpgout  &lt;br&gt;node\_vmstat\_pswpin  &lt;br&gt;node\_vmstat\_pswpout | /proc/vmstat | 指标名称根据/proc/vmstat |
+| Exposes XFS runtime statistics. | 正常  | node\_xfs\_allocation\_btree\_compares\_total  &lt;br&gt;node\_xfs\_allocation\_btree\_lookups\_total  &lt;br&gt;node\_xfs\_allocation\_btree\_records\_deleted\_total  &lt;br&gt;node\_xfs\_allocation\_btree\_records\_inserted\_total  &lt;br&gt;node\_xfs\_block\_map\_btree\_compares\_total  &lt;br&gt;node\_xfs\_block\_map\_btree\_lookups\_total  &lt;br&gt;node\_xfs\_block\_map\_btree\_records\_deleted\_total  &lt;br&gt;node\_xfs\_block\_map\_btree\_records\_inserted\_total  &lt;br&gt;node\_xfs\_block\_mapping\_extent\_list\_compares\_total  &lt;br&gt;node\_xfs\_block\_mapping\_extent\_list\_deletions\_total  &lt;br&gt;node\_xfs\_block\_mapping\_extent\_list\_insertions\_total  &lt;br&gt;node\_xfs\_block\_mapping\_extent\_list\_lookups\_total  &lt;br&gt;node\_xfs\_block\_mapping\_reads\_total  &lt;br&gt;node\_xfs\_block\_mapping\_unmaps\_total  &lt;br&gt;node\_xfs\_block\_mapping\_writes\_total  &lt;br&gt;node\_xfs\_directory\_operation\_create\_total  &lt;br&gt;node\_xfs\_directory\_operation\_getdents\_total  &lt;br&gt;node\_xfs\_directory\_operation\_lookup\_total  &lt;br&gt;node\_xfs\_directory\_operation\_remove\_total  &lt;br&gt;node\_xfs\_extent\_allocation\_blocks\_allocated\_total  &lt;br&gt;node\_xfs\_extent\_allocation\_blocks\_freed\_total  &lt;br&gt;node\_xfs\_extent\_allocation\_extents\_allocated\_total  &lt;br&gt;node\_xfs\_extent\_allocation\_extents\_freed\_total  &lt;br&gt;node\_xfs\_inode\_operation\_attempts\_total  &lt;br&gt;node\_xfs\_inode\_operation\_attribute\_changes\_total  &lt;br&gt;node\_xfs\_inode\_operation\_duplicates\_total  &lt;br&gt;node\_xfs\_inode\_operation\_found\_total  &lt;br&gt;node\_xfs\_inode\_operation\_missed\_total  &lt;br&gt;node\_xfs\_inode\_operation\_reclaims\_total  &lt;br&gt;node\_xfs\_inode\_operation\_recycled\_total  &lt;br&gt;node\_xfs\_read\_calls\_total  &lt;br&gt;node\_xfs\_vnode\_active\_total  &lt;br&gt;node\_xfs\_vnode\_allocate\_total  &lt;br&gt;node\_xfs\_vnode\_get\_total  &lt;br&gt;node\_xfs\_vnode\_hold\_total  &lt;br&gt;node\_xfs\_vnode\_reclaim\_total  &lt;br&gt;node\_xfs\_vnode\_release\_total  &lt;br&gt;node\_xfs\_vnode\_remove\_total  &lt;br&gt;node\_xfs\_write\_calls\_total| /sys/fs/xfs/\*/stats/stats |     |
+| Exposes NUMA memory zone metrics. | 正常  | node\_zoneinfo\_high\_pages  &lt;br&gt;node\_zoneinfo\_low\_pages  &lt;br&gt;node\_zoneinfo\_managed\_pages  &lt;br&gt;node\_zoneinfo\_min\_pages  &lt;br&gt;node\_zoneinfo\_nr\_active\_anon\_pages  &lt;br&gt;node\_zoneinfo\_nr\_active\_file\_pages  &lt;br&gt;node\_zoneinfo\_nr\_anon\_pages  &lt;br&gt;node\_zoneinfo\_nr\_anon\_transparent\_hugepages  &lt;br&gt;node\_zoneinfo\_nr\_dirtied\_total  &lt;br&gt;node\_zoneinfo\_nr\_dirty\_pages  &lt;br&gt;node\_zoneinfo\_nr\_file\_pages  &lt;br&gt;node\_zoneinfo\_nr\_free\_pages  &lt;br&gt;node\_zoneinfo\_nr\_inactive\_anon\_pages  &lt;br&gt;node\_zoneinfo\_nr\_inactive\_file\_pages  &lt;br&gt;node\_zoneinfo\_nr\_isolated\_anon\_pages  &lt;br&gt;node\_zoneinfo\_nr\_isolated\_file\_pages  &lt;br&gt;node\_zoneinfo\_nr\_kernel\_stacks  &lt;br&gt;node\_zoneinfo\_nr\_mapped\_pages  &lt;br&gt;node\_zoneinfo\_nr\_shmem\_pages  &lt;br&gt;node\_zoneinfo\_nr\_slab\_reclaimable\_pages&lt;br&gt;node\_zoneinfo\_nr\_slab\_unreclaimable\_pages  &lt;br&gt;node\_zoneinfo\_nr\_unevictable\_pages  &lt;br&gt;node\_zoneinfo\_nr\_writeback\_pages  &lt;br&gt;node\_zoneinfo\_nr\_written\_total  &lt;br&gt;node\_zoneinfo\_numa\_foreign\_total  &lt;br&gt;node\_zoneinfo\_numa\_hit\_total  &lt;br&gt;node\_zoneinfo\_numa\_interleave\_total  &lt;br&gt;node\_zoneinfo\_numa\_local\_total  &lt;br&gt;node\_zoneinfo\_numa\_miss\_total  &lt;br&gt;node\_zoneinfo\_numa\_other\_total  &lt;br&gt;node\_zoneinfo\_present\_pages  &lt;br&gt;node\_zoneinfo\_spanned\_pages  &lt;br&gt;node\_zoneinfo\_protection\_0  &lt;br&gt;node\_zoneinfo\_protection\_1  &lt;br&gt;node\_zoneinfo\_protection\_2  &lt;br&gt;node\_zoneinfo\_protection\_3  &lt;br&gt;node\_zoneinfo\_protection\_4 | /proc/zoneinfo | 指标node\_zoneinfo\_protection\_x根据/proc/zoneinfo |
+| Exposes fibre channel information and statistics from/sys/class/fc\_host/. | 系统没有该目录或者目录为空 | node\_fibrechannel\_dumped\_frames\_total  &lt;br&gt;node\_fibrechannel\_loss\_of\_signal\_total  &lt;br&gt;node\_fibrechannel\_loss\_of\_sync\_total  &lt;br&gt;node\_fibrechannel\_rx\_frames\_total  &lt;br&gt;node\_fibrechannel\_error\_frames\_total  &lt;br&gt;node\_fibrechannel\_invalid\_tx\_words\_total  &lt;br&gt;node\_fibrechannel\_seconds\_since\_last\_reset\_total  &lt;br&gt;node\_fibrechannel\_tx\_words\_total  &lt;br&gt;node\_fibrechannel\_invalid\_crc\_total  &lt;br&gt;node\_fibrechannel\_nos\_total  &lt;br&gt;node\_fibrechannel\_fcp\_packet\_aborts\_total  &lt;br&gt;node\_fibrechannel\_rx\_words\_total  &lt;br&gt;node\_fibrechannel\_tx\_frames\_total  &lt;br&gt;node\_fibrechannel\_link\_failure\_total  &lt;br&gt;node\_fibrechannel\_name  &lt;br&gt;node\_fibrechannel\_speed  &lt;br&gt;node\_fibrechannel\_port\_state  &lt;br&gt;node\_fibrechannel\_port\_type  &lt;br&gt;node\_fibrechannel\_symbolic\_name  &lt;br&gt;node\_fibrechannel\_node\_name  &lt;br&gt;node\_fibrechannel\_port\_id  &lt;br&gt;node\_fibrechannel\_port\_name  &lt;br&gt;node\_fibrechannel\_fabric\_name  &lt;br&gt;node\_fibrechannel\_dev\_loss\_tmo  &lt;br&gt;node\_fibrechannel\_supported\_classes  &lt;br&gt;node\_fibrechannel\_supported\_speeds | /sys/class/fc\_host/ |     |
+| Expose hardware monitoring and sensor data from/sys/class/hwmon/. | 系统没有该目录或者目录为空 | node\_hwmon\_chip\_names  &lt;br&gt;node\_hwmon\_sensor\_label  &lt;br&gt;node\_hwmon\_beep\_enabled  &lt;br&gt;node\_hwmon\_voltage\_regulator\_version  &lt;br&gt;node\_hwmon\_update\_interval\_seconds  &lt;br&gt;node\_hwmon\_beep\_enable\_\*  &lt;br&gt;node\_hwmon\_vrm\_\*  &lt;br&gt;node\_hwmon\_update\_interval\_\* | /sys/class/hwmon/ | 指标名称\*根据/sys/class/hwmon/ |
+| Exposes kernel and system statistics from/sys/kernel/mm/ksm. | 系统没有该目录或者目录为空 | node\_ksmd\_full\_scans\_total  &lt;br&gt;node\_ksmd\_merge\_across\_nodes  &lt;br&gt;node\_ksmd\_pages\_shared  &lt;br&gt;node\_ksmd\_pages\_sharing  &lt;br&gt;node\_ksmd\_pages\_to\_scan  &lt;br&gt;node\_ksmd\_pages\_unshared  &lt;br&gt;node\_ksmd\_pages\_volatile  &lt;br&gt;node\_ksmd\_run  &lt;br&gt;node\_ksmd\_sleep\_seconds | /sys/kernel/mm/ksm |     |
+| Exposes NVMe info from/sys/class/nvme/ | 系统没有该目录或者目录为空 | node\_nvme\_info | /sys/class/nvme/ |     |
+| Exposes Power Supply statistics from/sys/class/power\_supply | 系统没有该目录或者目录为空 | node\_power\_supply\_authentic  &lt;br&gt;node\_power\_supply\_calibrate  &lt;br&gt;node\_power\_supply\_capacity  &lt;br&gt;node\_power\_supply\_capacity\_alert\_max  &lt;br&gt;node\_power\_supply\_capacity\_alert\_min  &lt;br&gt;node\_power\_supply\_cyclecount  &lt;br&gt;node\_power\_supply\_online  &lt;br&gt;node\_power\_supply\_present  &lt;br&gt;node\_power\_supply\_time\_to\_empty\_seconds  &lt;br&gt;node\_power\_supply\_time\_to\_full\_seconds  &lt;br&gt;node\_power\_supply\_current\_boot  &lt;br&gt;node\_power\_supply\_current\_max  &lt;br&gt;node\_power\_supply\_current\_ampere  &lt;br&gt;node\_power\_supply\_energy\_empty  &lt;br&gt;node\_power\_supply\_energy\_empty\_design  &lt;br&gt;node\_power\_supply\_energy\_full  &lt;br&gt;node\_power\_supply\_energy\_full\_design  &lt;br&gt;node\_power\_supply\_energy\_watthour  &lt;br&gt;node\_power\_supply\_voltage\_boot  &lt;br&gt;node\_power\_supply\_voltage\_max  &lt;br&gt;node\_power\_supply\_voltage\_max\_design  &lt;br&gt;node\_power\_supply\_voltage\_min  &lt;br&gt;node\_power\_supply\_voltage\_min\_design &lt;br&gt;node\_power\_supply\_voltage\_volt  &lt;br&gt;node\_power\_supply\_voltage\_ocv  &lt;br&gt;node\_power\_supply\_charge\_control\_limit  &lt;br&gt;node\_power\_supply\_charge\_control\_limit\_max  &lt;br&gt;node\_power\_supply\_charge\_counter  &lt;br&gt;node\_power\_supply\_charge\_empty  &lt;br&gt;node\_power\_supply\_charge\_empty\_design  &lt;br&gt;node\_power\_supply\_charge\_full  &lt;br&gt;node\_power\_supply\_charge\_full\_design  &lt;br&gt;node\_power\_supply\_charge\_ampere  &lt;br&gt;node\_power\_supply\_charge\_term\_current  &lt;br&gt;node\_power\_supply\_constant\_charge\_current  &lt;br&gt;node\_power\_supply\_constant\_charge\_current\_max  &lt;br&gt;node\_power\_supply\_constant\_charge\_voltage  &lt;br&gt;node\_power\_supply\_constant\_charge\_voltage\_max  &lt;br&gt;node\_power\_supply\_precharge\_current  &lt;br&gt;node\_power\_supply\_input\_current\_limit  &lt;br&gt;node\_power\_supply\_power\_watt  &lt;br&gt;node\_power\_supply\_temp\_celsius  &lt;br&gt;node\_power\_supply\_temp\_alert\_max\_celsius  &lt;br&gt;node\_power\_supply\_temp\_alert\_min\_celsius  &lt;br&gt;node\_power\_supply\_temp\_ambient\_celsius  &lt;br&gt;node\_power\_supply\_temp\_ambient\_max\_celsius  &lt;br&gt;node\_power\_supply\_temp\_ambient\_min\_celsius  &lt;br&gt;node\_power\_supply\_temp\_max\_celsius  &lt;br&gt;node\_power\_supply\_temp\_min\_celsius| /sys/class/power\_supply |     |
+| Exposes pressure stall statistics from/proc/pressure/. | 系统没有该目录或者目录为空 | node\_pressure\_cpu\_waiting\_seconds\_total  &lt;br&gt;node\_pressure\_io\_waiting\_seconds\_total  &lt;br&gt;node\_pressure\_io\_stalled\_seconds\_total  &lt;br&gt;node\_pressure\_memory\_waiting\_seconds\_total  &lt;br&gt;node\_pressure\_memory\_stalled\_seconds\_total | /proc/pressure/ |     |
+| Exposes various statistics from/sys/class/powercap. | 系统没有该目录或者目录为空 | node\_rapl\_\*\*\*\*\_joules\_total | /sys/class/powercap | 指标名称中的\*根据/sys/class/powercap中文件中的值确定 |
+| Exposes statistics from/sys/class/scsi\_tape. | 系统没有该目录或者目录为空 | node\_tape\_io\_now  &lt;br&gt;node\_tape\_io\_time\_seconds\_total  &lt;br&gt;node\_tape\_io\_others\_total  &lt;br&gt;node\_tape\_read\_bytes\_total  &lt;br&gt;node\_tape\_reads\_completed\_total  &lt;br&gt;node\_tape\_read\_time\_seconds\_total  &lt;br&gt;node\_tape\_written\_bytes\_total  &lt;br&gt;node\_tape\_writes\_completed\_total  &lt;br&gt;node\_tape\_write\_time\_seconds\_total  &lt;br&gt;node\_tape\_residual\_total | /sys/class/scsi\_tape |     |
+| A summary of the number of active and enabled cgroups | 没指标 | node\_cgroups\_cgroups  &lt;br&gt;node\_cgroups\_enabled | /proc/cgroups | release-1.4加入的collector |
+| Exposes device statistics | 没指标 | node\_devstat\_bytes\_total  &lt;br&gt;node\_devstat\_transfers\_total  &lt;br&gt;node\_devstat\_blocks\_total |     | 不支持linux |
+| Exposes network interface information and network driver statistics equivalent toethtool,ethtool -S, andethtool -i. | 没指标 | node\_ethtool\_info  &lt;br&gt;node\_ethtool\_\*  &lt;br&gt;node\_ethtool\_received\_bytes\_total  &lt;br&gt;node\_ethtool\_received\_dropped\_total  &lt;br&gt;node\_ethtool\_received\_errors\_total  &lt;br&gt;node\_ethtool\_received\_packets\_total  &lt;br&gt;node\_ethtool\_transmitted\_bytes\_total  &lt;br&gt;node\_ethtool\_transmitted\_errors\_total  &lt;br&gt;node\_ethtool\_transmitted\_packets\_total  &lt;br&gt;node\_network\_supported\_port\_info  &lt;br&gt;node\_network\_supported\_speed\_bytes  &lt;br&gt;node\_network\_autonegotiate\_supported  &lt;br&gt;node\_network\_pause\_supported  &lt;br&gt;node\_network\_asymmetricpause\_supported  &lt;br&gt;node\_network\_advertised\_speed\_bytes  &lt;br&gt;node\_network\_autonegotiate\_advertised  &lt;br&gt;node\_network\_pause\_advertised  &lt;br&gt;node\_network\_asymmetricpause\_advertised  &lt;br&gt;node\_network\_autonegotiate |     | 指标名称node\_ethtool\_\*根据不同网口设备还有其他参数 |
+| Exposes statistics about devices in/proc/mdstat(does nothing if no/proc/mdstatpresent). | 没指标 | node\_md\_state  &lt;br&gt;node\_md\_disks  &lt;br&gt;node\_md\_disks\_required  &lt;br&gt;node\_md\_blocks  &lt;br&gt;node\_md\_blocks\_synced | /proc/mdstat |     |
+| Exposes filesystem statistics from/proc/self/mountstats. Exposes detailed NFS client statistics. | 没指标 | node\_mountstats\_nfs\_age\_seconds\_total  &lt;br&gt;node\_mountstats\_nfs\_read\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_write\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_direct\_read\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_direct\_write\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_total\_read\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_total\_write\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_read\_pages\_total  &lt;br&gt;node\_mountstats\_nfs\_write\_pages\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_bind\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_connect\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_idle\_time\_seconds  &lt;br&gt;node\_mountstats\_nfs\_transport\_sends\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_receives\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_bad\_transaction\_ids\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_backlog\_queue\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_maximum\_rpc\_slots  &lt;br&gt;node\_mountstats\_nfs\_transport\_sending\_queue\_total  &lt;br&gt;node\_mountstats\_nfs\_transport\_pending\_queue\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_requests\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_transmissions\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_major\_timeouts\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_sent\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_received\_bytes\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_queue\_time\_seconds\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_response\_time\_seconds\_total  &lt;br&gt;node\_mountstats\_nfs\_operations\_request\_time\_seconds\_total &lt;br&gt;node\_mountstats\_nfs\_event\_inode\_revalidate\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_dnode\_revalidate\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_data\_invalidate\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_attribute\_invalidate\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_open\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_lookup\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_access\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_update\_page\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_read\_page\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_read\_pages\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_write\_page\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_write\_pages\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_getdents\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_setattr\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_flush\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_fsync\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_lock\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_vfs\_file\_release\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_truncation\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_write\_extension\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_silly\_rename\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_short\_read\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_short\_write\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_jukebox\_delay\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_pnfs\_read\_total  &lt;br&gt;node\_mountstats\_nfs\_event\_pnfs\_write\_total  | /proc/self/mountstats |     |
+| Exposes slab statistics from/proc/slabinfo. Note that permission of/proc/slabinfois usually 0400, so set it appropriately. | 没指标 | node\_slabinfo\_active\_objects  &lt;br&gt;node\_slabinfo\_objects  &lt;br&gt;node\_slabinfo\_object\_size\_bytes  &lt;br&gt;node\_slabinfo\_objects\_per\_slab  &lt;br&gt;node\_slabinfo\_pages\_per\_slab | /proc/slabinfo | release-1.4加入的collector |
+| Exposes detailed softirq statistics from/proc/softirqs. | 没指标 | node\_softirqs\_functions\_total | /proc/softirqs | release-1.6加入的collector |
+| Expose sysctl values from/proc/sys. Use\--collector.sysctl.include(-info)to configure. | 没指标 | node\_sysctl\_\* | /proc/sys | release-1.4加入的collector;  &lt;br&gt;指标名称\*与参数‘--collector.sysctl.include’的值有关 |
+| Exposes CPU frequency statistics | 没指标 | node\_cpu\_frequency\_hertz  &lt;br&gt;node\_cpu\_frequency\_min\_hertz  &lt;br&gt;node\_cpu\_frequency\_max\_hertz  &lt;br&gt;node\_cpu\_scaling\_frequency\_hertz  &lt;br&gt;node\_cpu\_scaling\_frequency\_min\_hertz  &lt;br&gt;node\_cpu\_scaling\_frequency\_max\_hertz | /sys/devices/system/cpu/cpu\[0-9\]\*/cpufreq |     |
+| Exposes system boot time derived from thekern.boottimesysctl. | 没指标 | node\_boot\_time\_seconds |     | 不支持linux |
+| Exposes netisr statistics | 没指标 | numthreads  &lt;br&gt;maxprot  &lt;br&gt;defaultqlimit  &lt;br&gt;maxqlimit  &lt;br&gt;bindthreads  &lt;br&gt;maxthreads |     | 不支持linux，release-1.6加入的collector |
+| Exposes Distributed Replicated Block Device statistics (to version 8.4) | 没测试 | node\_drdb\_network\_sent\_bytes\_total  &lt;br&gt;node\_drdb\_network\_received\_bytes\_total  &lt;br&gt;node\_drdb\_disk\_written\_bytes\_total  &lt;br&gt;node\_drdb\_disk\_read\_bytes\_total  &lt;br&gt;node\_drdb\_activitylog\_writes\_total  &lt;br&gt;node\_drdb\_bitmap\_writes\_total  &lt;br&gt;node\_drdb\_local\_pending  &lt;br&gt;node\_drdb\_remote\_pending  &lt;br&gt;node\_drdb\_remote\_unacknowledged  &lt;br&gt;node\_drdb\_application\_pending  &lt;br&gt;node\_drdb\_epochs  &lt;br&gt;node\_drdb\_out\_of\_sync\_bytes  &lt;br&gt;node\_drdb\_node\_role\_is\_primary  &lt;br&gt;node\_drdb\_disk\_state\_is\_up\_to\_date  &lt;br&gt;node\_drdb\_connected | /proc/drdb |     |
+| Exposes error detection and correction statistics. | 没测试 | node\_edac\_correctable\_errors\_total  &lt;br&gt;node\_edac\_uncorrectable\_errors\_total  &lt;br&gt;node\_edac\_csrow\_correctable\_errors\_total  &lt;br&gt;node\_edac\_csrow\_uncorrectable\_errors\_total | /sys/devices/system/edac/mc/mc\[0-9\]\* |     |
+| Exposes execution statistics. | 没测试 | node\_exec\_context\_switches\_total  &lt;br&gt;node\_exec\_traps\_total  &lt;br&gt;node\_exec\_system\_calls\_total  &lt;br&gt;node\_exec\_device\_interrupts\_total  &lt;br&gt;node\_exec\_software\_interrupts\_total  &lt;br&gt;node\_exec\_forks\_total |     | 不支持linux |
+| Exposes network statistics specific to InfiniBand and Intel OmniPath configurations. | 没测试 | node\_infiniband\_info  &lt;br&gt;node\_infiniband\_legacy\_multicast\_packets\_received\_total  &lt;br&gt;node\_infiniband\_legacy\_multicast\_packets\_transmitted\_total  &lt;br&gt;node\_infiniband\_legacy\_data\_received\_bytes\_total  &lt;br&gt;node\_infiniband\_legacy\_packets\_received\_total  &lt;br&gt;node\_infiniband\_legacy\_unicast\_packets\_received\_total  &lt;br&gt;node\_infiniband\_legacy\_unicast\_packets\_transmitted\_total  &lt;br&gt;node\_infiniband\_legacy\_data\_transmitted\_bytes\_total  &lt;br&gt;node\_infiniband\_legacy\_packets\_transmitted\_total  &lt;br&gt;node\_infiniband\_excessive\_buffer\_overrun\_errors\_total  &lt;br&gt;node\_infiniband\_link\_downed\_total  &lt;br&gt;node\_infiniband\_link\_error\_recovery\_total  &lt;br&gt;node\_infiniband\_local\_link\_integrity\_errors\_total  &lt;br&gt;node\_infiniband\_multicast\_packets\_received\_total  &lt;br&gt;node\_infiniband\_multicast\_packets\_transmitted\_total  &lt;br&gt;node\_infiniband\_physical\_state\_id  &lt;br&gt;node\_infiniband\_port\_constraint\_errors\_received\_total  &lt;br&gt;node\_infiniband\_port\_constraint\_errors\_transmitted\_total  &lt;br&gt;node\_infiniband\_port\_data\_received\_bytes\_total  &lt;br&gt;node\_infiniband\_port\_data\_transmitted\_bytes\_total  &lt;br&gt;node\_infiniband\_port\_discards\_received\_total  &lt;br&gt;node\_infiniband\_port\_discards\_transmitted\_total  &lt;br&gt;node\_infiniband\_port\_errors\_received\_total  &lt;br&gt;node\_infiniband\_port\_packets\_received\_total  &lt;br&gt;node\_infiniband\_port\_packets\_transmitted\_total  &lt;br&gt;node\_infiniband\_port\_transmit\_wait\_total  &lt;br&gt;node\_infiniband\_rate\_bytes\_per\_second  &lt;br&gt;node\_infiniband\_state\_id  &lt;br&gt;node\_infiniband\_unicast\_packets\_received\_total  &lt;br&gt;node\_infiniband\_unicast\_packets\_transmitted\_total  &lt;br&gt;node\_infiniband\_port\_receive\_remote\_physical\_errors\_total  &lt;br&gt;node\_infiniband\_port\_receive\_switch\_relay\_errors\_total  &lt;br&gt;node\_infiniband\_symbol\_error\_total  &lt;br&gt;node\_infiniband\_vl15\_dropped\_total | /sys/class/infiniband/&lt;device&gt; |     |
+| Exposes session counts fromlogind. | 没测试 | node\_logind\_sessions | dbus |     |
+| Exposes perf based metrics (Warning: Metrics are dependent on kernel configuration and settings). | 没测试 | node\_perf\_cpucycles\_total  &lt;br&gt;node\_perf\_instructions\_total  &lt;br&gt;node\_perf\_branch\_instructions\_total  &lt;br&gt;node\_perf\_branch\_misses\_total  &lt;br&gt;node\_perf\_cache\_refs\_total  &lt;br&gt;node\_perf\_cache\_misses\_total  &lt;br&gt;node\_perf\_ref\_cpucycles\_total  &lt;br&gt;node\_perf\_page\_faults\_total  &lt;br&gt;node\_perf\_context\_switches\_total  &lt;br&gt;node\_perf\_cpu\_migrations\_total  &lt;br&gt;node\_perf\_minor\_faults\_total  &lt;br&gt;node\_perf\_major\_faults\_total  &lt;br&gt;node\_perf\_cache\_l1d\_read\_hits\_total  &lt;br&gt;node\_perf\_cache\_l1d\_read\_misses\_total  &lt;br&gt;node\_perf\_cache\_l1d\_write\_hits\_total  &lt;br&gt;node\_perf\_cache\_l1\_instr\_read\_misses\_total  &lt;br&gt;node\_perf\_cache\_tlb\_instr\_read\_hits\_total  &lt;br&gt;node\_perf\_cache\_tlb\_instr\_read\_misses\_total  &lt;br&gt;node\_perf\_cache\_ll\_read\_hits\_total  &lt;br&gt;node\_perf\_cache\_ll\_read\_misses\_total  &lt;br&gt;node\_perf\_cache\_ll\_write\_hits\_total  &lt;br&gt;node\_perf\_cache\_ll\_write\_misses\_total  &lt;br&gt;node\_perf\_cache\_bpu\_read\_hits\_total  &lt;br&gt;node\_perf\_cache\_bpu\_read\_misses\_total | [github.com/hodgesds/perf-utils](https://github.com/hodgesds/perf-utils) |     |
+| Exposes service and system status fromsystemd. | 没测试 | node\_systemd\_unit\_state  &lt;br&gt;node\_systemd\_unit\_start\_time\_seconds  &lt;br&gt;node\_systemd\_unit\_tasks\_current  &lt;br&gt;node\_systemd\_unit\_tasks\_max  &lt;br&gt;node\_systemd\_system\_running  &lt;br&gt;node\_systemd\_units  &lt;br&gt;node\_systemd\_service\_restart\_total  &lt;br&gt;node\_systemd\_timer\_last\_trigger\_seconds  &lt;br&gt;node\_systemd\_socket\_accepted\_connections\_total  &lt;br&gt;node\_systemd\_socket\_current\_connections  &lt;br&gt;node\_systemd\_socket\_refused\_connections\_total  &lt;br&gt;node\_systemd\_version | dbus |     |
+| Exposes WiFi device and station statistics. | 没测试 | node\_wifi\_interface\_frequency\_hertz  &lt;br&gt;node\_wifi\_station\_info  &lt;br&gt;node\_wifi\_station\_connected\_seconds\_total  &lt;br&gt;node\_wifi\_station\_inactive\_seconds  &lt;br&gt;node\_wifi\_station\_receive\_bits\_per\_second  &lt;br&gt;node\_wifi\_station\_transmit\_bits\_per\_second  &lt;br&gt;node\_wifi\_station\_receive\_bytes\_total  &lt;br&gt;node\_wifi\_station\_transmit\_bytes\_total  &lt;br&gt;node\_wifi\_station\_signal\_dbm  &lt;br&gt;node\_wifi\_station\_transmit\_retries\_total  &lt;br&gt;node\_wifi\_station\_transmit\_failed\_total  &lt;br&gt;node\_wifi\_station\_beacon\_loss\_total | [github.com/mdlayher/wifi](https://github.com/mdlayher/wifi 'github.com/mdlayher/wifi') |     |
+| ExposesZFSperformance statistics. | 没测试 | node\_zfs\_pool\_state  &lt;br&gt;node\_zfs\_zpool\_dataset\_\*  &lt;br&gt;node\_zfs\_zpool\_\*  &lt;br&gt;node\_zfs\_abd\_\*  &lt;br&gt;node\_zfs\_arc\_\*  &lt;br&gt;node\_zfs\_dbuf\_\*  &lt;br&gt;node\_zfs\_dmu\_tx\_\*  &lt;br&gt;node\_zfs\_dnode\_\*  &lt;br&gt;node\_zfs\_fm\_\*  &lt;br&gt;node\_zfs\_vdev\_cache\_\*  &lt;br&gt;node\_zfs\_vdev\_mirror\_\*  &lt;br&gt;node\_zfs\_xuio\_\*  &lt;br&gt;node\_zfs\_zfetch\_\*  &lt;br&gt;node\_zfs\_zil\_\* | /proc/spl/kstat/zfs/\* | \*由kstat-zfs-misc-x-x替换，具体根据/proc/spl/kstat/zfs/\*确定 |。</description><guid isPermaLink="true">https://longxiucai.github.io/post/58.html</guid><pubDate>Tue, 21 Jan 2025 03:11:00 +0000</pubDate></item><item><title>process-exporter指标</title><link>https://longxiucai.github.io/post/57.html</link><description>使用以下配置metrics中全部指标正常
+[root@amd ~]# cat filename.yml 
+```
+process_names:
+  - name: '{{.Comm}}'
+    cmdline:
+    - '.+'
+ ```
+```
+docker run -d  -p 9256:9256 --privileged -v /[proc:/host/proc](http://proc/host/proc) -v `pwd`:/config ncabatoff/process-exporter --procfs /host/proc -config.path /config/filename.yml
+```
+
+| 指标名称                                     | 描述                                                                                                   | 来源                                                                                                  |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| namedprocess_namegroup_num_procs             | Number of processes in this group                                                                      | 程序累加                                                                                              |
+| namedprocess_namegroup_cpu_seconds_total     | CPU user usage in seconds                                                                              | /proc/[pid]/stat 的 utime(14) 和 stime(15) 字段                                                        |
+| namedprocess_namegroup_read_bytes_total      | Number of bytes read by this group                                                                     | /proc/[pid]/io 的 read_bytes 字段                                                                      |
+| namedprocess_namegroup_write_bytes_total     | Number of bytes written by this group                                                                  | /proc/[pid]/io 的 write_bytes 字段                                                                     |
+| namedprocess_namegroup_major_page_faults_total | Major page faults                                                                                     | /proc/[pid]/stat 的 majflt(12) 字段                                                                    |
+| namedprocess_namegroup_minor_page_faults_total | Minor page faults                                                                                     | /proc/[pid]/stat 的 minflt(10) 字段                                                                    |
+| namedprocess_namegroup_context_switches_total | Context switches                                                                                      | /proc/[pid]/status 的 voluntary_ctxt_switches 字段                                                     |
+| namedprocess_namegroup_memory_bytes          | Number of bytes of memory in use                                                                       | resident: /proc/[pid]/stat 的 rss(24) 字段&lt;br&gt;virtual: /proc/[pid]/stat 的 vsize(23) 字段&lt;br&gt;swapped: /proc/[pid]/status 的 VmSwap 字段&lt;br&gt;proportionalResident: /proc/[pid]/smaps 的 'Pss' 字段之和&lt;br&gt;proportionalSwapped: /proc/[pid]/smaps 的 'SwapPss' 字段之和 |
+| namedprocess_namegroup_open_filedesc         | Number of open file descriptors for this group                                                         | 计算目录 /proc/[pid]/fd 中有多少条目                                                                   |
+| namedprocess_namegroup_worst_fd_ratio        | The worst (closest to 1) ratio between open fds and max fds among all procs in this group              | /proc/[pid]/limits 的 fd 软限制                                                                        |
+| namedprocess_namegroup_oldest_start_time_seconds | Start time in seconds since 1970/01/01 of oldest process in group                                     | /proc/[pid]/stat 中的 starttime(22) 字段派生出来的                                                     |
+| namedprocess_namegroup_num_threads           | Number of threads                                                                                      | Based on field num_threads(20) from /proc/[pid]/stat                                                  |
+| namedprocess_namegroup_states                | Number of processes in states Running, Sleeping, Waiting, Zombie, or Other                             | /proc/[pid]/stat 的 num_threads(20) 字段                                                              |
+| namedprocess_scrape_errors                   | General scrape errors: no proc metrics collected during a cycle                                        | 程序累加                                                                                              |
+| namedprocess_scrape_procread_errors          | Incremented each time a proc's metrics collection fails                                                | 程序累加                                                                                              |
+| namedprocess_scrape_partial_errors           | Incremented each time a tracked proc's metrics collection fails partially, e.g. unreadable I/O stats   | 程序累加                                                                                              |
+| namedprocess_namegroup_threads_wchan         | Number of threads in this group waiting on each wchan                                                  | /proc/[pid]/wchan                                                                                     |
+| namedprocess_namegroup_thread_count          | Number of threads in this group with same threadname                                                   | 程序累加                                                                                              |
+| namedprocess_namegroup_thread_cpu_seconds_total | CPU user/system usage in seconds                                                                      | 与cpu_user_seconds_total和cpu_system_seconds_total相同，但分解为每个线程子组。</description><guid isPermaLink="true">https://longxiucai.github.io/post/57.html</guid><pubDate>Tue, 21 Jan 2025 02:55:42 +0000</pubDate></item><item><title>systemd-exporter指标</title><link>https://longxiucai.github.io/post/56.html</link><description>https://github.com/prometheus-community/systemd_exporter
+
+| 指标名称                                      | 描述                                                     | 来源                                             | 是否需要添加运行参数                          |
+|-----------------------------------------------|----------------------------------------------------------|--------------------------------------------------|-----------------------------------------------|
+| systemd_process_open_fds                      | Number of open file descriptors                          | /proc/&lt;pid&gt;/fd/* 数量                            | --systemd.collector.enable-file-descriptor-size |
+| systemd_service_ip_egress_bytes               | Service unit egress IP accounting in bytes               | dbus Service 类型 IPEgressBytes 属性             | --systemd.collector.enable-ip-accounting       |
+| systemd_service_ip_egress_packets_total       | Service unit egress IP accounting in packets             | dbus Service 类型 IPEgressPackets 属性           | 否                                           |
+| systemd_service_ip_ingress_bytes              | Service unit ingress IP accounting in bytes              | dbus Service 类型 IPIngressBytes 属性            | 否                                           |
+| systemd_service_ip_ingress_packets_total      | Service unit ingress IP accounting in packets            | dbus Service 类型 IPIngressPackets 属性          | 否                                           |
+| systemd_service_restart_total                 | Service unit count of Restart triggers                   | dbus Service 类型 NRestarts 属性                 | --systemd.collector.enable-restart-count      |
+| systemd_exporter_build_info                   | A metric with a constant '1' value labeled by version, revision, branch, and goversion from which systemd_exporter was built. | -                                              | 否                                           |
+| systemd_process_cpu_seconds_total             | Total user and system CPU time spent in seconds          | /proc/&lt;pid&gt;/stat 中第 14 与 15 个值的和再除以 100 | 否                                           |
+| systemd_process_max_fds                       | Maximum number of open file descriptors                  | /proc/&lt;pid&gt;/limits 中 ‘Max open files’ 的 ‘Soft Limit’ 值 | 否                                           |
+| systemd_process_resident_memory_bytes         | Resident memory size in bytes                            | /proc/&lt;pid&gt;/stat 中第 24 个值乘 pagesize         | 否                                           |
+| systemd_process_virtual_memory_bytes          | Virtual memory size in bytes                             | /proc/&lt;pid&gt;/stat 中第 23 个值                    | 否                                           |
+| systemd_process_virtual_memory_max_bytes      | Maximum amount of virtual memory available in bytes      | /proc/&lt;pid&gt;/limits 中 ‘Max address space’ 的 ‘Soft Limit’ 值 | 否                                           |
+| systemd_socket_accepted_connections_total     | Total number of accepted socket connections              | dbus Service 类型 NAccepted 属性                 | 否                                           |
+| systemd_socket_current_connections            | Current number of socket connections                     | dbus Service 类型 NConnections 属性              | 否                                           |
+| systemd_socket_refused_connections_total      | Total number of refused socket connections               | dbus Service 类型 NRefused 属性                  | 否                                           |
+| systemd_timer_last_trigger_seconds            | Seconds since epoch of last trigger                      | dbus Timer 类型 LastTriggerUSec 属性再除以 1e6   | 否                                           |
+| systemd_unit_cpu_seconds_total                | Unit CPU time in seconds                                 | cgroup 中的 cpuacct.usage_all                    | 否                                           |
+| systemd_unit_info                             | Mostly-static metadata for all unit types                | dbus Service 类型 Type 属性、servicename         | 否                                           |
+| systemd_unit_start_time_seconds               | Start time of the unit since unix epoch in seconds       | dbus Service 类型 ActiveEnterTimestamp 属性再除以 1e6 | 否                                           |
+| systemd_unit_state                            | Systemd unit                                             | dbus 连接获取服务列表时的值                      | 否                                           |
+| systemd_unit_tasks_current                    | Current number of tasks per Systemd unit                 | dbus Service 类型 TasksCurrent 属性              | 否                                           |
+| systemd_unit_tasks_max                        | Maximum number of tasks per Systemd unit                 | dbus Service 类型 TasksMax 属性                  | 否                                           |
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/56.html</guid><pubDate>Tue, 21 Jan 2025 02:46:23 +0000</pubDate></item><item><title>git将两个分支之间的提交以及修改的文件输出为表格</title><link>https://longxiucai.github.io/post/55.html</link><description>```
+#!/bin/bash
+start_branch=v1.30.7
+end_bransh=release-4.17
+input_file='input.txt'
+git log $(git merge-base $start_branch $end_bransh)..$end_bransh --oneline --reverse --no-merges |grep carry &gt; $input_file
+output_file='output.tsv'
+# 遍历每一行，提取 commit 和 message，并获取 diff 文件内容
+while IFS= read -r line; do
+    # 提取 commit 和 message
+    commit=$(echo '$line' | awk '{print $1}')
+    message=$(echo '$line' | awk '{$1=''; print $0}' | sed 's/^ *//')
+    # 获取 diff 文件内容
+    diff_output=$(git show $commit|grep '^diff'|cut -d ' ' -f3|cut -d '/' -f 2-)
+    # 拼接输出内容并写入文件
+    echo -e '$commit\t$message\t\'$diff_output\'' &gt;&gt; '$output_file'
+done &lt; '$input_file'
+
+echo '已完成处理，结果保存到 $output_file'
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/55.html</guid><pubDate>Mon, 20 Jan 2025 09:07:54 +0000</pubDate></item><item><title>vim键位参考</title><link>https://longxiucai.github.io/post/54.html</link><description>![image](https://github.com/user-attachments/assets/ceca58b8-1b04-45e5-a38d-bc8222d55a45)&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/54.html</guid><pubDate>Thu, 16 Jan 2025 02:17:33 +0000</pubDate></item><item><title>kubernetes dnsPolicy</title><link>https://longxiucai.github.io/post/53.html</link><description># dnsPolicy的4种用法&#13;
+策略名称 | 说明 | 特点 | 适用场景&#13;
+-- | -- | -- | --&#13;
+ClusterFirst | 默认策略，优先通过集群的 DNS 解析 Kubernetes 服务域名，无法解析时退回到宿主机的 DNS 设置。</description><guid isPermaLink="true">https://longxiucai.github.io/post/53.html</guid><pubDate>Wed, 08 Jan 2025 06:37:27 +0000</pubDate></item><item><title>运维常用命令/脚本</title><link>https://longxiucai.github.io/post/52.html</link><description>1. 获取kubernetes cluster master节点ip地址
+```
+kubectl get nodes --selector=node-role.kubernetes.io/control-plane='' -o=jsonpath='{.items[*].status.addresses[?(@.type=='InternalIP')].address}'
+
+```
+2.  获取kubernetes cluster node节点ip地址
+```
+kubectl get nodes --selector=node-role.kubernetes.io/node='' -o=jsonpath='{.items[*].status.addresses[?(@.type=='InternalIP')].address}'
+```
+3. 通过`ping`获取丢包率与平均延迟
+```shell
+# 执行ping命令并获取统计信息
+ping_result=$(ping -c 5 '$target' | tail -2)
+# 提取丢包率和平均延迟
+packet_loss=$(echo '$ping_result' | grep -oP '\d+(?=% packet loss)')
+avg_latency=$(echo '$ping_result' | grep -oP '(?&lt;=rtt min/avg/max/mdev = )[\d.]+/[\d.]+/[\d.]+/[\d.]+' | awk -F '/' '{print $2}')
+```
+4. cpu使用率
+```
+top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%* id.*/\1/' | awk '{print 100 - $1}'
+```
+5. 内存使用率
+```
+free | awk 'FNR==2{printf '%.2f', $3/$2*100}'
+```
+6. 随机选择一个ip地址
+```
+echo $IPs | tr ' ' '\n' | shuf -n 1
+```
+7. 文件数量限制，清除多余文件
+```
+cleanup_old_files() {
+  local DIR='$1'
+  local MAX_FILES='$2'
+
+  # 检查目录是否存在
+  if [ ! -d '$DIR' ]; then
+    echo 'Directory $DIR does not exist.'
+    return 1
+  fi
+
+  # 获取所有文件，并按时间排序
+  FILES=$(ls -1t '$DIR')
+
+  COUNT=$(echo '$FILES' | wc -l)
+
+  # 如果文件数量超过最大限制，则删除最旧的文件
+  if [ $COUNT -gt $MAX_FILES ]; then
+    # 获取最旧的文件
+    OLD_FILES=$(echo '$FILES' | tail -n $((COUNT - MAX_FILES)))
+    # 删除这些旧的文件
+    for FILE in $OLD_FILES; do
+      rm '$DIR/$FILE'
+      echo 'Deleted old file: $FILE'
+    done
+  fi
+}
+## 例如目录/opt/test中只保留5份：
+cleanup_old_files /opt/test 5
+```
+例如需要通过ssh远端调用此函数
+```
+ssh -q -o StrictHostKeyChecking=no 'root@10.20.30.40' '$(typeset -f cleanup_old_files); cleanup_old_files /opt/test 5'
+```
+8. `dd`测试写速率
+```
+# dd输出如下
+[root@abcdefg01 ~]# dd if=/dev/zero of=.tmp.test bs=1M count=100
+记录了100+0 的读入
+记录了100+0 的写出
+104857600字节（105 MB，100 MiB）已复制，0.233213 s，450 MB/s
+# 输出写速率
+dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?\s+[A-Za-z]+/s'
+# 不要单位
+dd if=/dev/zero of=.tmp.test bs=1M count=100 2&gt;&amp;1 | awk 'NR==3{print $0}' | grep -oP '\d+(\.\d+)?(?=\s+[A-Za-z]+/s)'
+```
+9. alertmanager告警接口，产生告警
+```
+curl -X POST http://172.20.41.32:30300/api/v2/alerts \
+  -H 'Content-Type: application/json' \
+  -d '[
+    {
+      'labels': {
+        'alertname': '系统连续崩溃，已经出现雪崩状况！',
+        'dev': 'sda1',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：这个系统雪崩了，快处理！',
+        'summary': '请检查实例示例1'
+      }
+    },
+    {
+      'labels': {
+        'alertname': '管理系统损坏',
+        'dev': 'sda2',
+        'instance': '实例1',
+        'msgtype': 'testing'
+      },
+      'annotations': {
+        'info': '程序员小王提示您：电子商务管理系统中订单，仓库模块已经雪崩，快处理！',
+        'summary': '请检查实例示例1',
+        'runbook': '以下链接http://192.168.5.128:9093/api/v2/alerts应该是可点击的'
+      }
+    }
+  ]'
+
+```
+10. 集群中全部容器运行date命令检查时区（date命令不存在的情况下报错）
+```
+kubectl get pods -A -o 'jsonpath={range .items[*]}{.metadata.namespace}{'\t'}{.metadata.name}{'\t'}{range .spec.containers[*]}{.name}{'\t'}{end}{'\n'}{end}' | while IFS=$'\t' read -r namespace pod containers; do
+    for container in $containers; do
+        if [[ -z '$container' ]]; then
+            echo -e '$namespace,$pod,No container found,-'
+            continue
+        fi
+        output=$(kubectl exec -n '$namespace' '$pod' -c '$container' -- date 2&gt;&amp;1)
+        echo -e '$namespace,$pod,$container,$output'
+    done
+done
+```
+11. 去除重复行
+```
+awk '!a[$0]++' /path/to/file
+```
+12. 拉取外网镜像上传到内网harbor，通过代理拉镜像，通过docker manifest做multi（可以通过skopeo自动实现）。</description><guid isPermaLink="true">https://longxiucai.github.io/post/52.html</guid><pubDate>Tue, 10 Dec 2024 07:49:40 +0000</pubDate></item><item><title>calico network policy只开通pod间tcp流量</title><link>https://longxiucai.github.io/post/51.html</link><description># 资源文件&#13;
+```&#13;
+apiVersion: v1&#13;
+kind: Pod&#13;
+metadata:&#13;
+  name: busybox-pod1&#13;
+  labels:&#13;
+    app: busybox-pod1&#13;
+spec:&#13;
+  containers:&#13;
+  - name: busybox&#13;
+    image: busybox:1.28&#13;
+    command: ['sleep', '360000']&#13;
+    tty: true&#13;
+---&#13;
+apiVersion: v1&#13;
+kind: Pod&#13;
+metadata:&#13;
+  name: busybox-pod2&#13;
+  labels:&#13;
+    app: busybox-pod2&#13;
+spec:&#13;
+  containers:&#13;
+  - name: busybox&#13;
+    image: busybox:1.28&#13;
+    command: ['sleep', '360000']&#13;
+    tty: true&#13;
+---&#13;
+apiVersion: networking.k8s.io/v1&#13;
+kind: NetworkPolicy&#13;
+metadata:&#13;
+  name: allow-tcp-block-icmp&#13;
+  namespace: default  # 根据您的实际 namespace 修改&#13;
+spec:&#13;
+  podSelector:&#13;
+    matchLabels:&#13;
+      app: busybox-pod1  # 选择 busybox-pod1，您可以根据需要调整&#13;
+  policyTypes:&#13;
+  - Ingress&#13;
+  - Egress&#13;
+  ingress:&#13;
+  - from:&#13;
+    - podSelector:&#13;
+        matchLabels:&#13;
+          app: busybox-pod2  # 允许 busybox-pod2 发送的流量&#13;
+    ports:&#13;
+    - protocol: TCP&#13;
+      port: 8080  # 指定要允许的 TCP 端口号，您可以根据需要修改&#13;
+  egress:&#13;
+  - to:&#13;
+    - podSelector:&#13;
+        matchLabels:&#13;
+          app: busybox-pod2  # 允许 busybox-pod1 访问 busybox-pod2&#13;
+    ports:&#13;
+    - protocol: TCP&#13;
+      port: 8080  # 同样指定要允许的 TCP 端口号&#13;
+```&#13;
+# 验证&#13;
+* pod1执行kubectl exec -it busybox-pod1 -- nc -l -p 8080&#13;
+* pod2执行kubectl exec -it busybox-pod1 -- nc &lt;pod1的ip地址&gt; 8080，然后输入任意字符回车，pod1端会有打印，tcp连接成功。</description><guid isPermaLink="true">https://longxiucai.github.io/post/51.html</guid><pubDate>Tue, 22 Oct 2024 07:05:22 +0000</pubDate></item><item><title>交叉编译打包docker镜像（go程序）</title><link>https://longxiucai.github.io/post/50.html</link><description>## Dockerfile&#13;
+```&#13;
+# Build the manager binary&#13;
+FROM --platform=${BUILDPLATFORM} golang:1.19 as builder&#13;
+WORKDIR /workspace&#13;
+# Copy the Go Modules manifests&#13;
+COPY go.mod go.mod&#13;
+COPY go.sum go.sum&#13;
+# Copy the go source&#13;
+COPY pkg/ pkg/&#13;
+COPY cmd/ cmd/&#13;
+COPY internal/ internal/&#13;
+COPY lib/ lib/&#13;
+COPY controllers/ controllers/&#13;
+COPY vendor/ vendor/&#13;
+&#13;
+# Build&#13;
+ARG TARGETARCH&#13;
+RUN echo 'Building for $TARGETARCH platform' &amp;&amp; \&#13;
+    CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -mod=vendor -a -o controller cmd/machine-config-controller/main.go&#13;
+&#13;
+# Use distroless as minimal base image to package the manager binary&#13;
+FROM --platform=${BUILDPLATFORM} harbor.kylincloudnative.com/docker.io/library/alpine:latest&#13;
+WORKDIR /&#13;
+COPY --from=builder /workspace/controller .&#13;
+USER 65532:65532&#13;
+&#13;
+ENTRYPOINT ['/controller']&#13;
+```&#13;
+## Makefile&#13;
+```&#13;
+PLATFORMS ?= linux/arm64,linux/amd64 ###,linux/s390x,linux/ppc64le&#13;
+.PHONY: docker-buildx&#13;
+#make docker-buildx IMG=harbor.kylincloudnative.com/longyuxiang/mco-controller:v1-20231221&#13;
+docker-buildx: version  ## Build and push docker image for the manager for cross-platform support&#13;
+	- docker buildx create --name project-v3-builder&#13;
+	- docker buildx use project-v3-builder&#13;
+	- docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile .&#13;
+	- docker buildx rm project-v3-builder&#13;
+```&#13;
+## use&#13;
+```&#13;
+make docker-buildx IMG=harbor.xxx.com/longyuxiang/mco-daemon:v1-20231221&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/50.html</guid><pubDate>Fri, 18 Oct 2024 02:27:58 +0000</pubDate></item><item><title>kubelet kubelet-client-current.pem证书过期手动生成</title><link>https://longxiucai.github.io/post/49.html</link><description>* 首先备份kubelet证书目录，默认为`/var/lib/kubelet/pki`。</description><guid isPermaLink="true">https://longxiucai.github.io/post/49.html</guid><pubDate>Fri, 13 Sep 2024 01:33:39 +0000</pubDate></item><item><title>kubernetes IPv4/IPv6双栈配置</title><link>https://longxiucai.github.io/post/48.html</link><description>calico参考：https://docs.tigera.io/calico/latest/networking/ipam/ipv6#enable-dual-stack
+k8s参考：https://kubernetes.io/docs/concepts/services-networking/dual-stack/#configure-ipv4-ipv6-dual-stack
+
+# 先决条件
+1. 内核参数`net.ipv6.conf.all.forwarding`需要设置为1
+2. 集群节点之间ipv6需要连通
+3. Kubernetes 1.20 版本或更高版本（低版本参考版本文档修改k8s配置，如[v1.19](https://github.com/kubernetes/website/blob/release-1.19/content/zh/docs/concepts/services-networking/dual-stack.md)）
+4. 支持双协议栈的[网络插件](https://kubernetes.io/zh-cn/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)。</description><guid isPermaLink="true">https://longxiucai.github.io/post/48.html</guid><pubDate>Thu, 05 Sep 2024 07:31:58 +0000</pubDate></item><item><title>动态规划-01背包</title><link>https://longxiucai.github.io/post/47.html</link><description>### 01 背包问题&#13;
+&#13;
+- **物品价值**: `5, 10, 3, 6, 3`&#13;
+- **物品重量**: `2, 5, 1, 4, 3`&#13;
+- **背包容量**: `6`&#13;
+&#13;
+|下标 |	0 | 	1| 	2 |	3 | 	4  &#13;
+|-------|---|---|---|---|---|&#13;
+|价值 | 5| 10| 3| 6 |	3|&#13;
+|重量 |  2|5| 1|	4|	3|&#13;
+&#13;
+| 物品 \ 背包容量 | 0 | 1 | 2 | 3 | 4 | 5 | 6 |&#13;
+|-----------------|---|---|---|---|---|---|---|&#13;
+|0	| 0 | 0 |	0|	0|	0|	0|	0&#13;
+|1	| 0 |0|	5|	5|	5|	5|	5&#13;
+|2	| 0 |0|	5|	5|	5|	10|	10&#13;
+|3	| 0 |3|	5|	8|	8|	10|13&#13;
+|4	| 0 |3|	5|	8|	8|	10|	13&#13;
+|5	| 0 |3|	5|	8|	8|	10|	13&#13;
+### 说明：&#13;
+- dp表格中存在i=0的行，表示不选任何物品，dp的行数为物品数量+1，因此在获取物品价值与物品重量的时候需要下标i-1&#13;
+- **行**: 表示前 `i` 个物品（下标&lt;=i-1）（物品编号从 0 到 5）&#13;
+- **列**: 表示背包容量 `j`（容量从 0 到 6）&#13;
+- **dp[i][j]**: 表示考虑前 `i` 个物品（下标&lt;=i-1），在背包容量为 `j` 时的最大价值&#13;
+### 思路&#13;
+往dp表格中计算填写值。</description><guid isPermaLink="true">https://longxiucai.github.io/post/47.html</guid><pubDate>Wed, 28 Aug 2024 08:56:30 +0000</pubDate></item><item><title>gitlab软件包发布【cicd】</title><link>https://longxiucai.github.io/post/46.html</link><description>以go程序为例，build.sh编译输出物料为`_output`目录，然后将其打包为`软件名称-分支名称-日期.tar`，然后通过api来发布&#13;
+官方文档参考： https://docs.gitlab.com/ee/user/packages/generic_packages/index.html#publish-a-generic-package-by-using-&#13;
+```yaml1&#13;
+stages:&#13;
+  - build-and-uploads&#13;
+&#13;
+build_job:&#13;
+  stage: build-and-uploads&#13;
+  script:&#13;
+    - bash build.sh aarch64&#13;
+    - bash build.sh x86_64&#13;
+    - mv _output installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d)&#13;
+    - tar -cf installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d).tar installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d)/&#13;
+    - |&#13;
+      curl --header 'JOB-TOKEN: $CI_JOB_TOKEN' --upload-file installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d).tar '${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/installer-apiserver-output/$CI_COMMIT_REF_NAME/installer-apiserver-$CI_COMMIT_REF_NAME-$(date +%Y%m%d).tar'&#13;
+```&#13;
+然后即可在页面查看：&#13;
+![1723798006765](https://github.com/user-attachments/assets/92ac40ef-c330-40e5-82ce-2144e66e3008)&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/46.html</guid><pubDate>Fri, 16 Aug 2024 08:50:10 +0000</pubDate></item><item><title>git使用手册</title><link>https://longxiucai.github.io/post/45.html</link><description># Git 速查表&#13;
+&#13;
+## 创建&#13;
+&#13;
+| 操作 | 命令 |&#13;
+| --- | --- |&#13;
+| 克隆现有仓库 | `git clone ssh://user@domain.com/repo.git` |&#13;
+| 创建一个新的本地仓库 | `git init` |&#13;
+&#13;
+## 本地修改&#13;
+&#13;
+| 操作 | 命令 |&#13;
+| --- | --- |&#13;
+| 查看工作目录中已更改的文件（即查看 Git 状态） | `git status` |&#13;
+| 查看跟踪文件的更改（即远程仓库与本地仓库文件的不同） | `git diff` |&#13;
+| 将所有当前更改添加到下一次提交（即全部提交） | `git add .` |&#13;
+| 将某个文件的更改添加到下一次提交（即部分提交） | `git add -p &lt;file&gt;` |&#13;
+| 提交跟踪文件中的所有本地更改 | `git commit -a` |&#13;
+| 提交先前进行的更改 | `git commit` |&#13;
+| 更改最后一次提交（不要修改已发布的提交） | `git commit --amend` |&#13;
+&#13;
+## 提交历史&#13;
+&#13;
+| 操作 | 命令 |&#13;
+| --- | --- |&#13;
+| 显示所有提交，从最新的提交开始 | `git log` |&#13;
+| 显示特定文件随时间的修改 | `git log -p &lt;file&gt;` |&#13;
+| 查看特定文件什么时间被什么人修改了什么内容 | `git blame &lt;file&gt;` |&#13;
+&#13;
+## 分支和标签&#13;
+&#13;
+| 操作 | 命令 |&#13;
+| --- | --- |&#13;
+| 列出所有现有分支 | `git branch -av` |&#13;
+| 切换当前分支 | `git checkout &lt;branch&gt;` |&#13;
+| 基于当前 HEAD 指针创建新分支 | `git branch &lt;new-branch&gt;` |&#13;
+| 基于当前远程分支创建一个新跟踪分支 | `git checkout --track &lt;remote/branch&gt;` |&#13;
+| 删除一个本地分支 | `git branch -d &lt;branch&gt;` |&#13;
+| 将一次提交标记为一个标签 | `git tag &lt;tag-name&gt;` |&#13;
+&#13;
+## 更新和推送&#13;
+&#13;
+| 操作 | 命令 |&#13;
+| --- | --- |&#13;
+| 列出当前仓库关联的所有远程仓库 | `git remote -v` |&#13;
+| 显示远程仓库的详细信息 | `git remote show &lt;remote&gt;` |&#13;
+| 关联一个新的远程仓库到本地仓库 | `git remote add &lt;shortname&gt; &lt;url&gt;` |&#13;
+| 仅拉取远程仓库所有更改，不合并到本地仓库 | `git fetch &lt;remote&gt;` |&#13;
+| 拉取远程仓库所有更改，并合并到本地仓库 | `git pull &lt;remote&gt; &lt;branch&gt;` |&#13;
+| 推送本地仓库修改到远程仓库 | `git push &lt;remote&gt; &lt;branch&gt;` |&#13;
+| 删除远程仓库的一个分支 | `git branch -dr &lt;remote/branch&gt;` |&#13;
+| 推送所有本地仓库标签到远程仓库 | `git push --tags` |&#13;
+&#13;
+## 合并和变基&#13;
+&#13;
+| 操作 | 命令 |&#13;
+| --- | --- |&#13;
+| 合并指定分支到当前分支 | `git merge &lt;branch&gt;` |&#13;
+| 变基 | `git rebase &lt;branch&gt;` |&#13;
+| 放弃变基 | `git rebase --abort` |&#13;
+| 解决冲突之后继续变基 | `git rebase --continue` |&#13;
+| 运行合并冲突解决工具来解决合并冲突 | `git mergetool` |&#13;
+| 使用编辑器手动解决冲突，并（在解决之后）将文件标记为已解决 | `git add &lt;resolved-file&gt;`&lt;br&gt;`git rm &lt;resolved-file&gt;` |&#13;
+&#13;
+## 撤销&#13;
+&#13;
+| 操作 | 命令 |&#13;
+| --- | --- |&#13;
+| 放弃工作目录中的所有本地更改 | `git reset --hard HEAD` |&#13;
+| 放弃特定文件中的本地更改 | `git checkout HEAD &lt;file&gt;` |&#13;
+| 还原提交 | `git revert &lt;commit&gt;` |&#13;
+| 将你的 HEAD 指针重置为上一次提交，并放弃此后的所有更改 | `git reset --hard &lt;commit&gt;` |&#13;
+| 重置 HEAD 指针，并将所有更改保留为未提交的更改 | `git reset &lt;commit&gt;` |&#13;
+| 重置 HEAD 指针，并保留未提交的本地更改 | `git reset --keep &lt;commit&gt;` |&#13;
+&#13;
+# 基础知识&#13;
+## 配置&#13;
+```&#13;
+git config --global user.name 'Your Name'&#13;
+git config --global user.email 'email@example.com'&#13;
+```&#13;
+上述命令里的name和Email是你注册GitHub时使用的name和Email&#13;
+&gt; [!TIP]&#13;
+&gt; git config命令的–global参数,用了这个参数,表示你这台机器上所有的Git仓库都会使用这个配置,当然也可以对某个仓库指定不同的用户名和Email地址。</description><guid isPermaLink="true">https://longxiucai.github.io/post/45.html</guid><pubDate>Fri, 16 Aug 2024 03:38:46 +0000</pubDate></item><item><title>【go】切片扩容</title><link>https://longxiucai.github.io/post/44.html</link><description>一般都是在向 `slice` 追加了元素之后，才会引起扩容。</description><guid isPermaLink="true">https://longxiucai.github.io/post/44.html</guid><pubDate>Mon, 12 Aug 2024 08:05:00 +0000</pubDate></item><item><title>【go】接口-底层实现</title><link>https://longxiucai.github.io/post/42.html</link><description>iface 和 eface 都是 Go 中描述接口的底层结构体，区别在于 iface 描述的接口包含方法，而 eface 则是不包含任何方法的空接口：interface{}。</description><guid isPermaLink="true">https://longxiucai.github.io/post/42.html</guid><pubDate>Fri, 09 Aug 2024 07:04:55 +0000</pubDate></item><item><title>【go】接口-多态</title><link>https://longxiucai.github.io/post/41.html</link><description>Go 语言并没有设计诸如虚函数、纯虚函数、继承、多重继承等概念，但它通过接口却非常优雅地支持了面向对象的特性。</description><guid isPermaLink="true">https://longxiucai.github.io/post/41.html</guid><pubDate>Fri, 09 Aug 2024 06:19:17 +0000</pubDate></item><item><title>【go】channel的应用</title><link>https://longxiucai.github.io/post/40.html</link><description>Channel 和 goroutine 的结合是 Go 并发编程的大杀器。</description><guid isPermaLink="true">https://longxiucai.github.io/post/40.html</guid><pubDate>Fri, 09 Aug 2024 06:11:20 +0000</pubDate></item><item><title>【go】channel的数据结构</title><link>https://longxiucai.github.io/post/39.html</link><description>```&#13;
+type hchan struct {&#13;
+	// chan 里元素数量&#13;
+	qcount   uint&#13;
+	// chan 底层循环数组的长度&#13;
+	dataqsiz uint&#13;
+	// 指向底层循环数组的指针&#13;
+	// 只针对有缓冲的 channel&#13;
+	buf      unsafe.Pointer&#13;
+	// chan 中元素大小&#13;
+	elemsize uint16&#13;
+	// chan 是否被关闭的标志&#13;
+	closed   uint32&#13;
+	// chan 中元素类型&#13;
+	elemtype *_type // element type&#13;
+	// 已发送元素在循环数组中的索引&#13;
+	sendx    uint   // send index&#13;
+	// 已接收元素在循环数组中的索引&#13;
+	recvx    uint   // receive index&#13;
+	// 等待接收的 goroutine 队列&#13;
+	recvq    waitq  // list of recv waiters&#13;
+	// 等待发送的 goroutine 队列&#13;
+	sendq    waitq  // list of send waiters&#13;
+&#13;
+	// 保护 hchan 中所有字段&#13;
+	lock mutex&#13;
+}&#13;
+```&#13;
+`buf` 指向底层循环数组，只有**缓冲型**的 `channel` 才有。</description><guid isPermaLink="true">https://longxiucai.github.io/post/39.html</guid><pubDate>Fri, 09 Aug 2024 01:22:25 +0000</pubDate></item><item><title>【go】接口-类型转换与断言</title><link>https://longxiucai.github.io/post/38.html</link><description>我们知道，Go 语言中不允许隐式类型转换，也就是说 `=` 两边，不允许出现类型不相同的变量。</description><guid isPermaLink="true">https://longxiucai.github.io/post/38.html</guid><pubDate>Thu, 08 Aug 2024 09:10:43 +0000</pubDate></item><item><title>logrotate</title><link>https://longxiucai.github.io/post/37.html</link><description>## 命令格式&#13;
+```&#13;
+logrotate [OPTION...] &lt;configfile&gt;&#13;
+-d, --debug ：debug模式，测试配置文件是否有错误。</description><guid isPermaLink="true">https://longxiucai.github.io/post/37.html</guid><pubDate>Wed, 07 Aug 2024 02:55:13 +0000</pubDate></item><item><title>linux根分区扩容</title><link>https://longxiucai.github.io/post/36.html</link><description>```&#13;
+[root@master1 ~]# pvcreate /dev/sdb &#13;
+  Physical volume '/dev/sdb' successfully created.&#13;
+[root@master1 ~]# vgextend klas /dev/sdb&#13;
+  Volume group 'klas' successfully extended&#13;
+[root@master1 ~]# lvextend /dev/klas/root /dev/sdb &#13;
+  Size of logical volume klas/root changed from &lt;61.34 GiB (15703 extents) to &lt;141.34 GiB (36182 extents).&#13;
+  Logical volume klas/root successfully resized.&#13;
+[root@master1 ~]# xfs_growfs /&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/36.html</guid><pubDate>Tue, 06 Aug 2024 07:01:13 +0000</pubDate></item><item><title>gocolor</title><link>https://longxiucai.github.io/post/35.html</link><description>```&#13;
+import ct 'github.com/daviddengcn/go-colortext'&#13;
+&#13;
+func PrintYellow(out io.Writer, content string) {&#13;
+	ct.ChangeColor(ct.Yellow, false, ct.None, false)&#13;
+	fmt.Fprint(out, content)&#13;
+	ct.ResetColor()&#13;
+}&#13;
+...&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/35.html</guid><pubDate>Thu, 01 Aug 2024 03:36:20 +0000</pubDate></item><item><title>记录maxcale找不到主的异常</title><link>https://longxiucai.github.io/post/34.html</link><description>### 问题现象&#13;
+maxcale的pod中查看如下图所示&#13;
+![微信图片_20240730141907](https://github.com/user-attachments/assets/40abae26-c65a-48fa-b714-fd4a0cf5023a)&#13;
+&#13;
+### 排查&#13;
+1.查看日志，可以知道没有找到master，有只读错误&#13;
+![微信图片_20240730142747](https://github.com/user-attachments/assets/ae1d81e5-9f0b-44f9-8ab0-152ac1da6f72)&#13;
+&#13;
+2.查看monitor，发现3个节点都是只读&#13;
+```&#13;
+maxctrl list monitors&#13;
+maxctrl show monitor MariaDB-Monitor&#13;
+```&#13;
+![微信图片_20240730143048](https://github.com/user-attachments/assets/2fc22344-bd6a-4bda-922a-642614f8bcbc)&#13;
+&#13;
+### 解决问题&#13;
+* 手动修改主节点，关闭只读&#13;
+```&#13;
+SET GLOBAL read_only = OFF;&#13;
+```&#13;
+此时删除maxcale的pod，重新拉起之后，发现依然没有找到主节点。</description><guid isPermaLink="true">https://longxiucai.github.io/post/34.html</guid><pubDate>Tue, 30 Jul 2024 06:46:05 +0000</pubDate></item><item><title>使用hugo搭建静态网页</title><link>https://longxiucai.github.io/post/33.html</link><description>Hugo官方主页：https://gohugo.io/&#13;
+Hugo二进制下载地址：https://github.com/spf13/hugo/releases&#13;
+&#13;
+1、下载之后执行下面命令会在当前目录创建test文件夹&#13;
+```&#13;
+hugo new site test&#13;
+```&#13;
+2、进入生成的文件夹内会有如下文件与文件夹&#13;
+```&#13;
+archetypes  assets  content  data  hugo.toml  i18n  layouts  public  static  themes&#13;
+```&#13;
+3、创建文章，如下命令会在content目录创建test.md文件并且在文件首部增加一些信息&#13;
+```&#13;
+hugo new test.md&#13;
+```&#13;
+4、查看test.md，可以自己在里面补充内容&#13;
+```&#13;
++++&#13;
+title = 'Test'&#13;
+date = 2024-07-26T14:37:18+08:00&#13;
+draft = true&#13;
++++&#13;
+```&#13;
+5、自己手动编创建文章，直接在content目录中编写Markdown文件并且开头增加下面的内容即可&#13;
+```&#13;
++++&#13;
+title = 'XXXXXX'&#13;
+date = 2024-07-26T14:37:18+08:00&#13;
+draft = true&#13;
++++&#13;
+```&#13;
+6、需要在themes目录中添加皮肤，更多皮肤见https://github.com/gohugoio/hugoThemes&#13;
+```&#13;
+cd themes&#13;
+git clone https://github.com/spf13/hyde.git&#13;
+```&#13;
+7、运行站点&#13;
+```&#13;
+hugo server --theme=hyde --buildDrafts --watch&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/33.html</guid><pubDate>Fri, 26 Jul 2024 06:44:03 +0000</pubDate></item><item><title>linux修改密码与系统救援</title><link>https://longxiucai.github.io/post/32.html</link><description>## 需要iso来当本地yum源的需提前添加cd-rom并选择好对应的iso文件&#13;
+![](https://github.com/user-attachments/assets/b6940c91-1798-4f32-aa79-2d2b59bf371d)&#13;
+&#13;
+## 重启之后在grub界面按`e`&#13;
+![](https://github.com/user-attachments/assets/fe06fe3f-5a37-4176-ad5c-ae4e55a2d665)&#13;
+&#13;
+## 找到如下行，并且删除圈出来的部分&#13;
+找到`linux`开头的行，删除`ro`与`rhgb`，rhgb不删除可能会报错无法进入救援模式&#13;
+![](https://github.com/user-attachments/assets/629f57e0-482e-4499-a04c-fef6f450c1be)&#13;
+&#13;
+## 增加圈出来的部分，ctrl+x进入救援模式，不需要root密码&#13;
+增加`rw init=/bin/bash console=tty0`&#13;
+![](https://github.com/user-attachments/assets/58e7d784-0b96-4604-9483-26a5c6181faa)&#13;
+&#13;
+## 救援模式下查看cd-rom为/dev/sr0，挂载之后可以当做本地yum源，用于还原包的版本。</description><guid isPermaLink="true">https://longxiucai.github.io/post/32.html</guid><pubDate>Fri, 26 Jul 2024 03:26:33 +0000</pubDate></item><item><title>在线可视化正则表达式</title><link>https://longxiucai.github.io/post/30.html</link><description># 原项目&#13;
+https://github.com/gskinner/regexr/&#13;
+https://regexr.com/&#13;
+&#13;
+# 中文翻译项目&#13;
+http://github.com/skys215/regexr/&#13;
+https://regexr-cn.com/。</description><guid isPermaLink="true">https://longxiucai.github.io/post/30.html</guid><pubDate>Tue, 23 Jul 2024 01:45:51 +0000</pubDate></item><item><title>记录一次pod网络问题，dns min参数对网络影响</title><link>https://longxiucai.github.io/post/29.html</link><description>## 问题现象&#13;
+容器内执行程序报错，程序需要连接指定的svc&#13;
+![现象](https://github.com/user-attachments/assets/6eaf7525-06c1-4b75-b0b3-e042572224e2)&#13;
+&#13;
+## 网络排查&#13;
+1、pod内nslookup能够解析出正确的ip地址，coredns没问题&#13;
+![](https://github.com/user-attachments/assets/4d683d92-ee8e-4e56-954c-09b8e807cd74)&#13;
+&#13;
+2、pod内ping有报错&#13;
+![微信图片_20240723091634](https://github.com/user-attachments/assets/e3e91ad8-ad37-41ec-b5bf-ef7b13e0a264)&#13;
+&#13;
+3、手动修改容器内/etc/hosts，程序执行没问题&#13;
+![](https://github.com/user-attachments/assets/439151cb-dcbd-4a75-8976-6ded8d055c3c)&#13;
+&#13;
+4、查看容器内/etc/resolv.conf,发现末尾有min字段&#13;
+![](https://github.com/user-attachments/assets/3fd3e5bd-37fc-4ec4-86ec-0fec5b70bb4d)&#13;
+&#13;
+5、修改去除min字段，删除/etc/hosts解析，程序没问题&#13;
+![](https://github.com/user-attachments/assets/13379954-03ee-4f54-aa60-0e19d26c24b2)&#13;
+&#13;
+## 配置排查&#13;
+1、查看pod的dns解析策略，没问题&#13;
+![](https://github.com/user-attachments/assets/d6b1ae96-715d-433f-a215-e5daad117c5a)&#13;
+&#13;
+2、查看coredns配置，没问题&#13;
+![](https://github.com/user-attachments/assets/12d44482-6545-4974-b86d-3ac9eacefac9)&#13;
+&#13;
+3、查看宿主机/etc/resolv.conf，有min字段&#13;
+![](https://github.com/user-attachments/assets/537a3892-5fcc-440d-9852-a815212bdfa4)&#13;
+&#13;
+## 解决方法&#13;
+宿主机/etc/resolv.conf删除min字段之后，pod删除重新拉起，容器恢复正常。</description><guid isPermaLink="true">https://longxiucai.github.io/post/29.html</guid><pubDate>Tue, 23 Jul 2024 01:35:38 +0000</pubDate></item><item><title>MarkDown语法</title><link>https://longxiucai.github.io/post/28.html</link><description>README&#13;
+===========================&#13;
+&#13;
+该文件用来测试和展示书写README的各种markdown语法。</description><guid isPermaLink="true">https://longxiucai.github.io/post/28.html</guid><pubDate>Mon, 22 Jul 2024 03:03:31 +0000</pubDate></item><item><title>Markdown emoji</title><link>https://longxiucai.github.io/post/27.html</link><description>Emoji表情&#13;
+=========&#13;
+将对应emoji表情的符号码复制后输入你的markdown文本即可显示emoji表情。</description><guid isPermaLink="true">https://longxiucai.github.io/post/27.html</guid><pubDate>Mon, 22 Jul 2024 01:55:06 +0000</pubDate></item><item><title>排序算法详解</title><link>https://longxiucai.github.io/post/26.html</link><description># 复杂度&#13;
+&#13;
+| 排序方法  | 时间复杂度（平均） | 时间复杂度（最坏） | 时间复杂度（最好） | 空间复杂度 | 稳定性 |&#13;
+| -------- | ------------------ | ------------------ | ------------------ | ---------- | ------ |&#13;
+| 插入排序 | O(n^2)             | O(n^2)             | O(n)               | O(1)       | 稳定   |&#13;
+| 希尔排序 | O(n^1.3)           | O(n^2)             | O(n)               | O(1)       | 不稳定 |&#13;
+| 选择排序 | O(n^2)             | O(n^2)             | O(n^2)             | O(1)       | 不稳定 |&#13;
+| 堆排序   | O(nlog₂n)          | O(nlog₂n)          | O(nlog₂n)          | O(1)       | 不稳定 |&#13;
+| 冒泡排序 | O(n^2)             | O(n^2)             | O(n)               | O(1)       | 稳定   |&#13;
+| 快速排序 | O(nlog₂n)          | O(n^2)             | O(nlog₂n)          | O(nlog₂n)  | 不稳定 |&#13;
+| 归并排序 | O(nlog₂n)          | O(nlog₂n)          | O(nlog₂n)          | O(n)       | 稳定   |&#13;
+&#13;
+# 排序算法详解&#13;
+## 一、直接插入（Insertion Sort）&#13;
+插入排序（Insertion-Sort）的算法描述是一种简单直观的排序算法。</description><guid isPermaLink="true">https://longxiucai.github.io/post/26.html</guid><pubDate>Fri, 19 Jul 2024 08:24:08 +0000</pubDate></item><item><title>pod的创建流程</title><link>https://longxiucai.github.io/post/25.html</link><description># 详细步骤&#13;
+1. **用户提交高级资源定义**：通过 kubectl apply -f deployment.yaml 或 API 请求来提交 Deployment、ReplicaSet 等高级资源定义。</description><guid isPermaLink="true">https://longxiucai.github.io/post/25.html</guid><pubDate>Fri, 19 Jul 2024 07:30:59 +0000</pubDate></item><item><title>systemd-exporter指标说明</title><link>https://longxiucai.github.io/post/24.html</link><description>指标名称|描述|	来源|	是否需要添加运行参数&#13;
+--------- | --------|--------|--------|&#13;
+systemd_process_open_fds|	Number of open file descriptors	|/proc/&lt;pid&gt;/fd/*   数量|	--systemd.collector.enable-file-descriptor-size&#13;
+systemd_service_ip_egress_bytes|	Service unit egress IP accounting in bytes	|dbus Service类型 IPEgressBytes属性	|--systemd.collector.enable-ip-accounting&#13;
+systemd_service_ip_egress_packets_total|	Service unit egress IP accounting in packets|	dbus Service类型 IPEgressPackets属性|--systemd.collector.enable-ip-accounting&#13;
+systemd_service_ip_ingress_bytes|	Service unit ingress IP accounting in bytes|	dbus Service类型 IPIngressBytes属性|--systemd.collector.enable-ip-accounting&#13;
+systemd_service_ip_ingress_packets_total|	Service unit ingress IP accounting in packets|	dbus Service类型 IPIngressPackets属性|--systemd.collector.enable-ip-accounting&#13;
+systemd_service_restart_total|	Service unit count of Restart triggers|	dbus Service类型 NRestarts属性|	--systemd.collector.enable-restart-count&#13;
+systemd_exporter_build_info|	A metric with a constant '1' value labeled by version, revision, branch, and goversion from which systemd_exporter was built.	|| 否&#13;
+systemd_process_cpu_seconds_total|	Total user and system CPU time spent in seconds|	/proc/&lt;pid&gt;/stat中第14与15个值的和再除以100	|否&#13;
+systemd_process_max_fds|	Maximum number of open file descriptors	| /proc/&lt;pid&gt;/limits中‘Max open files’的‘Soft Limit’值	|否&#13;
+systemd_process_resident_memory_bytes|	Resident memory size in bytes|	/proc/&lt;pid&gt;/stat中第24个值乘pagesize	|否&#13;
+systemd_process_virtual_memory_bytes|	Virtual memory size in bytes|	/proc/&lt;pid&gt;/stat中第23个值	|否&#13;
+systemd_process_virtual_memory_max_bytes|	Maximum amount of virtual memory available in bytes|	/proc/&lt;pid&gt;/limits中‘Max address space’的‘Soft Limit’值	|否&#13;
+systemd_socket_accepted_connections_total|	Total number of accepted socket connections|	dbus Service类型 NAccepted属性	|否&#13;
+systemd_socket_current_connections|	Current number of socket connections|	dbus Service类型 NConnections属性	|否&#13;
+systemd_socket_refused_connections_total|	Total number of refused socket connections|	dbus Service类型 NRefused属性	|否&#13;
+systemd_timer_last_trigger_seconds|	Seconds since epoch of last trigger.|	dbus Timer类型 LastTriggerUSec属性再除以1e6	|否&#13;
+systemd_unit_cpu_seconds_total|	Unit CPU time in seconds|	cgroup中的cpuacct.usage_all	|否&#13;
+systemd_unit_info|	Mostly-static metadata for all unit types|	dbus Service类型 Type属性、servicename	|否&#13;
+systemd_unit_start_time_seconds|	Start time of the unit since unix epoch in seconds|	dbus Service类型 ActiveEnterTimestamp属性再除以1e6	|否&#13;
+systemd_unit_state|	Systemd unit|	dbus连接获取服务列表时的值	|否&#13;
+systemd_unit_tasks_current|	Current number of tasks per Systemd unit|	dbus Service类型 TasksCurrent属性	|否&#13;
+systemd_unit_tasks_max|	Maximum number of tasks per Systemd unit|	dbus Service类型 TasksMax属性	|否。</description><guid isPermaLink="true">https://longxiucai.github.io/post/24.html</guid><pubDate>Tue, 16 Jul 2024 07:56:23 +0000</pubDate></item><item><title>日志工具vector自定义日志解析与过滤，包含vrl语法解释与http后端demo（go编写）</title><link>https://longxiucai.github.io/post/23.html</link><description>源码：https://github.com/vectordotdev/vector&#13;
+&#13;
+helm repo:   https://helm.vector.dev/&#13;
+&#13;
+repo chart: https://github.com/vectordotdev/helm-charts/tree/develop&#13;
+&#13;
+文档： https://vector.dev/docs/&#13;
+&#13;
+# 验证与测试方法&#13;
+1、当前目录中创建vector.yaml文件，文件名必须为vector.yaml&#13;
+2、执行命令验证&#13;
+```&#13;
+alias vector='nerdctl run -it -v $(pwd)/:/etc/vector/ -v /var/log/:/var/log/ --rm harbor.kylincloudnative.com/docker.io/timberio/vector:0.39.0-alpine'&#13;
+nerdctl pull harbor.kylincloudnative.com/docker.io/timberio/vector:0.39.0-alpine&#13;
+vector&#13;
+```&#13;
+# ingress-controller日志示例(/var/log/test-pod-log-ingress)&#13;
+```&#13;
+2024-07-15T14:28:37+08:00       error   ingress/controller.go:653       upstream is not referenced      {'cluster': 'name=default; base_url=http://apisix-admin.apisix-system:9180/apisix/admin', 'upstream': 'default_kubelet_10250'}&#13;
+2024-07-15T14:28:37+08:00       error   ingress/controller.go:653       upstream is not referenced      {'cluster': 'name=default; base_url=http://apisix-admin.apisix-system:9180/apisix/admin', 'upstream': 'default_kubelet_10250'}&#13;
+2024-07-15T14:28:37+08:00       warn    ingress/controller.go:653       upstream is not referenced      {'cluster': 'name=default; base_url=http://apisix-admin.apisix-system:9180/apisix/admin', 'upstream': 'default_kubelet_10255'}&#13;
+2024-07-15T14:28:37+08:00       warn    ingress/controller.go:653       upstream is not referenced      {'cluster': 'name=default; base_url=http://apisix-admin.apisix-system:9180/apisix/admin', 'upstream': 'default_kubelet_4194'}&#13;
+2024-07-15T14:28:38+08:00       error   ingress/controller.go:653       upstream is not referenced      {'cluster': 'name=default; base_url=http://apisix-admin.apisix-system:9180/apisix/admin', 'upstream': 'default_kubelet_10250'}&#13;
+2024-07-15T14:28:38+08:00       warn    ingress/controller.go:653       upstream is not referenced      {'cluster': 'name=default; base_url=http://apisix-admin.apisix-system:9180/apisix/admin', 'upstream': 'default_kubelet_10255'}&#13;
+2024-07-15T14:28:38+08:00       warn    ingress/controller.go:653       upstream is not referenced      {'cluster': 'name=default; base_url=http://apisix-admin.apisix-system:9180/apisix/admin', 'upstream': 'default_kubelet_4194'}&#13;
+```&#13;
+# vector.yaml配置&#13;
+```&#13;
+api:&#13;
+  enabled: true&#13;
+  address: 127.0.0.1:58686&#13;
+  playground: false&#13;
+sources:&#13;
+  ingress:&#13;
+    type: file&#13;
+    include: &#13;
+      - /var/log/test-pod-log-ingress&#13;
+    data_dir: /etc/vector/workdir&#13;
+transforms:&#13;
+  parse_ingress:&#13;
+    inputs:&#13;
+      - ingress&#13;
+    type: remap&#13;
+    source: |&#13;
+      . |= parse_regex!(.message, r'^(?P&lt;timestamp&gt;\d+-\d+-\d+T\d+:\d+:\d+\+\d+:\d+)\s+(?P&lt;log_level&gt;\w+)\s+(?P&lt;file_path&gt;[\w./:-]+)\s+(?P&lt;message&gt;[^\{]+)\s+(?P&lt;structured_data&gt;\{.*\})$')&#13;
+      .structured_data = parse_json!(.structured_data)&#13;
+      .structured_data = parse_key_value!(.structured_data.cluster, key_value_delimiter: '=' )&#13;
+      . = merge(., .structured_data)&#13;
+      del(.structured_data)&#13;
+  ingress_filter:&#13;
+    type: filter&#13;
+    inputs:&#13;
+      - parse_ingress&#13;
+    condition:&#13;
+      type: vrl&#13;
+      source: .log_level == 'error'&#13;
+sinks:&#13;
+  http_log:&#13;
+    inputs:&#13;
+      - ingress_filter&#13;
+    uri: http://10.42.16.241:8080/push&#13;
+    type: http&#13;
+    encoding:&#13;
+      codec: json&#13;
+  console_log:&#13;
+    inputs:&#13;
+      - parse_ingress&#13;
+    type: console&#13;
+    encoding:&#13;
+      codec: json&#13;
+```&#13;
+## sources配置说明&#13;
+直接从文件读取日志&#13;
+## transforms配置说明&#13;
+1、**parse_ingress**使用正则表达式解析日志的timestamp、log_level、file_path、message、structured_data，然后将structured_data再次通过key-value的方式解析。</description><guid isPermaLink="true">https://longxiucai.github.io/post/23.html</guid><pubDate>Mon, 15 Jul 2024 08:13:10 +0000</pubDate></item><item><title>docker desktop登录报错Error saving credentials</title><link>https://longxiucai.github.io/post/22.html</link><description>报错内容具体为：&#13;
+```&#13;
+$ docker login harbor.xxx.com/docker.io/timberio/vector:0.39.0-alpine-arm64&#13;
+Username: admin&#13;
+Password: &#13;
+Error saving credentials: error storing credentials - err: exit status 1, out: `error getting credentials - err: exit status 1, out: `no usernames for harbor.xxx.com``&#13;
+```&#13;
+解决方案：修改~/.docker/config.json删除`'credsStore': 'desktop',`，然后重新启动。</description><guid isPermaLink="true">https://longxiucai.github.io/post/22.html</guid><pubDate>Thu, 11 Jul 2024 09:12:09 +0000</pubDate></item><item><title>docker配置代理</title><link>https://longxiucai.github.io/post/21.html</link><description># rpm装的docker，且服务器没有外网&#13;
+1. 修改/usr/lib/systemd/system/docker.service文件(有的可能不是这个文件。</description><guid isPermaLink="true">https://longxiucai.github.io/post/21.html</guid><pubDate>Thu, 11 Jul 2024 09:08:39 +0000</pubDate></item><item><title>docker multi image</title><link>https://longxiucai.github.io/post/20.html</link><description># 通过manifest&#13;
+1、镜像仓库中有2个架构的镜像且tag不一致，没有则push上去&#13;
+```&#13;
+docker push  harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-arm64&#13;
+docker push  harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-amd64&#13;
+```&#13;
+2、创建manifest&#13;
+```&#13;
+docker manifest create harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine \&#13;
+--amend harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-amd64 \&#13;
+--amend harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine-arm64&#13;
+```&#13;
+3、push manifest&#13;
+```&#13;
+ docker manifest push harbor.yourharbor.com/docker.io/timberio/vector:0.39.0-alpine   &#13;
+```&#13;
+&#13;
+# 通过buildx&#13;
+确保 docker buildx 已经配置好：&#13;
+```&#13;
+docker buildx create --use&#13;
+docker buildx inspect --bootstrap&#13;
+```&#13;
+首先，使用`docker buildx imagetools inspect`查看 velero/velero:v1.14.0 是否支持多架构。</description><guid isPermaLink="true">https://longxiucai.github.io/post/20.html</guid><pubDate>Thu, 11 Jul 2024 09:00:21 +0000</pubDate></item><item><title>redis一主一从集群脑裂现象模拟</title><link>https://longxiucai.github.io/post/19.html</link><description># 一主一从redis脑裂现象模拟&#13;
+主节点A:10.42.186.32  从节点B:10.42.186.33&#13;
+&#13;
+1. 网络隔离&#13;
+```bash&#13;
+# 10.42.186.32 执行下面命令&#13;
+iptables -A INPUT -s 10.42.186.33 -j DROP&#13;
+iptables -A OUTPUT -d 10.42.186.33 -j DROP&#13;
+&#13;
+# 10.42.186.33 执行下面命令&#13;
+iptables -A INPUT -s 10.42.186.32 -j DROP&#13;
+iptables -A OUTPUT -d 10.42.186.32 -j DROP&#13;
+```&#13;
+&#13;
+2. 从节点升级为主节点&#13;
+```bash&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! cluster failover takeover&#13;
+```&#13;
+3. 查看集群状态(此时2个节点都是主节点)&#13;
+```bash&#13;
+# redis-cli -h 10.42.186.32 -p 6379 -a Kylin.2023! cluster nodes&#13;
+4226cce5d7735c488a74e3aff86ad641d5c5e54b 10.42.186.33:6379@16379 master,fail? - 1719909668692 1719909667688 1 connected&#13;
+b4519db09c96d8ad12efae818210e6521525e2bf 10.42.186.32:6379@16379 myself,master - 0 0 2 connected 0-16383&#13;
+&#13;
+# redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! cluster nodes&#13;
+b4519db09c96d8ad12efae818210e6521525e2bf 10.42.186.32:6379@16379 slave,fail? 4226cce5d7735c488a74e3aff86ad641d5c5e54b 1719909668604 1719909667601 1 connected&#13;
+4226cce5d7735c488a74e3aff86ad641d5c5e54b 10.42.186.33:6379@16379 myself,master - 0 0 1 connected 0-16383&#13;
+&#13;
+```&#13;
+4. 节点A(旧主节点)写入数据&#13;
+```bash&#13;
+redis-cli -h 10.42.186.32 -p 6379 -a Kylin.2023! set key32 data32&#13;
+redis-cli -h 10.42.186.32 -p 6379 -a Kylin.2023! set AAA from32&#13;
+redis-cli -h 10.42.186.32 -p 6379 -a Kylin.2023! set BBB from32&#13;
+```&#13;
+5. 节点B(新主节点)写入数据&#13;
+```bash&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! set key33 data33&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! set AAA from33&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! set BBB from33&#13;
+```&#13;
+6. 恢复网络&#13;
+```bash&#13;
+# 10.42.186.32 执行下面命令&#13;
+iptables -D INPUT -s 10.42.186.33 -j DROP&#13;
+iptables -D OUTPUT -d 10.42.186.33 -j DROP&#13;
+&#13;
+# 10.42.186.33 执行下面命令&#13;
+iptables -D INPUT -s 10.42.186.32 -j DROP&#13;
+iptables -D OUTPUT -d 10.42.186.32 -j DROP&#13;
+```&#13;
+7. 查看数据，此时节点A(旧主节点)变成从节点，并且在网络隔离之后写的数据已经丢失，节点B(新主节点)变成主节点，redis集群的数据以新主节点中的数据为准&#13;
+```bash&#13;
+# 10.42.186.33 执行下面命令&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! get key32&#13;
+返回值为 (nil)&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! get key33&#13;
+返回值为 data33&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! get AAA&#13;
+返回值为 from33&#13;
+redis-cli -h 10.42.186.33 -p 6379 -a Kylin.2023! get BBB&#13;
+返回值为 from33&#13;
+# 10.42.186.32变成从节点，已经无法get key。</description><guid isPermaLink="true">https://longxiucai.github.io/post/19.html</guid><pubDate>Tue, 02 Jul 2024 09:17:50 +0000</pubDate></item><item><title>shell中的特殊变量与数组</title><link>https://longxiucai.github.io/post/18.html</link><description>`$0`	当前脚本的文件名。</description><guid isPermaLink="true">https://longxiucai.github.io/post/18.html</guid><pubDate>Tue, 02 Jul 2024 06:43:32 +0000</pubDate></item><item><title>rpmdb报错</title><link>https://longxiucai.github.io/post/17.html</link><description>执行yum、rpm命令失败:error: rpmdb: BDB0113 Thread/process 16978/139878363277376 failed: BDB1507 Thread died in Berkeley DB library&#13;
+&#13;
+可以通过以下命令解决&#13;
+```&#13;
+cd /var/lib/rpm&#13;
+rm -rf __db*&#13;
+rpm --rebuilddb&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/17.html</guid><pubDate>Tue, 02 Jul 2024 06:29:10 +0000</pubDate></item><item><title>修改master3节点主机名</title><link>https://longxiucai.github.io/post/16.html</link><description>1. master1节点操作删除master3节点&#13;
+```&#13;
+kubectl delete node master3&#13;
+```&#13;
+2. master3节点操作&#13;
+``` &#13;
+kubeadm reset&#13;
+rm -rf  /var/lib/etcd/&#13;
+rm -rf /etc/kubernetes/manifests/*&#13;
+hostnamectl set-hostname xxxxx&#13;
+``` &#13;
+&#13;
+3. master1节点&#13;
+```&#13;
+kubectl exec -n kube-system -it etcd-master1 -- sh&#13;
+alias etcdctl='etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key'&#13;
+etcdctl member list&#13;
+etcdctl member remove &lt;master3的id，上一步输出的第一列&gt;&#13;
+exit&#13;
+```&#13;
+4. master1节点操作&#13;
+```&#13;
+kubeadm token create --print-join-command&#13;
+kubeadm init phase upload-certs --upload-certs输出的最后一行字符串与上一步组合（--control-plane --certificate-key xxxxx）&#13;
+```&#13;
+组合完成后示例：&#13;
+```&#13;
+kubeadm join apiserver.cluster.local:6443 --token a6e1fm.b5lnpm64r7t707lw --discovery-token-ca-cert-hash sha256:06bc401679c6964d712790e0464d701030b27919c84807a30acb9c772e1a884f --control-plane --certificate-key b8e05ef60b5cecc78318cfe8148520ae2d46d0ac7871932cfeec7b36a0bd698e&#13;
+```&#13;
+5. master3执行上面组合之后的命令&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/16.html</guid><pubDate>Tue, 02 Jul 2024 06:21:39 +0000</pubDate></item><item><title>linux安装启动过程</title><link>https://longxiucai.github.io/post/15.html</link><description>1. isolinux.bin &amp; isolinux.cfg&#13;
+&#13;
+isolinux.bin是光盘引导程序，在mkisofs的选项中需要明确给出文件路径，这个文件属于SYSLINUX项目，对应fedora13中的syslinux包，文档可参考：/usr/share/doc/syslinux-4.02/isolinux.txt或者项目Wiki；可引导光盘相关信息请参考El Torito规范；&#13;
+isolinux.cfg是isolinux.bin的配置文件，当光盘启动后（即运行isolinux.bin），会自动去找isolinux.cfg文件，然后根据配置信息进行后续工作；查找isolinux.cfg的顺序为:&#13;
+boot/syslinux/isolinux.cfg&#13;
+syslinux/isolinux.cfg&#13;
+isolinux.cfg&#13;
+&#13;
+2. vesamenu.c32&#13;
+&#13;
+vesamenu.c32就是我们看到的光盘启动后的安装图形界面，也属于SYSLINUX项目，还有一个menu.c32版本，是纯文本的菜单；&#13;
+&#13;
+3. memtest&#13;
+&#13;
+如果通过光盘启动菜单选择了memtest选项，则开始进行内存检测；这是一个独立的程序，属于memtest86+项目，对应的fedora13的包是memtest86+-4.00-3.fc13.i686.rpm；通过效验md5值可以发现这个文件就是从包中提取出来的，发行版定制工具会从yum源将这个包安装到chroot中，然后将 /boot/memtest86+* 复制到ISO根目录；&#13;
+&#13;
+4. splash.jgp&#13;
+&#13;
+是光盘启动界面的背景图，应该来自文件 /usr/lib/anaconda-runtime/syslinux-vesa-splash.jpg，属于fedora-logos包；制作方法见Fedora官方Wiki：[How_to_create_a_custom_syslinux_splash](https://fedoraproject.org/wiki/How_to_create_a_custom_syslinux_splash)&#13;
+&#13;
+5. vmlinuz &amp; initrd.img&#13;
+&#13;
+vmlinuz是内核映像，initrd.img是ramfs (先cpio，再gzip压缩)，都是编译内核生成的；isolinux.bin根据安装选项找到对应的配置，装载内核和ramfs；&#13;
+&#13;
+6. install.img&#13;
+&#13;
+install.img是一个squashfs根文件系统，当内核启动后就装载install.img并切换根文件系统，执行里面的anaconda程序，anaconda是fedora的安装程序；&#13;
+```&#13;
+    $ sudo mount install.img /mnt -oloop   # mount&#13;
+    $ sudo mksquashfs /dir                 # build&#13;
+```&#13;
+7. discinfo&#13;
+&#13;
+安装过程中，anaconda会去读取.discinfo文件，获取光盘信息（以前CD安装系统需要多张光盘），内容如下：&#13;
+1273712438.740122     # timestamp （ python time.time() ）&#13;
+Fedora 13             # releasestr&#13;
+i386                  # arch&#13;
+ALL                   # discNum （ALL表示只有一张安装盘）&#13;
+注：参考文件/usr/lib/anaconda-runtime/makestamp.py &#13;
+&#13;
+8.Packages &amp; repodata&#13;
+&#13;
+packages就是存放包的目录，对这个目录执行createrepo命令就会生成一个repodata的目录，这个repodata就是yum源，里面的文件基本都是xml格式，记录了Packages中所有包的基本信息，如包名、包信息、包版本、包中的文件清单等等；&#13;
+&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/15.html</guid><pubDate>Tue, 02 Jul 2024 06:18:07 +0000</pubDate></item><item><title>curl k8s api</title><link>https://longxiucai.github.io/post/14.html</link><description>1. apply下面的资源文件
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: test
+    namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: test
+  namespace: kube-system
+---
+# sa-token-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-sa-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: test
+type: kubernetes.io/service-account-token
+```
+2. 执行下面命令(替换`KUBE_API`为实际)
+```
+JWT_TOKEN_KUBESYSTEM_DEFAULT=`kubectl get secret test-sa-token -n kube-system -o jsonpath='{.data.token}' | base64 -d`
+KUBE_API=https://172.20.187.11:6443
+```
+3. 请求
+```
+curl  $KUBE_API/apis/apps/v1/deployments  --header 'Authorization: Bearer $JWT_TOKEN_KUBESYSTEM_DEFAULT' -k
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/14.html</guid><pubDate>Tue, 02 Jul 2024 06:13:16 +0000</pubDate></item><item><title>linux家目录下的中文目录修改为英文</title><link>https://longxiucai.github.io/post/13.html</link><description>1. 将这些目录修改为英文名，如：  mv 桌面 Desktop &#13;
+&#13;
+2. 修改配置文件`~/.config/user-dirs.dirs`，将对应的路径改为英文名（要和1中修改的英文名对应）&#13;
+&#13;
+配置文件修改后的内容如下：&#13;
+```&#13;
+XDG_DESKTOP_DIR='$HOME/Desktop'&#13;
+XDG_DOWNLOAD_DIR='$HOME/Download'&#13;
+XDG_TEMPLATES_DIR='$HOME/Template'&#13;
+XDG_PUBLICSHARE_DIR='$HOME/Public'&#13;
+XDG_DOCUMENTS_DIR='$HOME/Document'&#13;
+XDG_MUSIC_DIR='$HOME/Music'&#13;
+XDG_PICTURES_DIR='$HOME/Picture'&#13;
+XDG_VIDEOS_DIR='$HOME/Video'&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/13.html</guid><pubDate>Tue, 02 Jul 2024 06:09:53 +0000</pubDate></item><item><title>k8s dashbord的token创建，用于登录</title><link>https://longxiucai.github.io/post/12.html</link><description>```&#13;
+kubectl create serviceaccount cluster-admin-dashboard-sa&#13;
+kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa&#13;
+kubectl describe secrets $(kubectl get secret | grep cluster-admin-dashboard-sa |cut -d ' ' -f1)|grep 'token:'&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/12.html</guid><pubDate>Tue, 02 Jul 2024 06:06:03 +0000</pubDate></item><item><title>彩色echo</title><link>https://longxiucai.github.io/post/11.html</link><description>```&#13;
+################# color code ####################&#13;
+RED='31;1m'      # Error message&#13;
+GREEN='32;1m'    # Success message&#13;
+YELLOW='33;1m'   # Warning message&#13;
+BLUE='36;1m'     # Info message&#13;
+LIGHT_BLUE='36m' # Debug message&#13;
+################# color echo ####################&#13;
+colorEcho() { echo -e '\033[${1}${@:2}\033[0m'; }&#13;
+error() { colorEcho $RED $1; }&#13;
+success() { colorEcho $GREEN $1; }&#13;
+warn() { colorEcho $YELLOW $1; }&#13;
+info() { colorEcho $BLUE $1; }&#13;
+################ end of color echo ##############&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/11.html</guid><pubDate>Tue, 02 Jul 2024 06:04:42 +0000</pubDate></item><item><title>c程序占用文件描述符</title><link>https://longxiucai.github.io/post/10.html</link><description>## c程序打开多个文件&#13;
+```&#13;
+#include &lt;stdio.h&gt;&#13;
+#include &lt;stdlib.h&gt;&#13;
+#include &lt;fcntl.h&gt;&#13;
+#include &lt;unistd.h&gt;&#13;
+#include &lt;signal.h&gt;&#13;
+&#13;
+int *fds = NULL;&#13;
+int number_of_files = 0;&#13;
+int last_files = 0;&#13;
+void cleanup() {&#13;
+    if (fds != NULL) {&#13;
+        for (int i = 0; i &lt; last_files + 1; i++) {&#13;
+            if (fds[i] != -1) {&#13;
+                close(fds[i]);&#13;
+                printf('Closed file descriptor %d\n', fds[i]);&#13;
+            }&#13;
+&#13;
+            char filename[256];&#13;
+            snprintf(filename, sizeof(filename), '/tmp/testfile_%d.txt', i);&#13;
+            if (unlink(filename) == 0) {&#13;
+                printf('Deleted file %s\n', filename);&#13;
+            } else {&#13;
+                perror('unlink');&#13;
+            }&#13;
+        }&#13;
+        free(fds);&#13;
+        fds = NULL;&#13;
+        printf('Freed allocated memory\n');&#13;
+    }&#13;
+}&#13;
+&#13;
+void signal_handler(int signal) {&#13;
+    if (signal == SIGINT) {&#13;
+        printf('\nCaught SIGINT signal, performing cleanup...\n');&#13;
+        cleanup();&#13;
+        exit(EXIT_FAILURE);&#13;
+    }&#13;
+}&#13;
+&#13;
+void open_many_files(int num_files) {&#13;
+    number_of_files = num_files;&#13;
+    fds = malloc(number_of_files * sizeof(int));&#13;
+    if (fds == NULL) {&#13;
+        perror('malloc');&#13;
+        exit(EXIT_FAILURE);&#13;
+    }&#13;
+&#13;
+    for (int i = 0; i &lt; number_of_files; i++) {&#13;
+        char filename[256];&#13;
+        snprintf(filename, sizeof(filename), '/tmp/testfile_%d.txt', i);&#13;
+        fds[i] = open(filename, O_RDWR | O_CREAT, 0644);&#13;
+        if (fds[i] == -1) {&#13;
+            perror('open');&#13;
+            break;&#13;
+        }&#13;
+        printf('Opened file descriptor %d for %s\n', fds[i], filename);&#13;
+        last_files = i;&#13;
+    }&#13;
+}&#13;
+&#13;
+int main(int argc, char *argv[]) {&#13;
+    if (argc != 3) {&#13;
+        fprintf(stderr, 'Usage: %s &lt;number_of_files_to_open&gt; &lt;wait_time_in_seconds&gt;\n', argv[0]);&#13;
+        exit(EXIT_FAILURE);&#13;
+    }&#13;
+&#13;
+    // Register the signal handler for SIGINT&#13;
+    signal(SIGINT, signal_handler);&#13;
+&#13;
+    int num_files_to_open = atoi(argv[1]);&#13;
+    int wait_time = atoi(argv[2]);&#13;
+&#13;
+    open_many_files(num_files_to_open);&#13;
+&#13;
+    // Wait for the specified time before closing file descriptors&#13;
+    printf('Waiting for %d seconds before closing file descriptors...\n', wait_time);&#13;
+    sleep(wait_time);&#13;
+&#13;
+    cleanup();&#13;
+&#13;
+    return 0;&#13;
+}&#13;
+```&#13;
+## 在pod中复现`too many open files in system`的情况&#13;
+*  修改limit.conf中nofile，现在文件打开数量，在pod中不会报错，直接在宿主机中运行程序会报错&#13;
+*  修改内核参数fs.file-max，降低值内核参数的值，pod中会报错。</description><guid isPermaLink="true">https://longxiucai.github.io/post/10.html</guid><pubDate>Tue, 02 Jul 2024 06:03:36 +0000</pubDate></item><item><title>cgroup&amp;多线程测试</title><link>https://longxiucai.github.io/post/9.html</link><description>## C代码：thread.c&#13;
+```&#13;
+#include&lt;stdio.h&gt;&#13;
+#include&lt;stdlib.h&gt;&#13;
+#include&lt;pthread.h&gt;&#13;
+#include &lt;unistd.h&gt; &#13;
+/* 声明结构体 */&#13;
+struct member&#13;
+{&#13;
+    int num;&#13;
+    char *name;&#13;
+};     &#13;
+&#13;
+/* 定义线程pthread */&#13;
+static void * pthread(void *arg)       &#13;
+{&#13;
+    struct member *temp;&#13;
+    &#13;
+    /* 线程pthread开始运行 */&#13;
+    printf('pthread start!\n');&#13;
+    while(1){&#13;
+    ;&#13;
+    }&#13;
+    /* 令主线程继续执行 */&#13;
+    sleep(2);&#13;
+    &#13;
+    /* 打印传入参数 */&#13;
+    temp = (struct member *)arg;      &#13;
+    printf('member-&gt;num:%d\n',temp-&gt;num);&#13;
+    printf('member-&gt;name:%s\n',temp-&gt;name);&#13;
+    &#13;
+    return NULL;&#13;
+}&#13;
+&#13;
+/* main函数 */&#13;
+int main(int agrc,char* argv[])&#13;
+{&#13;
+    pthread_t tidp,tidp1;&#13;
+    struct member *b;&#13;
+&#13;
+    /* 为结构体变量b赋值 */&#13;
+    b = (struct member *)malloc(sizeof(struct member));           &#13;
+    b-&gt;num=1;&#13;
+    b-&gt;name='mlq';              &#13;
+&#13;
+    /* 创建线程pthread */&#13;
+    if ((pthread_create(&amp;tidp, NULL, pthread, (void*)b)) == -1)&#13;
+    {&#13;
+        printf('create error!\n');&#13;
+        return 1;&#13;
+    }&#13;
+    if ((pthread_create(&amp;tidp1, NULL, pthread, (void*)b)) == -1)&#13;
+    {&#13;
+        printf('create error!\n');&#13;
+        return 1;&#13;
+    }&#13;
+&#13;
+    /* 令线程pthread先运行 */&#13;
+    sleep(1);&#13;
+    &#13;
+    /* 线程pthread睡眠2s，此时main可以先执行 */&#13;
+    printf('main continue!\n');&#13;
+    &#13;
+    /* 等待线程pthread释放 */&#13;
+    if (pthread_join(tidp, NULL))                  &#13;
+    {&#13;
+        printf('thread is not exit...\n');&#13;
+        return -2;&#13;
+    }&#13;
+    &#13;
+    return 0;&#13;
+}&#13;
+```&#13;
+## 编译&#13;
+```&#13;
+gcc -o thread.out thread.c -lpthread&#13;
+```&#13;
+## 测试&#13;
+1、`systemd-run --unit=threadtest --slice=test  /root/thread.out` 会启动一个临时服务,该服务就是运行/root/thread.out，名为threadtest.service&#13;
+2、查看`top -H -p &lt;threadtest.service的pid&gt;`会显示该服务及其线程的信息&#13;
+3、cgroup：/sys/fs/cgroup/cpu/test.slice/threadtest.service。</description><guid isPermaLink="true">https://longxiucai.github.io/post/9.html</guid><pubDate>Tue, 02 Jul 2024 05:56:42 +0000</pubDate></item><item><title>bucketbench测试crio步骤</title><link>https://longxiucai.github.io/post/8.html</link><description>1. 安装crio&#13;
+&#13;
+2. 修改crio配置文件的[crio.image]字段，添加一行pause_image      字段位于第444行&#13;
+vim /etc/crio/crio.conf&#13;
+[crio.image]&#13;
+pause_image = 'harbor.kylincloudnative.com/registry.k8s.io/pause:3.6'&#13;
+&#13;
+3. 配置cgroup&#13;
+mkdir -p /etc/crio/crio.conf.d&#13;
+cat &gt;/etc/crio/crio.conf.d/02-cgroup-manager.conf&lt;&lt;-EOF&#13;
+[crio.runtime]&#13;
+conmon_cgroup = 'pod'&#13;
+cgroup_manager = 'cgroupfs'&#13;
+EOF&#13;
+&#13;
+&#13;
+4. 重启并观察状态是否running&#13;
+systemctl daemon-reload&#13;
+systemctl restart crio&#13;
+systemctl status crio&#13;
+&#13;
+5. 拉镜像，修改tag&#13;
+```&#13;
+podman pull harbor.kylincloudnative.com/library/alpine:latest&#13;
+podman pull harbor.kylincloudnative.com/registry.k8s.io/pause:3.6&#13;
+podman pull harbor.kylincloudnative.com/registry.k8s.io/pause:3.1&#13;
+podman tag harbor.kylincloudnative.com/registry.k8s.io/pause:3.6 registry.aliyuncs.com/google_containes/pause:3.6&#13;
+podman tag harbor.kylincloudnative.com/registry.k8s.io/pause:3.1 registry.aliyuncs.com/google_containers/pause:3.1&#13;
+```&#13;
+6. 修改测试工具配置文件&#13;
+* 修改 contrib/container_config.json      位于第7行&#13;
+image.image修改为harbor.kylincloudnative.com/library/alpine:latest&#13;
+* 修改 examples/crio.yaml   位于第2行&#13;
+image: harbor.kylincloudnative.com/library/alpine:latest&#13;
+* 修改 examples/crio.yaml中的线程数相关配置：&#13;
+   threads: xxxxxxxx&#13;
+   iterations: xxxxxxxx.&#13;
+&#13;
+7. 测试 arm&#13;
+./bucketbench-aarch64 --log-level=debug run -b   examples/crio.yaml --skip-limit&#13;
+&#13;
+&#13;
+&gt; [!TIP]&#13;
+&gt; 如报错`xxxxxx : name is reserved`，则需删除pod：&#13;
+```&#13;
+for i in $(crictl pods | awk -F ' ' '{print$1}' | xargs) ;do crictl stopp $i; done&#13;
+for i in $(crictl pods | awk -F ' ' '{print$1}' | xargs) ;do crictl rmp $i; done&#13;
+```&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/8.html</guid><pubDate>Tue, 02 Jul 2024 05:51:53 +0000</pubDate></item><item><title>bond配置</title><link>https://longxiucai.github.io/post/7.html</link><description>1. 配置ifcfg-xxx1接口 路径为 /etc/sysconfig/network-scripts/&#13;
+TYPE=Ethernet&#13;
+NAME=xxx1&#13;
+BOOTPROTO=none&#13;
+DEVICE=xxx1&#13;
+ONBOOT=yes&#13;
+MASTER=bond0&#13;
+SLAVE=yes&#13;
+2. 同1，配置ifcfg-xxx2接口&#13;
+3. 新建ifcfg-bond0文件，内容如下&#13;
+TYPE=Ethernet&#13;
+NAME=bond0&#13;
+BOOTPROTO=static&#13;
+DEVICE=bond0&#13;
+ONBOOT=yes&#13;
+IPADDR=xxxx&#13;
+NATMASK=XXXX&#13;
+GATEWAY=172.20.43.253&#13;
+DNS1=172.20.191.2&#13;
+DNS2=114.114.114.114&#13;
+BONDING_OPTS='mode=6 miimon=100'&#13;
+4. 加载模块，让系统支持bonding    ？？？？？？&#13;
+cat/etc/modprobe.conf？？？/etc/modprobe.d/bonding.conf？？？  //不存在的话，手动创建（也可以放在modprobe.d下面）&#13;
+alias bond0 bonding&#13;
+options bond0 miimon=100 mode=0&#13;
+5. 加载bond module：modprobe bonding&#13;
+6. systemctl restart network&#13;
+7. 查看绑定结果&#13;
+`cat  /proc/net/bonding/bond0`&#13;
+&#13;
+参考：&#13;
+https://www.cnblogs.com/huangweimin/articles/6527058.html&#13;
+https://blog.csdn.net/qq_34870631/article/details/80625217&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/7.html</guid><pubDate>Tue, 02 Jul 2024 05:45:43 +0000</pubDate></item><item><title>网桥配置脚本</title><link>https://longxiucai.github.io/post/6.html</link><description>#!/bin/bash&#13;
+ifname=ens3&#13;
+brname=bridge0&#13;
+ip=172.20.43.11/24&#13;
+gateway=172.20.43.253&#13;
+dns='172.20.191.2,114.114.114.114'&#13;
+nmcli connection add ifname $brname type bridge con-name $brname&#13;
+nmcli connection delete ${ifname}&#13;
+nmcli connection add type bridge-slave ifname ${ifname} master $brname&#13;
+nmcli connection modify $brname ipv4.addresses $ip&#13;
+nmcli connection modify $brname ipv4.gateway $gateway&#13;
+nmcli connection modify $brname ipv4.dns $dns&#13;
+nmcli connection modify $brname ipv4.method manual&#13;
+nmcli connection up $brname。</description><guid isPermaLink="true">https://longxiucai.github.io/post/6.html</guid><pubDate>Tue, 02 Jul 2024 05:43:51 +0000</pubDate></item><item><title>临时修改initrd.img</title><link>https://longxiucai.github.io/post/5.html</link><description>## 解压&#13;
+mkdir tmpdir&#13;
+cd tmpdir&#13;
+xzcat -d ../initrd.img | cpio -idum   #解压img输出到当前所在目录&#13;
+&#13;
+## 修改&#13;
+....&#13;
+&#13;
+## 重新打包&#13;
+find . | cpio -oH newc | xz --check=crc32 -9 &gt; ../initrd.img&#13;
+&#13;
+cpio -H参数说明：&#13;
+* bin 过时的二进制格式。</description><guid isPermaLink="true">https://longxiucai.github.io/post/5.html</guid><pubDate>Tue, 02 Jul 2024 05:40:28 +0000</pubDate></item><item><title>正则表达式</title><link>https://longxiucai.github.io/post/4.html</link><description>## 元字符说明&#13;
+&#13;
+    元字符:  |&#13;
+    匹配规则:匹配|两边任意一个正则表达式&#13;
+&#13;
+    元字符:  .&#13;
+    匹配规则:匹配除换行外的任意字符&#13;
+&#13;
+    元字符:  ^&#13;
+    匹配规则:匹配目标字符串的开头位置&#13;
+&#13;
+    元字符:  $&#13;
+    匹配规则:匹配字符串的结束位置&#13;
+&#13;
+    元字符:  *&#13;
+    匹配规则:匹配前面的字符出现0次或多次&#13;
+&#13;
+    元字符:  +&#13;
+    匹配规则:匹配前面的字符出现一次或多次&#13;
+&#13;
+	元字符:  ?&#13;
+	匹配规则:匹配前面的字符出现0次或1次&#13;
+&#13;
+    元字符:  {n}&#13;
+    匹配规则:匹配指定的重复次数&#13;
+   &#13;
+	 元字符: {m,n}   &#13;
+    匹配规则:匹配前面的正则表达式 m--n次        &#13;
+&#13;
+&#13;
+## 匹配字符集合&#13;
+&#13;
+* 元字符:`[字符集]`&#13;
+&#13;
+    匹配规则:匹配任意一个字符集下的字符&#13;
+```&#13;
+    [abc123] a b c 1 2 3 12 &#13;
+	[a-z] [0-9] [_123a-z]&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.findall('^[a-z][a-z]','boy')&#13;
+    ['bo']&#13;
+```&#13;
+* 元字符:`[^...]`&#13;
+&#13;
+    匹配规则:字符集取非,除了列出的字符之外任意一个字符&#13;
+```&#13;
+    [^abc]--&gt;除abc之外任意字符&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.findall('[^abcds]','boyadshfhjasjhbhjasf')&#13;
+    ['o', 'y', 'h', 'f', 'h', 'j', 'j', 'h', 'h', 'j', 'f']&#13;
+```&#13;
+&#13;
+* 元字符: `\d`  `\D`&#13;
+&#13;
+    匹配规则: &#13;
+&#13;
+    `\d` 匹配任意数字字符      [0-9]&#13;
+    &#13;
+    `\D` 匹配任意非数字字符    [^0-9]&#13;
+```&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.findall('\D','AID1807')&#13;
+    ['A', 'I', 'D']&#13;
+&#13;
+	\1,\2	反向引用	匹配之前第一、第二括号内表达式匹配的内容&#13;
+&#13;
+	举个例子，想找到连续两个重复单词，我们就必须要知道前面单词是什么，这时候就可以使用反向引用了，可以简单写为(\w+)\s+\1&#13;
+```&#13;
+	&#13;
+* 元字符:`\w`  `\W`&#13;
+    匹配规则:&#13;
+&#13;
+    `\w` 普通字符  &#13;
+    &#13;
+    `\W` 非普通字符&#13;
+```&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.findall('\w','我在北京')&#13;
+    ['我', '在', '北', '京']&#13;
+            &#13;
+    &gt;&gt;&gt; re.findall('\W','!@#$我在北京')&#13;
+    ['!', '@', '#', '$']&#13;
+```&#13;
+&#13;
+* 元字符: `\s` `\S`&#13;
+    匹配规则:&#13;
+&#13;
+    `\s` 匹配任意空字符`[\r\t\n\v\f]`&#13;
+&#13;
+    `\S` 匹配任意非空字符&#13;
+```&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.findall('\w+\s+\w+','hello     beijin')&#13;
+    ['hello     beijin']&#13;
+    &gt;&gt;&gt; re.findall('\w+\S+\w+','hello     beijin')&#13;
+    ['hello', 'beijin']&#13;
+```&#13;
+* 元字符: `\A` `\Z`&#13;
+   &#13;
+    匹配规则:&#13;
+    &#13;
+    `\A` 匹配字符串开头位置  `^`&#13;
+&#13;
+    `\Z` 匹配字符串结尾位置  `$`&#13;
+```&#13;
+    &gt;&gt;&gt; re.findall('\Ahello','hellobeijin')&#13;
+    ['hello']&#13;
+    &gt;&gt;&gt; re.findall('beijin\Z','hellobeijin')&#13;
+    ['beijin']&#13;
+```&#13;
+绝对匹配:正则表达式完全匹配目标字符串内容&#13;
+&#13;
+在正则表达式的开头或者结尾加上`^`或者`$`(或者`\A` `\Z`).这样正则表达式必须匹配到整个目标字符串才会有结果&#13;
+```&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.findall('\A\d+$','1234568789')&#13;
+    ['1234568789']&#13;
+&#13;
+    匹配(非)单词边界&#13;
+    \&lt;	单词分界符	匹配单词开始	java中使用\b&#13;
+	\&gt;	单词分界符	匹配单词结束	java中使用\B&#13;
+```&#13;
+* 元字符: `\b` `\B`&#13;
+    &#13;
+    匹配规则:&#13;
+    &#13;
+    `\b` 匹配单词边界位置&#13;
+&#13;
+    `\B` 匹配非单词边界位置&#13;
+            普通字符和非普通字符认为是单词边界&#13;
+```&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.findall(r'he\b','he ##is a good gril')&#13;
+    ['he']&#13;
+```&#13;
+ &#13;
+## 元字符总结&#13;
+&#13;
+匹配单个字符: &#13;
+```&#13;
+a  .  \d   \D  \s  \S  \w   \W  [...]  [^...]&#13;
+```&#13;
+匹配重复: &#13;
+```&#13;
+*  +  ?  {n}  {m,n}&#13;
+```&#13;
+匹配位置:&#13;
+```&#13;
+^  $  \A  \Z  \b  \B&#13;
+```&#13;
+其他: &#13;
+```&#13;
+|  ()  \&#13;
+```&#13;
+## 正则表达式转义&#13;
+&#13;
+正则中的特殊字符&#13;
+```&#13;
+. * + ? ^ $ [] {} () | \&#13;
+```&#13;
+正则表达式如果匹配特殊字符需要加`\`表达转义&#13;
+```&#13;
+    eg:             正则  目标字符串&#13;
+    &gt;&gt;&gt; re.findall('\$\d+','$10')&#13;
+    ['$10']&#13;
+&#13;
+             pattern     string&#13;
+    python  '\\$\\d+'     '$10'&#13;
+    python   r'\$\d+'     '$10'&#13;
+&#13;
+    raw子串: 原始字符串对内容不解释转义,就表达内容原本的意义&#13;
+```&#13;
+## 贪婪和非贪婪&#13;
+&#13;
+贪婪模式:正则表达式的重复匹配总是尽可能多的向后匹配更多内容`* + ? {m,n}`&#13;
+&#13;
+非贪婪模式(懒惰模式):尽可能少的匹配内容&#13;
+```&#13;
+    贪婪---&gt;非贪婪 *?  +?  ??   {m,n}?&#13;
+    &gt;&gt;&gt; re.findall(r'ab','abbbbbbbbbbb')&#13;
+    ['ab']&#13;
+    &#13;
+    &gt;&gt;&gt; re.findall(r'ab+','abbbbbbbbbbb')&#13;
+    ['abbbbbbbbbbb']&#13;
+    &#13;
+    &gt;&gt;&gt; re.findall(r'ab{3,5}?','abbbbbbbbbbb')&#13;
+    ['abbb']&#13;
+```&#13;
+## 正则表达式的子组&#13;
+可以使用()为正则表达式建立子组,子组可以看做是正则表达式内部操作的一个整体&#13;
+&#13;
+子组是在正则表达式整体匹配到内容的前提下才会发挥的作用,他不影响正则表达式整体去匹配目标内容这一原则&#13;
+&#13;
+子组作用&#13;
+&#13;
+1.作为内部整体可以改变某些原字符的行为&#13;
+    eg:&#13;
+    &gt;&gt;&gt; re.search(r'(ab)+\d+','abababab123456').group()&#13;
+    'abababab123456'&#13;
+&#13;
+2.子组在某些操作中可以单独提取出匹配内容&#13;
+    &gt;&gt;&gt; re.search(r'(https|http|ftp)://\S+','https://baidu.com').group()&#13;
+    'https://baidu.com'&#13;
+&#13;
+&#13;
+子组使用注意事项:&#13;
+* 一个正则表达式中可以有多个子组&#13;
+* 子组一般由外到内,左到右称之为第一,第二,第三...子组&#13;
+* 子组不能重叠,嵌套也不宜很复杂&#13;
+&#13;
+&#13;
+## 捕获组和非捕获组&#13;
+&#13;
+格式:&#13;
+```&#13;
+(?P&lt;name&gt;pattern)&#13;
+&#13;
+&gt;&gt;&gt; re.search(r'(?P&lt;dog&gt;ab)cdef','abcdefghijklmn').group('dog')&#13;
+'ab'&#13;
+```&#13;
+作用:可以通过组名更方便获取某组内容。</description><guid isPermaLink="true">https://longxiucai.github.io/post/4.html</guid><pubDate>Tue, 02 Jul 2024 05:36:57 +0000</pubDate></item><item><title>修改pod网段与calico配置</title><link>https://longxiucai.github.io/post/3.html</link><description>1. vim /etc/kubernetes/manifests/kube-controller-manager.yaml 【3个master一个一个的执行，最好是kube-controller-manager-节点名字的pod Running之后再修改下一个节点】&#13;
+		19行：--cluster-cidr=10.128.0.0/18&#13;
+&#13;
+2. kubectl edit cm kubeadm-config -n kube-system&#13;
+		podSubnet: 10.128.0.0/18&#13;
+&#13;
+3. kubectl edit cm kube-proxy -n kube-system&#13;
+		clusterCIDR: 10.128.0.0/18&#13;
+&#13;
+4. kubectl edit ippool default-ipv4-ippool&#13;
+		cidr: 10.128.0.0/18&#13;
+&#13;
+5. kubectl edit cm calico-config -n kube-system ：&#13;
+          'ipam': {&#13;
+              'type': 'calico-ipam',					              #逗号&#13;
+              'ipv4_pools': ['default-ipv4-ippool']   #添加此行，前面必须是空格不能是tab&#13;
+          },&#13;
+&#13;
+6. kubectl rollout restart -n kube-system daemonset.apps/calico-node&#13;
+等待calico的pod全部running，全部节点查看配置文件是否有'ipv4_pools': ['default-ipv4-ippool']：&#13;
+cat /etc/cni/net.d/00-multus.conf&#13;
+cat /etc/cni/net.d/10-calico.conflist&#13;
+&#13;
+7. kubectl  edit ippool kubevirt-vm-ippool&#13;
+  cidr: 10.128.128.0/18&#13;
+&#13;
+8. kubectl delete ippool other-ippool&#13;
+&#13;
+9. kubectl cluster-info dump | grep cluster-cidr&#13;
+&#13;
+&#13;
+默认使用default pool，开启noipam功能&#13;
+calico-config configMap:&#13;
+cni.projectcalico.org/ipAddrsNoIpam&#13;
+```&#13;
+apiVersion: v1&#13;
+data:&#13;
+  calico_backend: bird&#13;
+  cni_network_config: |-&#13;
+    {&#13;
+      'name': 'k8s-pod-network',&#13;
+      'cniVersion': '0.3.1',&#13;
+      'plugins': [&#13;
+        {&#13;
+          'type': 'calico',&#13;
+          'log_level': 'info',&#13;
+          'log_file_path': '/var/log/calico/cni/cni.log',&#13;
+          'datastore_type': 'kubernetes',&#13;
+          'nodename': '__KUBERNETES_NODE_NAME__',&#13;
+          'mtu': __CNI_MTU__,&#13;
+          'ipam': {&#13;
+              'type': 'calico-ipam',&#13;
+              'ipv4_pools': ['default-ipv4-ippool']&#13;
+          },&#13;
+          'policy': {&#13;
+              'type': 'k8s'&#13;
+          },&#13;
+          'kubernetes': {&#13;
+              'kubeconfig': '__KUBECONFIG_FILEPATH__'&#13;
+          },&#13;
+         'feature_control': {&#13;
+             'ip_addrs_no_ipam': true&#13;
+         }&#13;
+        },&#13;
+        {&#13;
+          'type': 'portmap',&#13;
+          'snat': true,&#13;
+          'capabilities': {'portMappings': true}&#13;
+        },&#13;
+        {&#13;
+          'type': 'bandwidth',&#13;
+          'capabilities': {'bandwidth': true}&#13;
+        }&#13;
+      ]&#13;
+    }&#13;
+  typha_service_name: none&#13;
+  veth_mtu: '0'&#13;
+kind: ConfigMap&#13;
+metadata:&#13;
+  name: calico-config&#13;
+  namespace: kube-system&#13;
+```&#13;
+&#13;
+。</description><guid isPermaLink="true">https://longxiucai.github.io/post/3.html</guid><pubDate>Tue, 02 Jul 2024 03:23:13 +0000</pubDate></item><item><title>go解析证书文件</title><link>https://longxiucai.github.io/post/2.html</link><description>```&#13;
+package cert&#13;
+&#13;
+import (&#13;
+	'crypto/x509'&#13;
+	'encoding/pem'&#13;
+	'os'&#13;
+	'path/filepath'&#13;
+	'strings'&#13;
+	'time'&#13;
+&#13;
+	log 'github.com/sirupsen/logrus'&#13;
+)&#13;
+&#13;
+func parseCertificate(file string) {&#13;
+	// 读取文件内容&#13;
+	fileData, err := os.ReadFile(file)&#13;
+	if err != nil {&#13;
+		log.Errorf('Error reading file %s: %s\n', file, err)&#13;
+		return&#13;
+	}&#13;
+&#13;
+	// 解析 PEM 块&#13;
+	block, _ := pem.Decode(fileData)&#13;
+	if block == nil {&#13;
+		log.Errorf('No PEM block found in file %s\n', file)&#13;
+		return&#13;
+	}&#13;
+&#13;
+	// 判断文件类型&#13;
+	fileType := strings.ToLower(filepath.Ext(file))&#13;
+	switch fileType {&#13;
+	case '.crt', '.pem':&#13;
+		// 解析证书&#13;
+		cert, err := x509.ParseCertificate(block.Bytes)&#13;
+		if err != nil {&#13;
+			log.Errorf('Error parsing certificate from file %s: %s\n', file, err)&#13;
+			return&#13;
+		}&#13;
+&#13;
+		// 输出证书有效期等信息&#13;
+		log.Infof('Certificate in file %s:', file)&#13;
+		log.Infof('  Subject: %s', cert.Subject.CommonName)&#13;
+		log.Infof('  Valid from: %s', cert.NotBefore)&#13;
+		log.Infof('  Valid until: %s', cert.NotAfter)&#13;
+&#13;
+		// 计算证书有效期结束时间与当前时间之间的天数差&#13;
+		now := time.Now()&#13;
+		expiresInDays := int((time.Duration(cert.NotAfter.Sub(now).Hours()) / 24))&#13;
+		log.Infof('证书%s 将于 %d 天后过期', cert.Subject.CommonName, expiresInDays)&#13;
+		log.Infof('---------------------------')&#13;
+	default:&#13;
+		log.Infof('Unsupported file type: %s %s', fileType, file)&#13;
+	}&#13;
+}&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/2.html</guid><pubDate>Tue, 02 Jul 2024 02:33:15 +0000</pubDate></item><item><title>go连接数据库</title><link>https://longxiucai.github.io/post/1.html</link><description>```&#13;
+package dbtest&#13;
+&#13;
+import (&#13;
+	'database/sql'&#13;
+	'fmt'&#13;
+	'log'&#13;
+&#13;
+	_ 'github.com/go-sql-driver/mysql'&#13;
+)&#13;
+&#13;
+func maindb() {&#13;
+	// 连接 MySQL 数据库&#13;
+	db, err := sql.Open('mysql', 'dbinit:123456@tcp(10.42.186.232:3306)/dbinit_test')&#13;
+	if err != nil {&#13;
+		log.Fatal(err)&#13;
+	}&#13;
+	defer db.Close()&#13;
+&#13;
+	// 测试连接&#13;
+	err = db.Ping()&#13;
+	if err != nil {&#13;
+		log.Fatal('Error connecting to the database:', err)&#13;
+	}&#13;
+&#13;
+	fmt.Println('Connected to MySQL database successfully!')&#13;
+&#13;
+	// 查询示例&#13;
+	rows, err := db.Query('SELECT * FROM users')&#13;
+	if err != nil {&#13;
+		log.Fatal('Error executing query:', err)&#13;
+	}&#13;
+	defer rows.Close()&#13;
+&#13;
+	// 遍历查询结果&#13;
+	for rows.Next() {&#13;
+		var id int&#13;
+		var name string&#13;
+		err := rows.Scan(&amp;id, &amp;name)&#13;
+		if err != nil {&#13;
+			log.Fatal('Error scanning row:', err)&#13;
+		}&#13;
+		fmt.Printf('ID: %d, Name: %s\n', id, name)&#13;
+	}&#13;
+}&#13;
+```。</description><guid isPermaLink="true">https://longxiucai.github.io/post/1.html</guid><pubDate>Tue, 02 Jul 2024 02:04:36 +0000</pubDate></item></channel></rss>
