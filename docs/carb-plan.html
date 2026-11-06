@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="nJ0qQDEZdRi15S27Z1aL8i">
+<head data-page-node-id="ezEcsEEnZ78qUz4q6XMJWw">
+<meta charset="UTF-8" data-page-node-id="KpmYZw3gQxEyxMxzDHlZHH">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="22LK0bRGp4QRTE85wvsFBT">
+<title>谭成义碳水渐降 · 减脂计划计算器</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1420; --card:#1a2130; --card2:#212a3d; --line:#2e3950;
+    --txt:#e8edf6; --sub:#8b97ad;
+    --red:#ff5d5d; --orange:#ffb454; --green:#3ddc84; --blue:#4d9fff; --purple:#b07cff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:20px;max-width:900px;margin:0 auto}
+  h1{font-size:22px;margin-bottom:4px}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--card2);color:var(--sub);font-weight:normal}
+  /* tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .tab{flex:1;min-width:150px;text-align:center;padding:11px 10px;border-radius:10px;background:var(--card);border:1px solid var(--line);color:var(--sub);cursor:pointer;font-size:14px;font-weight:600;transition:.15s}
+  .tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  label{display:block;font-size:12px;color:var(--sub);margin-bottom:5px}
+  input,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:10px 12px;font-size:15px;outline:none}
+  input:focus,select:focus{border-color:var(--blue)}
+  button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:var(--card2);color:var(--sub);font-weight:normal}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:6px}
+  .stat{background:var(--card2);border-radius:10px;padding:12px;text-align:center}
+  .stat .v{font-size:24px;font-weight:700}
+  .stat .k{font-size:12px;color:var(--sub);margin-top:3px}
+  .c-carb{color:var(--orange)} .c-prot{color:var(--purple)} .c-fat{color:var(--green)} .c-kcal{color:var(--blue)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th{color:var(--sub);font-weight:500;text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 6px;text-align:right;border-bottom:1px solid rgba(46,57,80,.5)}
+  th:first-child,td:first-child{text-align:left}
+  tr.hc td{background:rgba(255,93,93,.07);color:var(--red);font-weight:600}
+  tr.hc td:first-child{border-left:3px solid var(--red)}
+  .warn{background:rgba(255,93,93,.1);border:1px solid rgba(255,93,93,.4);color:var(--red);border-radius:10px;padding:12px 14px;font-size:13px;margin-top:12px;display:none}
+  .ok{background:rgba(61,220,132,.08);border:1px solid rgba(61,220,132,.35);color:var(--green);border-radius:10px;padding:12px 14px;font-size:13px;margin-top:12px;display:none}
+  .chart-box{height:300px;margin-top:10px}
+  .disclaim{color:var(--sub);font-size:12px;text-align:center;margin:24px 0 8px;line-height:1.7}
+  .rule{font-size:12px;color:var(--sub);line-height:1.9;margin-top:10px;background:var(--card2);border-radius:10px;padding:12px 14px}
+  .rule b{color:var(--txt)}
+  /* 动态调整流程 */
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 12px}
+  .flow .step{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px}
+  .flow .arr{color:var(--sub);font-size:16px}
+  .branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .branch{background:var(--card2);border-radius:10px;padding:12px;font-size:13px;border:1px solid var(--line)}
+  .branch b{display:block;margin-bottom:5px}
+  .branch.up b{color:var(--green)} .branch.down b{color:var(--orange)} .branch.stay b{color:var(--red)}
+  /* 食谱 */
+  .meal{background:var(--card2);border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;line-height:1.9}
+  .meal b{color:var(--blue);font-size:14px}
+  .meal .swap{color:var(--sub);font-size:12px}
+  .meal .amt{margin-top:6px;font-weight:600;color:var(--orange);font-size:13.5px;line-height:1.8}
+  .meal .mac{color:var(--sub);font-size:12px;margin-top:4px;font-family:ui-monospace,Menlo,monospace}
+  #mealSum{margin-top:12px}
+  .hidden{display:none}
+</style>
+</head>
+<body data-page-node-id="ccR4gXnePBq8B293o1cn0W">
+
+<h1 data-page-node-id="zqikVwdzf67lgcRBgkGWVt">🥩 谭成义碳水渐降 · 减脂计划计算器</h1>
+<div class="sub" data-page-node-id="a2TC5nSSLASUEfWOxTHyLt">动态三个月版 / 冲刺40天固定版 / 经典3倍版 —— 输入身体数据，自动生成每日营养目标与执行计划</div>
+
+<div class="tabs" data-page-node-id="KpQLW35EHRFkZtmFVOsmD5">
+  <div class="tab active" data-mode="dynamic" onclick="setMode('dynamic')" data-page-node-id="2fo3I7Gr19uw5yhIknfmre">📅 动态三个月版<br data-page-node-id="nt42812Kv9VT6IguWJ4eUJ"><span style="font-size:11px;font-weight:400" data-page-node-id="QrwDzeQfF5dFP4QP8wtViY">按运动量分档 + 晨重反馈调整</span></div>
+  <div class="tab" data-mode="sprint" onclick="setMode('sprint')" data-page-node-id="1Vh3W7zAvCkDCNFhuAcEm5">🔥 冲刺40天固定版<br data-page-node-id="skw3ECyzWNcZnXEVwj7aoT"><span style="font-size:11px;font-weight:400" data-page-node-id="S5cd7BbEjVGPawZLOWi8Ab">固定阶段表 + 3个高碳日</span></div>
+  <div class="tab" data-mode="classic" onclick="setMode('classic')" data-page-node-id="YvxEpMN8aF8PhMJvJd31OF">⚡ 经典3倍版<br data-page-node-id="UacXG9VgBGaOeVAU7SUB2W"><span style="font-size:11px;font-weight:400" data-page-node-id="0x5REdkIIox8c7si85gBie">男3倍 / 女2.5倍 + 8周渐降</span></div>
+</div>
+
+<!-- 输入 -->
+<div class="card" data-page-node-id="qT9WrZW2CBHRBNm9ibHxhN">
+  <h2 data-page-node-id="bSlpmrB7EZjwKKfhnswXWF">① 基本信息</h2>
+  <div class="grid" data-page-node-id="FlyWtshKn1CCKfReZqRljA">
+    <div data-page-node-id="dIsaPkQPbgfGgA2Luo9uk5">
+      <label data-page-node-id="cJ7nsFGh5gci0VAcgHj7ph">性别</label>
+      <select id="gender" onchange="onGenderChange()" data-page-node-id="oqDXhN26HuX4OWT2SQpJ8E"><option value="male" data-page-node-id="WhZTuC1OGJH6nGsZ2HPQbz">男</option><option value="female" data-page-node-id="o1VxGa60hn9HwBKDqqDGlA">女</option></select>
+    </div>
+    <div data-page-node-id="EBpHxFMUass3wePNcdGKDJ">
+      <label data-page-node-id="tzbhx5syNUNal0bOFKz0xs">年龄（岁）</label>
+      <input type="number" id="age" value="27" min="10" max="90" data-page-node-id="ywfAucr03ytCyIzFsFB53U">
+    </div>
+    <div data-page-node-id="i2ooR4LczuoaKxEYmNT3cH">
+      <label data-page-node-id="n1TyKaE23duyEQS5ZveBnd">身高（cm）</label>
+      <input type="number" id="height" value="170" min="120" max="230" data-page-node-id="QLqEwmu3kW5qLaoneQjqjq">
+    </div>
+    <div data-page-node-id="egMHJgF8XrbH88lGWZTFh5">
+      <label data-page-node-id="bOKHbxcR2WxkWYkOTGetbb">体重（kg）</label>
+      <input type="number" id="weight" value="66" min="30" max="200" step="0.5" data-page-node-id="jqCAk9wFaDDzV9lotn3mbz">
+    </div>
+    <div data-page-node-id="M550Id7DBrFLxp9jUiCcyD">
+      <label data-page-node-id="NonJY4EIuQ5cS3Il7kyBub">每周运动量</label>
+      <select id="train" data-page-node-id="soTNp3aoTNCn2LdXH7ePtP">
+        <option value="1.2|none" data-page-node-id="Re5ksgAQ3WUhpyKkk4GqGI">不运动 / 久坐</option>
+        <option value="1.375|2-3" selected data-page-node-id="JgsS7hDIH4Ps8zFCrKz8XF">每周 2~3 小时（约2次）</option>
+        <option value="1.55|4-5" data-page-node-id="UrrIYdlvB62gBl1nx69Dum">每周 4~5 小时（约3次）</option>
+        <option value="1.725|6-7" data-page-node-id="JISwQ5xCGsdwb3S6Mm8tdF">每周 6~7 小时（约4次）</option>
+        <option value="1.9|8-9" data-page-node-id="Gfn2VMOludHXhL9HIjlNc8">每周 8~9 小时（约5次）</option>
+      </select>
+    </div>
+  </div>
+  <button onclick="calc()" data-page-node-id="kFlzX56zSaWxqeZHcpIHqT">生成计划</button>
+  <button class="ghost" onclick="resetForm()" data-page-node-id="sH8THX79naz9EoVpGvcpii">重置</button>
+</div>
+
+<div id="result" style="display:none" data-page-node-id="zueMoI6Ot1A8BHQuTTbNnG">
+
+  <div class="card" data-page-node-id="q2kYtxhINFHfQvMUO0R1Qa">
+    <h2 data-page-node-id="g0dQxb69N3BVzuIN18Fuky">② 代谢参考 <span class="tag" data-page-node-id="dReUyIXntlNA6PzefHlcCu">Mifflin-St Jeor</span></h2>
+    <div class="stats" data-page-node-id="vSRNRGB7bWAq7gOoVGWISg">
+      <div class="stat" data-page-node-id="GZlLaA0AGZQCL1wutdowFo"><div class="v c-kcal" id="vBmr" data-page-node-id="m7r06ODZnMjB0iGa0DjXWd">-</div><div class="k" data-page-node-id="UcARUA69dqQsRrpEBSFOR7">基础代谢 BMR</div></div>
+      <div class="stat" data-page-node-id="68OnpshElrPpIBInkpSVWJ"><div class="v c-kcal" id="vTdee" data-page-node-id="a23qYRrB8cm2HGRKIYVwDW">-</div><div class="k" data-page-node-id="dk4X7DrF1j1uOLrrJpHqzY">每日消耗 TDEE</div></div>
+      <div class="stat" data-page-node-id="9leU78OwpsacJPCtuW0D24"><div class="v c-orange" id="vKcal" data-page-node-id="0QcCFxy3Kv2pv8JKCrCjjC">-</div><div class="k" data-page-node-id="nN1uWF4iYKFJrezBc5gWp1">计划首日摄入</div></div>
+      <div class="stat" data-page-node-id="dlwgMrISFcScbMfQXnh7Nm"><div class="v c-green" id="vDeficit" data-page-node-id="SXM1ocNGaC795NLoOVXG3h">-</div><div class="k" data-page-node-id="z06EaOhNDaQqua66BwQ7b0">首日热量缺口</div></div>
+    </div>
+  </div>
+
+  <!-- ===== 动态三个月版 ===== -->
+  <div class="mode" id="mode-dynamic" data-page-node-id="iUoGSKxLySrQwG7vJaMiKm">
+
+    <div class="card" data-page-node-id="RIK9L1CX7noq53xCRvUVdC">
+      <h2 data-page-node-id="cM5umNPGJa65j3FJSvKU4k">③ 每日营养目标 <span class="tag" id="dynTag" data-page-node-id="pxTCEcBgWcV7RBslVcN03V">分档系数</span></h2>
+      <div class="stats" data-page-node-id="C1hDWp2OgMbz139B23phrr">
+        <div class="stat" data-page-node-id="ec2WJWCRlejE7Ia1YbjXEe"><div class="v c-carb" id="dCarb" data-page-node-id="pl0asPtZbmouLQf8OXqLJo">-</div><div class="k" data-page-node-id="fvVFzuivtuhFQrwhA8OI3Y">碳水 g / <span id="dCarbMul" data-page-node-id="6Z3Cu3ZhAmYKI5CQXJ56q7">-</span>×体重</div></div>
+        <div class="stat" data-page-node-id="dGT6tKiDUi1h8mlTR13fui"><div class="v c-prot" id="dProt" data-page-node-id="AP457YYU5QRjXwkMwjmlbU">-</div><div class="k" data-page-node-id="7sLkpRX7Pxe4m0AYvGXz3O">蛋白质 g / <span id="dProtMul" data-page-node-id="WX2m0WEZ8G8q2w35Nox8ak">-</span>×体重</div></div>
+        <div class="stat" data-page-node-id="aU68JEGPH8XyuBvwsc5Q2r"><div class="v c-fat" id="dFat" data-page-node-id="xTAOH0l3xj5kshhrPzDtHI">-</div><div class="k" data-page-node-id="Oq79liAvUBcpNNbP8I3PUa">脂肪 g / <span id="dFatMul" data-page-node-id="se9M2BokUdfZJAz3ktvhT0">-</span>×体重</div></div>
+        <div class="stat" data-page-node-id="JtrxVhqtmnZ1xZ6T1nPwLl"><div class="v c-kcal" id="dKcal" data-page-node-id="mYBNFm0AIRMgBUWZ2XLDxn">-</div><div class="k" data-page-node-id="5Pt7kxe1ugq726NkC1ogCW">合计大卡</div></div>
+      </div>
+      <div class="rule" id="dynRule" data-page-node-id="Y10aCuPyYm3h2SBU9mYKai"></div>
+    </div>
+
+    <div class="card" data-page-node-id="jjKS2WIZeR5OeB5XMBPpzu">
+      <h2 data-page-node-id="ROz4e1VgYo6VZ7C84Ybiwe">④ 执行与动态调整 <span class="tag" data-page-node-id="b6TCtqZYcgCWK3vDaIFe9F">先按运动量定起点，再用 7~10 天反馈校准</span></h2>
+      <div class="flow" data-page-node-id="2zCJtVems7ovbeD6H3ibLU">
+        <div class="step" data-page-node-id="fHOiX6fgPzw1GemNooi3CC">按分档算起始目标</div><div class="arr" data-page-node-id="4QhbMdsFonzZRm0MCP22KE">→</div>
+        <div class="step" data-page-node-id="hYJyYPIl0amNpnQHArQeCj">稳定执行 7~10 天<br data-page-node-id="EBBOcBapdUskNdLssJgMlu"><span style="color:var(--sub);font-size:11px" data-page-node-id="h9xpmOt6sT0DDfKrrKsJAo">不要两三天就改</span></div><div class="arr" data-page-node-id="OMbZl5JvReRVZ5WUBPapkU">→</div>
+        <div class="step" data-page-node-id="6sYFLScDfaNtBV1UzK3ErY">记录晨重，10 天拍对比图</div><div class="arr" data-page-node-id="bLjrG5vl5Fmrd1Hh6ZslrM">→</div>
+      </div>
+      <div class="branches" data-page-node-id="AFmEolZNCe0CR2JmV3g0xJ">
+        <div class="branch stay" data-page-node-id="cDWn8YzsE5golPlQDyMO24"><b data-page-node-id="8s9eiXRDVclySWoU2NcjVT">⬇️ 保持不动</b>下调碳水</div>
+        <div class="branch down" data-page-node-id="VezbLysEbuZ2As6lF1KGcv"><b data-page-node-id="TNQC3Hd9UyoAhSfEpEHFus">📉 掉得过慢</b>下调碳水</div>
+        <div class="branch up" data-page-node-id="lvoVdQ2dfOLWYpInKMUCWk"><b data-page-node-id="yf1UpqAS3z5945ToynNs7A">📈 掉得过快</b>适当加碳水</div>
+      </div>
+      <div class="rule" style="margin-top:12px" data-page-node-id="u3q6c88DwtdAl1WrCHCUX0">
+        <b data-page-node-id="6yemtt8Svtl9HqKDCjA37Q">最关键的一步：</b>体重从 85kg 变成 82kg 后，用 82kg 重新套原来的分档系数。不要只吃两三天就改，也不要把三个月提前写成一张固定表。
+      </div>
+    </div>
+
+    <div class="card" data-page-node-id="tWuF23y1hG9ZXNuS7fbsCB">
+      <h2 data-page-node-id="R6FcVzFQx6aA6vhK6L5VFl">⑤ 饮食执行要点 <span class="tag" data-page-node-id="F2YaxR1mpgvDEyozMp0QPK">食谱在下方自动生成</span></h2>
+      <div class="rule" data-page-node-id="1vGGrOw9vVWtdiqkrukWRd">
+        <b data-page-node-id="jiguTI9HSzw7sUsPxOq15i">称重注意</b>：米饭写的是<b data-page-node-id="tLiZN9xivNUuuwxjqdEm0V">生米</b>重量，不是熟米饭重量；肉类按可食部分计量，鸡腿肉需去皮、去骨。<br data-page-node-id="7VwurAhZCb64kKv8WyiBGK">
+        <b data-page-node-id="iMp8C8J7jIEMP4abbSlGFG">替换怎么做</b>：同一餐先在同一类食物中替换，换食物后需按实际营养成分重新核对，不是任何食材都能等量替换。<br data-page-node-id="NElQfMfFpMbUaaJMDjuXdC">
+        <b data-page-node-id="yfIYTFaYz6wsQEVKABruWM">固定小料</b>：南瓜籽、坚果、蓝莓等实际带热量，记录时统一计入（下方食谱已计入）。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== 冲刺40天固定版 ===== -->
+  <div class="mode hidden" id="mode-sprint" data-page-node-id="6LldYQyHCDHqj9UDEQf4Oa">
+    <div class="card" data-page-node-id="zuMicq0yqIvoUL2sAltFMA">
+      <h2 data-page-node-id="ndPnRMdTQSDZFPH9IFUtd3">③ 40 天固定阶段表 <span class="tag" data-page-node-id="taIpTHRCGPSWDG8iUAnkmx">固定阶段递进 + 3 个高碳日，每天按 体重×系数 计算</span></h2>
+      <table id="sprintTable" data-page-node-id="XwKlYmnwuju2GD1D01lIhQ">
+        <thead data-page-node-id="byS8QOcsDQNFvzXqZcuBOD"><tr data-page-node-id="hZXYqCsHI5JbsoBdxzpkzv"><th data-page-node-id="Dkd9HfcBirer6AnXQ6xoM9">阶段</th><th data-page-node-id="m1IseaVeDGlzRGNpFQQ7Eo">碳水×体重</th><th data-page-node-id="N1AryfjkCpIAXVwHJ7SmLy">蛋白质×体重</th><th data-page-node-id="PlSnWsf7OSOshfO9cKVK2G">脂肪×体重</th><th data-page-node-id="K8HqXzjNLuIi5FOKmPJseg">碳水 g</th><th data-page-node-id="31P1nipjaaVmrBZhnlvnPB">蛋白质 g</th><th data-page-node-id="ID3YBg7qjEHiSIP1KHtYCS">脂肪 g</th><th data-page-node-id="yngjiBOPCndYVAv32gzWHO">大卡</th></tr></thead>
+        <tbody data-page-node-id="bQa3HhG4v4XvAOqb4WBoUc"></tbody>
+      </table>
+      <div class="rule" data-page-node-id="b775t0kklm8LMNet5wz85n">红色行为<b data-page-node-id="RHYhMR0kAWiv6EJAgjPAFo">固定高碳日</b>，它不是"放纵日"，只是阶段表中的营养日变化；实际食物仍需按克数记录。前 11 天建立执行基线 → 第 12 天第一次高碳 → 阶段逐步降碳同时提高蛋白 → 第 24 / 36 天再次安排高碳。</div>
+    </div>
+    <div class="card" data-page-node-id="HaCRzHD29OFTc4EkfIBKzn">
+      <h2 data-page-node-id="igCjXudjHucLA0OgJWg1HE">④ 40 天碳水曲线 <span class="tag" data-page-node-id="OchR5EYzaT50AwWLmUufnG">红色点为高碳日</span></h2>
+      <div class="chart-box" data-page-node-id="5gAE4Y4uhgfEZ8gGTxPgDV"><canvas id="sprintChart" data-page-node-id="vqk4qgk3UXDe5cASTDpkG6"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ===== 经典3倍版 ===== -->
+  <div class="mode hidden" id="mode-classic" data-page-node-id="Ah3rAra39cbcfbuAgPI5yX">
+    <div class="card" data-page-node-id="ZB9JNh9FoXaWaUgx9FamPe">
+      <h2 data-page-node-id="shCXiAqnHBhYwDZ83eNlwK">③ 三大营养素 <span class="tag" id="ruleTag" data-page-node-id="6DJSuI3UPBCfaUWxmE6XxY">3倍碳水规则</span></h2>
+      <div class="stats" data-page-node-id="E1xO9J1seo635VFOP1LbGQ">
+        <div class="stat" data-page-node-id="IF3GLtSgC6Va2T6BMstjgU"><div class="v c-carb" id="vCarb" data-page-node-id="ALSeamb7xqvGmG0CrFCNci">-</div><div class="k" data-page-node-id="tg1MPacfBCOjm2obHt8RgQ">碳水 g</div></div>
+        <div class="stat" data-page-node-id="29AXP5DZcxHu3ceH0MWKlV"><div class="v c-prot" id="vProt" data-page-node-id="0roFneZS5jd3KCZHASTHF2">-</div><div class="k" data-page-node-id="katFgak35qziu4SEro4sGT">蛋白质 g</div></div>
+        <div class="stat" data-page-node-id="ZksftTRuNGRe5u0TOSjPaJ"><div class="v c-fat" id="vFat" data-page-node-id="PJdlZBt31hvoQn4HXWlxIK">-</div><div class="k" data-page-node-id="gnfsPXSzP5RZtAcw9nZa9n">脂肪 g</div></div>
+        <div class="stat" data-page-node-id="ksZBUs3sTlyD33Hg4C3RsE"><div class="v c-kcal" id="vTotal" data-page-node-id="9piXnHkL2zs3xmzWS7FxXo">-</div><div class="k" data-page-node-id="70fWPRqrajFrd0tc8z96IS">合计大卡</div></div>
+      </div>
+      <div class="rule" id="ruleNote" data-page-node-id="BJSNAay3SWxgduRqh2Hsqv"></div>
+    </div>
+    <div class="card" data-page-node-id="EB1TL5fbX1Een0Xb2n6Fi1">
+      <h2 data-page-node-id="l4vN7qO8F0B1Joc6F2Ud30">④ 8 周碳水渐降计划 <span class="tag" data-page-node-id="hj9mDYeDr3shRXREUvtWiL">每周 -0.25 g/kg，到下限后维持</span></h2>
+      <table id="planTable" data-page-node-id="YCGl5BHoBs8I4KtXYSUJHP">
+        <thead data-page-node-id="wVmzVewgzOD64993aeaJqa"><tr data-page-node-id="Gwz5Hj2y3DY7DvJSwQS9CD"><th data-page-node-id="xIoLRar9TRqPclGCNdvagO">周</th><th data-page-node-id="fG0Jv0fVYRvAHHnJRTeH7s">碳水系数</th><th data-page-node-id="jjOoe3uVIWkBltMQseEjTo">碳水 g</th><th data-page-node-id="B4jYOXN0ZeyKmKZoCn6Pdn">总热量</th><th data-page-node-id="HP7YEr2cL5fvhAcJq6fHP2">缺口 vs TDEE</th><th data-page-node-id="9rHMWk4nVVS4M3f05S2dMv">状态</th></tr></thead>
+        <tbody data-page-node-id="zWtWkBtKJ3GCDl8DBNoXIH"></tbody>
+      </table>
+      <div class="chart-box" data-page-node-id="HpiNLSNpJhvV6BCr7uUPVF"><canvas id="chart" data-page-node-id="vFHqaJPzU2Acoxum5jSG1B"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ===== 动态食谱（按当前目标反解） ===== -->
+  <div class="card" id="recipeCard" data-page-node-id="5iKnfKge0D1ZoNUGamJ0VI">
+    <h2 data-page-node-id="jlTDMbHzgU8naH901xUvcy">🍽️ 一日食谱（按你的目标反解） <span class="tag" id="mealTag" data-page-node-id="s6IRI3BTLhg9H8NyesMgXz">-</span></h2>
+    <div class="grid" style="margin-bottom:14px" data-page-node-id="C7v3MAxnaGbqyhYT6edbJn">
+      <div id="phaseWrap" data-page-node-id="Jhqik75DWXjJi3hY6kEERM"><label data-page-node-id="N9q2xu0a8x8bXu63y7X26o">查看阶段</label><select id="fPhase" onchange="renderRecipe()" data-page-node-id="3DVOC8Amdj6eygmb4QuWXl"></select></div>
+      <div data-page-node-id="HlaHgH5jhotf1bZWj7saRr"><label data-page-node-id="YazwLE69OxlzABSEvSU0uM">早餐主食</label><select id="fB" onchange="renderRecipe()" data-page-node-id="akLctpzlo49coq0PLmxSTR"></select></div>
+      <div data-page-node-id="bddDnblBR2AUEuIqiF1q1x"><label data-page-node-id="hvmpyE7iepej3hgrrlAHgH">午餐主食</label><select id="fL" onchange="renderRecipe()" data-page-node-id="3YmBFeMM4uBCSW8Qnvcp6c"></select></div>
+      <div data-page-node-id="sUiZginkPEAO3S8oYzcAWl"><label data-page-node-id="7hCpZEM0hpEdj4YONtTZnb">午餐肉类</label><select id="fLm" onchange="renderRecipe()" data-page-node-id="BsTiejQfBPPw6euqUW5Mvd"></select></div>
+      <div data-page-node-id="1U7L7MW1dDBhACXsQ6V0TP"><label data-page-node-id="u9uAjFPzEC9bTdPzBZP2rf">晚餐主食</label><select id="fS" onchange="renderRecipe()" data-page-node-id="oXVlhBMFozhxouEaHaNIqC"></select></div>
+      <div><label>晚餐肉类</label><select id="fDm" onchange="renderRecipe()"></select></div>
+      <div><label>晚餐加餐/零食</label><select id="fN" onchange="renderRecipe()"></select></div>
+    </div>
+    <div class="meal" data-page-node-id="uwR4jNsACbarqZY5wnty5P"><b data-page-node-id="i25V5Rc2OhwSmnH09gMA1x">🌅 早餐</b><div class="amt" id="mBreak" data-page-node-id="NcckNeJdoLG14phx20hnG1"></div><div class="mac" id="mBmac" data-page-node-id="nM1Nqud5RKEa4Q6COiv1VX"></div>
+      <div class="swap" data-page-node-id="eABsD8Wn0yncbYQzJWhfID">燕麦作早餐主食；鸡蛋供蛋白和脂肪；南瓜籽、蓝莓补充食物多样性</div></div>
+    <div class="meal" data-page-node-id="jlp6QGNS2l8AtJ3FhQhlTA"><b data-page-node-id="K6R46DqGAbWCFMIb6kCAUR">☀️ 午餐</b><div class="amt" id="mLunch" data-page-node-id="kyd9oEPGijGb4H8Giynwlp"></div><div class="mac" id="mLmac" data-page-node-id="B3NtQbMbK3tyaf2MBXHKjb"></div>
+      <div class="swap" data-page-node-id="A0V3pFFpsPryNraw6Xlv2n">蔬菜可选：西兰花、羽衣甘蓝、莴笋、菠菜、菌菇类等</div></div>
+    <div class="meal" data-page-node-id="OGlmMPHgJMt6FyAyvKa4Wq"><b data-page-node-id="EVQejRoi9Lt9o4BsfWGBFt">🌙 晚餐</b><div class="amt" id="mDinner" data-page-node-id="axC62S4IlM95wI0EI9Cll0"></div><div class="mac" id="mDmac" data-page-node-id="cU61bgGlDtnhHsFOlB4ssc"></div>
+      <div class="swap" data-page-node-id="WxmHex3uvuPMIfBDG9J0Bn">主食可选：红薯、紫薯、土豆、贝贝南瓜，也可选生白米/生糙米（按生重称）；加餐可选坚果/鹰嘴豆/土豆/玉米粒，吃零食会自动从晚餐主食里扣碳水</div></div>
+    <table id="mealSum" data-page-node-id="RfVwNFdQf3wf8j6UDld3mB">
+      <thead data-page-node-id="EwT5M7D0JPnBkIDQO6RWLA"><tr data-page-node-id="f4w1Uk1oDLOtdbVjOstPss"><th data-page-node-id="DuD0GGcLOqFgNwCOsPSUtY">项目</th><th data-page-node-id="fICx8lBfD2G9jBDZjktS8J">目标</th><th data-page-node-id="BIdpKSWp3tfVZitvA9Ms0w">食谱实际</th><th data-page-node-id="gYY9pmywRMnm3I8gQKwvcy">偏差</th></tr></thead>
+      <tbody data-page-node-id="f19GEyhS05rfjscT4zRPyU"></tbody>
+    </table>
+    <div class="warn" id="mealWarn" style="display:none" data-page-node-id="N4grA48VWZr45bl1rvxeVF"></div>
+    <div class="rule" data-page-node-id="H4ZDHCGovXk0ft8fOO3pGo">克数均为<b data-page-node-id="EP73zuh4qeHg6rcv7BkiiD">生重</b>；油按烹调油计。目标碳水过低时主食会算到 0g，工具会提示。<br>
+      <b>零食碳水换算</b>（都算在主食额度里）：生土豆 100g ≈ 碳水 17g ≈ 生米 22g；甜玉米粒（鲜）100g ≈ 碳水 19g ≈ 生米 24g；鹰嘴豆（干）30g ≈ 碳水 18g ≈ 生米 23g。吃了就像"少吃相应克数的生米"。</div>
+  </div>
+
+  <div class="warn" id="warnBox" data-page-node-id="Xzms1EMS0gqaFZK6yg7SKk"></div>
+  <div class="ok" id="okBox" data-page-node-id="Ok9NWIppDKs0agfFo5VT5i"></div>
+</div>
+
+<div class="disclaim" data-page-node-id="q3TtevctBQygrvIx1SKWpp">
+  本工具仅为公式计算参考，不构成医疗建议。经期/孕期/糖尿病等特殊人群请遵医嘱。<br data-page-node-id="nH3Fk4PwSuy3pyaoK2OorE">
+  数据保存在本机浏览器（localStorage），不上传任何服务器。
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let MODE = 'dynamic';
+
+/* 默认身体数据（切换性别自动套用） */
+const DEFAULTS = {
+  male:   {age:27, h:170, w:66},
+  female: {age:18, h:164, w:54}
+};
+function onGenderChange(){
+  const d = DEFAULTS[$('gender').value];
+  $('age').value = d.age; $('height').value = d.h; $('weight').value = d.w;
+  calc();
+}
+
+function setMode(m){
+  MODE = m;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===m));
+  document.querySelectorAll('.mode').forEach(d=>d.classList.add('hidden'));
+  $('mode-'+m).classList.remove('hidden');
+  calc();
+}
+
+/* ================= 动态三个月版分档系数 ================= */
+const DYN = {
+  male: {
+    '2-3':{c:2.2,p:1.4,f:0.8}, '4-5':{c:2.5,p:1.6,f:0.9},
+    '6-7':{c:3.0,p:1.7,f:1.0}, '8-9':{c:3.5,p:1.8,f:1.0}
+  },
+  female: {
+    '2-3':{c:2.0,p:1.4,f:1.0}, '4-5':{c:2.2,p:1.6,f:1.05},
+    '6-7':{c:2.5,p:1.7,f:1.1}, '8-9':{c:3.0,p:1.8,f:1.15}
+  }
+};
+const DYN_DESC = {'2-3':'约2次','4-5':'约3次','6-7':'约4次','8-9':'约5次'};
+
+/* ================= 冲刺40天固定版阶段表 ================= */
+function sprintPhases(g){
+  const fm = g==='male';
+  return [
+    {name:'第1~11天',        days:11, c:3.0, p:1.4, f:fm?0.4:0.5},
+    {name:'第12天｜高碳',    days:1,  c:5.0, p:1.0, f:fm?0.4:0.5, hc:true},
+    {name:'第13~23天',       days:11, c:2.5, p:1.6, f:fm?0.4:0.6},
+    {name:'第24天｜高碳',    days:1,  c:6.0, p:1.2, f:fm?0.5:0.6, hc:true},
+    {name:'第25~35天',       days:11, c:2.0, p:1.8, f:fm?0.5:0.6},
+    {name:'第36天｜高碳',    days:1,  c:6.0, p:1.2, f:fm?0.5:0.6, hc:true},
+    {name:'第37~40天',       days:4,  c:2.0, p:1.8, f:fm?0.5:0.6}
+  ];
+}
+
+/* ================= 食物营养库（每100g生重：碳水/蛋白/脂肪 g） ================= */
+const FOODS = {
+  oat:        {n:'燕麦',            m:[66, 13, 7]},
+  brownrice:  {n:'生糙米',          m:[76, 7.5, 2.7]},
+  bread:      {n:'全麦面包',        m:[45, 10, 3.5]},
+  rice:       {n:'生白米',          m:[78, 7, 0.9]},
+  sweetpotato:{n:'红薯',            m:[20, 1.6, 0.2]},
+  purple:     {n:'紫薯',            m:[24, 1.4, 0.2]},
+  potato:     {n:'土豆',            m:[17, 2, 0.2]},
+  pumpkin:    {n:'贝贝南瓜',        m:[10, 1.3, 0.2]},
+  chicken:    {n:'鸡胸肉（去皮）',  m:[0, 22, 2]},
+  beef:       {n:'牛里脊',          m:[0, 21, 4]},
+  pork:       {n:'猪瘦肉（里脊）',  m:[0, 20, 6.2]},
+  fish:       {n:'龙利鱼',          m:[0, 18, 1.5]},
+  shrimp:     {n:'虾仁',            m:[0, 18, 1]},
+  tofu:       {n:'老豆腐',          m:[3, 12, 7]}
+};
+const VEG  = {c:5,  p:1.5, f:0.3};   // 每100g 蔬菜
+const BERRY= {c:14, p:0.7, f:0.3};   // 每100g 蓝莓
+const SEED = {c:12, p:30,  f:49};    // 每100g 南瓜籽
+const NUT  = {c:20, p:15,  f:55};    // 每100g 混合坚果
+const CHICK= {c:61, p:20,  f:6};     // 每100g 鹰嘴豆（干）
+const CORN = {c:19, p:3.3, f:1.2};   // 每100g 甜玉米粒（鲜）
+const POT  = {c:17, p:2,   f:0.2};   // 每100g 土豆
+const EGG  = {c:1.1, p:6.3, f:5.3};  // 每个全蛋≈50g
+/* 晚餐加餐/零食：默认克数 + 每100g营养；fatty=高脂类，脂肪紧张时优先减 */
+const ADDONS = {
+  nut:     {n:'混合坚果',      g:20, m:NUT,   fatty:true},
+  seed:    {n:'南瓜籽',        g:20, m:SEED,  fatty:true},
+  chickpea:{n:'鹰嘴豆（干）',  g:30, m:CHICK, fatty:false},
+  potato:  {n:'土豆（生）',    g:100, m:POT,  fatty:false},
+  corn:    {n:'甜玉米粒（鲜）', g:100, m:CORN, fatty:false}
+};
+
+let CUR = null, CUR_W = 0, SPRINT_LIST = null;
+
+function r5(x){ return Math.max(0, Math.round(x/5)*5); }
+function r10(x){ return Math.max(0, Math.round(x/10)*10); }
+
+/* 按目标碳水/蛋白/脂肪反解三餐克数 */
+function buildRecipe(C, P, F, o){
+  const warn = [];
+  const vegG = 250, vegC = vegG/100*VEG.c, vegP = vegG/100*VEG.p, vegF = vegG/100*VEG.f;
+
+  /* --- 早餐：主食按碳水解，鸡蛋按蛋白解（脂肪由蛋+籽决定） --- */
+  const bSt = FOODS[o.b], berryG = 100, seedG = F < 45 ? 5 : 15;   // 脂肪目标很紧时自动减南瓜籽
+  const fxC = berryG/100*BERRY.c + seedG/100*SEED.c;
+  const fxP = berryG/100*BERRY.p + seedG/100*SEED.p;
+  const fxF = berryG/100*BERRY.f + seedG/100*SEED.f;
+  let oatG = r5((C*0.26 - fxC) / (bSt.m[0]/100));
+  if(oatG <= 0 && C*0.26 < fxC) warn.push('目标碳水偏低，早餐主食已算到 0g（蓝莓+南瓜籽本身就占碳水）。');
+  const oatC = oatG*bSt.m[0]/100, oatP = oatG*bSt.m[1]/100, oatF = oatG*bSt.m[2]/100;
+  let eggN = Math.max(1, Math.round(((P*0.28 - fxP - oatP)/EGG.p)*2)/2);
+  const bC = oatC + fxC, bP = oatP + fxP + eggN*EGG.p, bF = oatF + fxF + eggN*EGG.f;
+
+  /* --- 午餐：主食按碳水解，肉按蛋白解，缺口脂肪用烹调油补 --- */
+  const lSt = FOODS[o.l], lMt = FOODS[o.lm];
+  let riceG = r5((C*0.40 - vegC) / (lSt.m[0]/100));
+  if(riceG <= 0) warn.push('午餐主食算到 0g：碳水目标太低，建议提高碳水档位或减蔬菜量。');
+  const rC = riceG*lSt.m[0]/100, rP = riceG*lSt.m[1]/100, rF = riceG*lSt.m[2]/100;
+  let lMeatG = r10((P*0.36 - vegP - rP) / (lMt.m[1]/100));
+  const lmF = lMeatG*lMt.m[2]/100;
+  const fatPool = Math.max(0, F - bF);            // 剩余脂肪给午/晚
+  let lOil = Math.max(0, Math.round(fatPool*0.45 - vegF - rF - lmF));
+  const lC = rC + vegC + lMeatG*lMt.m[0]/100, lP = rP + vegP + lMeatG*lMt.m[1]/100;
+  const lF = rF + vegF + lmF + lOil;
+
+  /* --- 晚餐：薯类按碳水解，肉按蛋白解，油补脂肪（坚果固定，脂肪太紧则减半） --- */
+  const dSt = FOODS[o.s], dMt = FOODS[o.dm];
+  const ad = ADDONS[o.n] || ADDONS.nut;
+  // 脂肪目标很紧时只压高脂类加餐（坚果/籽）；土豆、玉米等高碳水零食保留
+  let nutsG = (F < 45 && ad.fatty) ? 0 : ad.g;
+  let dC, dP, dF, dOil, dMeatG, potatoG;
+  for(let attempt=0; attempt<4; attempt++){
+    const nC = nutsG/100*ad.m.c, nP = nutsG/100*ad.m.p, nF = nutsG/100*ad.m.f;
+    potatoG = r10((C*0.34 - vegC - nC) / (dSt.m[0]/100));
+    const pC = potatoG*dSt.m[0]/100, pP = potatoG*dSt.m[1]/100, pF = potatoG*dSt.m[2]/100;
+    dMeatG = r10((P*0.36 - vegP - nP - pP) / (dMt.m[1]/100));
+    const mF = dMeatG*dMt.m[2]/100;
+    dOil = Math.round(Math.max(0, F - bF - lF) - vegF - nF - pF - mF);
+    dC = pC + vegC + nC + dMeatG*dMt.m[0]/100;
+    dP = pP + vegP + nP + dMeatG*dMt.m[1]/100;
+    dF = pF + vegF + nF + mF + Math.max(0,dOil);
+    if(dOil >= 0 || nutsG === 0 || !ad.fatty) break;
+    nutsG = nutsG > 20 ? 15 : (nutsG > 10 ? 10 : 0);   // 脂肪已超 → 逐步减少高脂加餐
+  }
+  if(dOil < 0){ dOil = 0; warn.push('晚餐脂肪已达上限：当前碳水档位下脂肪偏高，加餐已减到最低，油为 0。'); }
+  if(potatoG <= 0) warn.push('晚餐碳水配额已被加餐/零食吃满，晚餐主食算到 0g：建议把零食挪到训练前后，或减少加餐量。');
+
+  return { oatG, eggN, seedG, berryG, riceG, lMeatG, lOil, potatoG, dMeatG, dOil, nutsG,
+           addonName: ad.n,
+           lSt, lMt, dSt, dMt, bSt,
+           b:{c:bC,p:bP,f:bF}, l:{c:lC,p:lP,f:lF}, d:{c:dC,p:dP,f:dF}, warn };
+}
+
+function renderRecipe(){
+  const card = $('recipeCard');
+  if(!CUR){ card.style.display='none'; return; }
+  card.style.display='block';
+
+  // 阶段选择（仅40天版）
+  const isSprint = MODE === 'sprint' && SPRINT_LIST;
+  $('phaseWrap').style.display = isSprint ? 'block' : 'none';
+  if(isSprint){
+    const sel = $('fPhase');
+    if(sel.options.length !== SPRINT_LIST.length){
+      const prev = sel.value;
+      sel.innerHTML = SPRINT_LIST.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+      sel.value = prev || '0';
+    }
+    const ph = SPRINT_LIST[+sel.value] || SPRINT_LIST[0];
+    CUR = {c: Math.round(CUR_W*ph.c), p: Math.round(CUR_W*ph.p), f: Math.round(CUR_W*ph.f),
+           tag: `80kg基准 ${ph.name}`, name: ph.name};
+  }
+
+  const o = {b:$('fB').value, l:$('fL').value, lm:$('fLm').value, s:$('fS').value, dm:$('fDm').value, n:$('fN').value};
+  const r = buildRecipe(CUR.c, CUR.p, CUR.f, o);
+  const C = CUR.c, P = CUR.p, F = CUR.f;
+
+  $('mealTag').textContent = `目标：碳水 ${C}g / 蛋白 ${P}g / 脂肪 ${F}g`;
+  $('mBreak').textContent = `${r.bSt.n} ${r.oatG}g ｜ 全蛋 ${r.eggN} 个 ｜ 南瓜籽 ${r.seedG}g ｜ 蓝莓 ${r.berryG}g`;
+  $('mLunch').textContent = `${r.lSt.n} ${r.riceG}g ｜ ${r.lMt.n} ${r.lMeatG}g ｜ 烹调油 ${r.lOil}g ｜ 蔬菜 ${vegTxt()}g`;
+  const adTxt = r.nutsG > 0 ? ` ｜ ${r.addonName} ${r.nutsG}g` : '';
+  $('mDinner').textContent = `${r.dSt.n} ${r.potatoG}g ｜ ${r.dMt.n} ${r.dMeatG}g ｜ 烹调油 ${r.dOil}g${adTxt} ｜ 蔬菜 ${vegTxt()}g`;
+
+  const mac = m => `碳水 ${Math.round(m.c)}g ｜ 蛋白 ${Math.round(m.p)}g ｜ 脂肪 ${Math.round(m.f)}g ｜ ${Math.round(m.c*4+m.p*4+m.f*9)} kcal`;
+  $('mBmac').textContent = mac(r.b);
+  $('mLmac').textContent = mac(r.l);
+  $('mDmac').textContent = mac(r.d);
+
+  const tot = {c:r.b.c+r.l.c+r.d.c, p:r.b.p+r.l.p+r.d.p, f:r.b.f+r.l.f+r.d.f};
+  const tk = tot.c*4+tot.p*4+tot.f*9, gk = C*4+P*4+F*9;
+  const row = (name, t, a, unit) => {
+    const d = Math.round(a - t), cls = Math.abs(d) <= Math.max(5, t*0.08) ? 'var(--green)' : 'var(--orange)';
+    return `<tr><td>${name}</td><td>${t}${unit}</td><td>${Math.round(a)}${unit}</td><td style="color:${cls}">${d>0?'+':''}${d}${unit}</td></tr>`;
+  };
+  $('mealSum').querySelector('tbody').innerHTML =
+    row('碳水', C, tot.c, 'g') + row('蛋白质', P, tot.p, 'g') + row('脂肪', F, tot.f, 'g') +
+    row('热量', gk, tk, ' kcal');
+
+  const mw = $('mealWarn');
+  const msgs = [...new Set(r.warn)];
+  if(Math.abs(tk-gk) > gk*0.06) msgs.push(`食谱热量与目标差 ${Math.round(tk-gk)} kcal，可在同餐内微调主食 5~10g 抹平。`);
+  mw.style.display = msgs.length ? 'block' : 'none';
+  mw.innerHTML = msgs.join('<br>');
+}
+function vegTxt(){ return '250'; }
+
+function calc(){
+  const g = $('gender').value;
+  const age = +$('age').value, h = +$('height').value, w = +$('weight').value;
+  const [act, hourBand] = $('train').value.split('|');
+  if(!age || !h || !w){ alert('请填写完整的年龄、身高、体重'); return; }
+  const A = +act;
+
+  // BMR / TDEE
+  const bmr = Math.round(10*w + 6.25*h - 5*age + (g==='male' ? 5 : -161));
+  const tdee = Math.round(bmr * A);
+
+  let firstKcal = 0;
+  const warns = [], oks = [];
+  const pushLine = k => { if(k < bmr) warns.push(`⚠️ 该日摄入低于基础代谢（${bmr} 大卡），长期如此伤代谢。`); };
+
+  /* ---- 动态三个月版 ---- */
+  if(MODE === 'dynamic'){
+    if(hourBand === 'none'){
+      CUR = null; SPRINT_LIST = null;
+      $('dCarb').textContent='-'; $('dProt').textContent='-'; $('dFat').textContent='-'; $('dKcal').textContent='-';
+      $('dynTag').textContent = '未选运动档：请选择每周运动量';
+      $('dynRule').innerHTML = '该体系按<b>每周运动小时数</b>分档，请先选择 2~3 / 4~5 / 6~7 / 8~9 小时档位。';
+    }else{
+      const k = DYN[g][hourBand];
+      const cg = Math.round(w*k.c), pg = Math.round(w*k.p), fg = Math.round(w*k.f);
+      const kcal = cg*4 + pg*4 + fg*9;
+      firstKcal = kcal;
+      $('dynTag').textContent = `${g==='male'?'男生':'女生'} ｜ 每周${hourBand.replace('-','~')}小时（${DYN_DESC[hourBand]}）`;
+      $('dCarb').textContent = cg; $('dCarbMul').textContent = k.c;
+      $('dProt').textContent = pg; $('dProtMul').textContent = k.p;
+      $('dFat').textContent = fg;  $('dFatMul').textContent = k.f;
+      $('dKcal').textContent = kcal;
+      $('vKcal').textContent = kcal;
+      $('dynRule').innerHTML = `<b>计算口径</b>：碳水 = ${w}kg × ${k.c} = ${cg}g；蛋白质 = ${w}kg × ${k.p} = ${pg}g；脂肪 = ${w}kg × ${k.f} = ${fg}g。` +
+        (g==='female' ? '女生版系数已内含"脂肪建议范围略高"的修正（1.0~1.2 档）。' : '示例：85kg 男生、每周运动 2~3 小时 → 碳水 187g、蛋白 119g、脂肪 68g。');
+      // 食谱目标 = 本档目标
+      CUR = {c:cg, p:pg, f:fg, tag:`动态版 · 每周${hourBand}小时`};
+      CUR_W = w; SPRINT_LIST = null;
+      if(kcal < bmr) warns.push(`⚠️ 本档摄入（${kcal} 大卡）低于基础代谢（${bmr} 大卡），如出现头晕乏力、掉发、月经紊乱（女）请立即上调档位。`);
+      if(g==='female' && kcal < 1200) warns.push('🚫 红线：女生全天热量别低于 1200 大卡！');
+      if(tdee - kcal > 1000) warns.push(`⚠️ 缺口达 ${tdee-kcal} 大卡，偏大。此体系不按缺口定档，若掉重过快（两周>体重的4%）请适当加碳水。`);
+    }
+  }
+
+  /* ---- 冲刺40天固定版 ---- */
+  if(MODE === 'sprint'){
+    const phases = sprintPhases(g);
+    SPRINT_LIST = phases; CUR_W = w;
+    CUR = {c:Math.round(w*phases[0].c), p:Math.round(w*phases[0].p), f:Math.round(w*phases[0].f)};
+    $('sprintTable').querySelector('tbody').innerHTML = phases.map(ph=>{
+      const cg=Math.round(w*ph.c), pg=Math.round(w*ph.p), fg=Math.round(w*ph.f);
+      const kc = cg*4+pg*4+fg*9;
+      if(ph.hc || ph === phases[0]) firstKcal = Math.max(firstKcal, ph===phases[0]?kc:firstKcal);
+      return `<tr class="${ph.hc?'hc':''}"><td>${ph.name}</td><td>${ph.c}</td><td>${ph.p}</td><td>${ph.f}</td><td>${cg}</td><td>${pg}</td><td>${fg}</td><td>${kc}</td></tr>`;
+    }).join('');
+    firstKcal = Math.round(w*phases[0].c)*4 + Math.round(w*phases[0].p)*4 + Math.round(w*phases[0].f)*9;
+    $('vKcal').textContent = firstKcal;
+    // 40天逐日数据 + 图
+    const days=[], carbs=[], kcals=[], hcFlags=[];
+    let day = 0;
+    phases.forEach(ph=>{ for(let i=0;i<ph.days;i++){ day++; days.push('D'+day); carbs.push(Math.round(w*ph.c)); kcals.push(Math.round(w*ph.c)*4+Math.round(w*ph.p)*4+Math.round(w*ph.f)*9); hcFlags.push(!!ph.hc); }});
+    const minKcal = Math.min(...kcals), maxKcal = Math.max(...kcals);
+    if(minKcal < bmr) warns.push(`⚠️ 40 天表中最低摄入 ${minKcal} 大卡 / 最高 ${maxKcal} 大卡，阶段后期低于基础代谢 ${bmr} 大卡属该体系的激进设计，出现不适请退回动态版。`);
+    if(g==='female' && minKcal < 1200) warns.push('🚫 红线：阶段表中有日子低于女生 1200 大卡红线，体重较小的女生请勿使用 40 天固定版，建议改用动态三个月版。');
+    drawSprintChart(days, carbs, kcals, hcFlags, tdee, bmr);
+  }
+
+  /* ---- 经典3倍版 ---- */
+  if(MODE === 'classic'){
+    const hardTrain = A >= 1.725;
+    let carbMul, protMul, fatG, carbFloor;
+    if(g==='male'){
+      carbMul = 3 + (hardTrain ? 0.5 : 0);
+      protMul = 2;
+      fatG = Math.max(50, Math.round(w*0.7));
+      carbFloor = 2.0;
+    }else{
+      carbMul = 2.5; protMul = 1.8;
+      fatG = Math.max(45, Math.round(w*0.9));
+      carbFloor = 1.5;
+    }
+    const carbG0 = Math.round(w*carbMul), protG = Math.round(w*protMul);
+    const kcal0 = carbG0*4 + protG*4 + fatG*9;
+    firstKcal = kcal0;
+    $('vCarb').textContent = carbG0; $('vProt').textContent = protG;
+    CUR = {c:carbG0, p:protG, f:fatG}; CUR_W = w; SPRINT_LIST = null;
+    $('vFat').textContent = fatG; $('vTotal').textContent = kcal0;
+    $('vKcal').textContent = kcal0;
+    $('ruleTag').textContent = g==='male' ? '男生：3倍碳水规则' : '女生：2.5倍碳水规则';
+    $('ruleNote').innerHTML = g==='male'
+      ? `<b>男生规则</b>：碳水 3 倍体重（训练量特别大可上浮 0.5）；蛋白质 1.8~2 倍；脂肪别低于 50g（0.5~0.8 区间取 0.7）。`
+      : `<b>女生规则</b>：碳水 2.5 倍起算；蛋白质 1.5~1.8 倍；脂肪别低于 0.9 倍、最少 45~50g。红线：全天热量别低于 1200 大卡。`;
+    // 8 周渐降
+    const STEP=0.25, WEEKS=8;
+    let rows=[];
+    for(let i=0;i<WEEKS;i++) rows.push({week:i+1, mul:Math.max(carbFloor, +(carbMul-i*STEP).toFixed(2))});
+    $('planTable').querySelector('tbody').innerHTML = rows.map(r=>{
+      const cg=Math.round(w*r.mul), kc=cg*4+protG*4+fatG*9, d=tdee-kc, hold=r.mul<=carbFloor;
+      const status = d<0?'<span style="color:var(--orange)">需加运动</span>'
+        : (g==='female'&&kc<1200)?'<span style="color:var(--red)">破 1200 红线</span>'
+        : (kc<bmr)?'<span style="color:var(--red)">低于基础代谢</span>'
+        : `<span style="color:var(--green)">缺口 ${d}</span>`;
+      return `<tr class="${hold?'hold':''}"><td>第 ${r.week} 周${hold?'（维持）':''}</td><td>×${r.mul}</td><td>${cg}</td><td>${kc}</td><td>${d>=0?'-'+d:'+'+Math.abs(d)}</td><td>${status}</td></tr>`;
+    }).join('');
+    if(kcal0 < bmr) warns.push(`⚠️ 首日摄入（${kcal0}）低于基础代谢（${bmr}）。`);
+    if(g==='female' && kcal0<1200) warns.push('🚫 红线：女生别把全天热量压到 1200 大卡以下！');
+    if(tdee-kcal0 > 1000) warns.push('⚠️ 首日缺口超过 1000 大卡，掉肌肉风险大。');
+    if(g==='male' && fatG<50) warns.push('⚠️ 男生脂肪别低于 50g。');
+    drawClassicChart(rows, w, protG, fatG, tdee, bmr);
+  }
+
+  /* ---- 代谢卡片 ---- */
+  $('vBmr').textContent = bmr;
+  $('vTdee').textContent = tdee;
+  $('vDeficit').textContent = (tdee-firstKcal>=0?'-':'+') + Math.abs(tdee-firstKcal);
+
+  if(!warns.length) oks.push(`✅ 各项指标正常。执行要点：连续执行 7~10 天再根据晨重反馈调整；掉太快加碳水、掉太慢或不动则下调碳水。`);
+  else oks.push('💡 调整原则：掉得太快 → 适当加碳水；掉得过慢或保持不动 → 下调碳水。体重每变化约 3~5kg 后，用新体重重新套系数。');
+  const wb=$('warnBox'), ob=$('okBox');
+  wb.style.display = warns.length?'block':'none'; wb.innerHTML = [...new Set(warns)].join('<br>');
+  ob.style.display = oks.length?'block':'none'; ob.innerHTML = oks.join('<br>');
+
+  renderRecipe();
+  $('result').style.display='block';
+  try{ localStorage.setItem('tanPlan2', JSON.stringify({g,age,h,w,act:act,hourBand,mode:MODE})); }catch(e){}
+}
+
+function drawSprintChart(days, carbs, kcals, hc, tdee, bmr){
+  if(typeof Chart==='undefined') return fallbackChart();
+  if(window._c1) window._c1.destroy();
+  window._c1 = new Chart($('sprintChart'), {
+    type:'line',
+    data:{labels:days, datasets:[
+      {label:'碳水 g', data:carbs, borderColor:'#ffb454', backgroundColor:'rgba(255,180,84,.1)', fill:true, tension:.2, pointRadius:hc.map(x=>x?6:0), pointBackgroundColor:hc.map(x=>x?'#ff5d5d':'#ffb454')},
+      {label:'总热量 大卡', data:kcals, borderColor:'#4d9fff', yAxisID:'y1', tension:.2, pointRadius:0},
+      {label:'TDEE', data:days.map(()=>tdee), borderColor:'rgba(139,151,173,.6)', borderDash:[6,6], pointRadius:0, yAxisID:'y1'},
+      {label:'基础代谢', data:days.map(()=>bmr), borderColor:'rgba(255,93,93,.5)', borderDash:[4,6], pointRadius:0, yAxisID:'y1'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b97ad',boxWidth:14,filter:item=>item.text!=='TDEE'||true}}},
+      scales:{x:{ticks:{color:'#8b97ad',maxTicksLimit:10},grid:{color:'rgba(46,57,80,.5)'}},
+        y:{title:{display:true,text:'碳水 g',color:'#ffb454'},ticks:{color:'#ffb454'},grid:{color:'rgba(46,57,80,.5)'}},
+        y1:{position:'right',title:{display:true,text:'大卡',color:'#4d9fff'},ticks:{color:'#4d9fff'},grid:{drawOnChartArea:false}}}}
+  });
+}
+
+function drawClassicChart(rows, w, protG, fatG, tdee, bmr){
+  if(typeof Chart==='undefined') return fallbackChart();
+  if(window._c2) window._c2.destroy();
+  const labels = rows.map(r=>'第'+r.week+'周');
+  window._c2 = new Chart($('chart'), {
+    type:'line',
+    data:{labels, datasets:[
+      {label:'碳水 g', data:rows.map(r=>Math.round(w*r.mul)), borderColor:'#ffb454', backgroundColor:'rgba(255,180,84,.12)', fill:true, tension:.35, yAxisID:'y'},
+      {label:'总热量 大卡', data:rows.map(r=>Math.round(w*r.mul)*4+protG*4+fatG*9), borderColor:'#4d9fff', backgroundColor:'rgba(77,159,255,.08)', fill:true, tension:.35, yAxisID:'y1'},
+      {label:'TDEE', data:labels.map(()=>tdee), borderColor:'rgba(139,151,173,.6)', borderDash:[6,6], pointRadius:0, yAxisID:'y1'},
+      {label:'基础代谢', data:labels.map(()=>bmr), borderColor:'rgba(255,93,93,.5)', borderDash:[4,6], pointRadius:0, yAxisID:'y1'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b97ad',boxWidth:14}}},
+      scales:{x:{ticks:{color:'#8b97ad'},grid:{color:'rgba(46,57,80,.5)'}},
+        y:{title:{display:true,text:'碳水 g',color:'#ffb454'},ticks:{color:'#ffb454'},grid:{color:'rgba(46,57,80,.5)'}},
+        y1:{position:'right',title:{display:true,text:'大卡',color:'#4d9fff'},ticks:{color:'#4d9fff'},grid:{drawOnChartArea:false}}}}
+  });
+}
+
+function fallbackChart(){
+  document.querySelectorAll('.chart-box').forEach(b=>{
+    b.innerHTML = '<div style="color:var(--sub);text-align:center;padding:60px 0">图表库加载失败（离线状态），表格数据不受影响</div>';
+  });
+}
+
+function resetForm(){
+  const d = DEFAULTS[$('gender').value];
+  $('age').value = d.age; $('height').value = d.h; $('weight').value = d.w;
+  $('train').value='1.375|2-3';
+  $('result').style.display='none';
+  try{ localStorage.removeItem('tanPlan2'); }catch(e){}
+}
+
+/* ---- 食物下拉初始化 ---- */
+function initSelects(){
+  const opts = (keys, def) => keys.map(k=>`<option value="${k}"${k===def?' selected':''}>${FOODS[k].n}</option>`).join('');
+  $('fB').innerHTML  = opts(['oat','bread','brownrice'], 'oat');
+  $('fL').innerHTML  = opts(['rice','brownrice'], 'rice');
+  $('fLm').innerHTML = opts(['chicken','beef','pork','fish','shrimp','tofu'], 'chicken');
+  $('fS').innerHTML  = opts(['sweetpotato','purple','potato','pumpkin','rice','brownrice'], 'sweetpotato');
+  $('fDm').innerHTML = opts(['beef','chicken','pork','fish','shrimp','tofu'], 'beef');
+  $('fN').innerHTML  = Object.keys(ADDONS).map(k=>`<option value="${k}"${k==='nut'?' selected':''}>${ADDONS[k].n}（默认${ADDONS[k].g}g）</option>`).join('');
+  $('phaseWrap').style.display = 'none';
+}
+initSelects();
+
+try{
+  const s = JSON.parse(localStorage.getItem('tanPlan2')||'null');
+  if(s){
+    $('gender').value=s.g; $('age').value=s.age; $('height').value=s.h; $('weight').value=s.w;
+    $('train').value=s.act+'|'+s.hourBand;
+    if(s.mode) setMode(s.mode);
+  }
+}catch(e){}
+</script>
+</body>
+</html>
