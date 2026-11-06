@@ -83,13 +83,11 @@
   .fatnote{margin-top:12px;background:var(--card2);border:1px solid var(--line);border-radius:10px;
     padding:10px 12px;font-size:12.5px;color:var(--sub);line-height:1.75}
   .fatnote b{color:var(--txt)}
-  .addon-row{display:flex;align-items:center;gap:6px}
-  .addon-row select{flex:1;min-width:0}
-  .addon-row input{width:72px;flex:none;text-align:center;padding-left:6px;padding-right:6px}
-  .addon-row input:disabled{opacity:.45;cursor:not-allowed}
-  .addon-row .u{color:var(--sub);font-size:12px;flex:none}
+  #fNg{text-align:center}
+  #fNg:disabled{opacity:.45;cursor:not-allowed}
   .meal .amt .cap{color:var(--orange);font-size:12px}
-  @media (max-width:640px){ .addon-cell{grid-column:1/-1} }
+  @media (max-width:640px){
+  }
   .fatnote .fbar{display:flex;height:9px;border-radius:6px;overflow:hidden;margin:7px 0 6px;background:var(--line)}
   .fatnote .fbar i{display:block;height:100%}
   .fatnote .fbar i:nth-child(1){background:#ffb454}
@@ -386,13 +384,8 @@
       <div data-page-node-id="sUiZginkPEAO3S8oYzcAWl"><label data-page-node-id="7hCpZEM0hpEdj4YONtTZnb">午餐肉类</label><select id="fLm" onchange="renderRecipe()" data-page-node-id="BsTiejQfBPPw6euqUW5Mvd"></select></div>
       <div data-page-node-id="1U7L7MW1dDBhACXsQ6V0TP"><label data-page-node-id="u9uAjFPzEC9bTdPzBZP2rf">晚餐主食</label><select id="fS" onchange="renderRecipe()" data-page-node-id="oXVlhBMFozhxouEaHaNIqC"></select></div>
       <div><label>晚餐肉类</label><select id="fDm" onchange="renderRecipe()"></select></div>
-      <div class="addon-cell"><label>晚餐加餐/零食（克数可改）</label>
-        <div class="addon-row">
-          <select id="fN" onchange="onAddonChange()"></select>
-          <input type="number" id="fNg" min="0" max="200" step="5" value="0" oninput="renderRecipe()" title="想吃的克数">
-          <span class="u">g</span>
-        </div>
-      </div>
+      <div><label>晚餐加餐/零食</label><select id="fN" onchange="onAddonChange()"></select></div>
+      <div><label>加餐克数（g，可改）</label><input type="number" id="fNg" min="0" max="200" step="5" value="0" oninput="renderRecipe()" title="想吃的克数"></div>
     </div>
     <div class="meal" data-page-node-id="uwR4jNsACbarqZY5wnty5P"><b data-page-node-id="i25V5Rc2OhwSmnH09gMA1x">🌅 早餐</b><div class="amt" id="mBreak" data-page-node-id="NcckNeJdoLG14phx20hnG1"></div><div class="mac" id="mBmac" data-page-node-id="nM1Nqud5RKEa4Q6COiv1VX"></div>
       <div class="swap" id="mBswap" data-page-node-id="eABsD8Wn0yncbYQzJWhfID">燕麦作早餐主食；全蛋供蛋白与脂肪；南瓜籽、蓝莓补充食物多样性</div></div>
@@ -596,9 +589,9 @@ const ADDONS = {
   none:    {n:'不加餐',        g:0,   m:{c:0,p:0,f:0}},
   nut:     {n:'混合坚果',      g:20,  m:NUT},
   seed:    {n:'南瓜籽',        g:20,  m:SEED},
-  chickpea:{n:'鹰嘴豆（干）',  g:30,  m:CHICK},
-  potato:  {n:'土豆（生）',    g:100, m:POT},
-  corn:    {n:'甜玉米粒（鲜）', g:100, m:CORN}
+  chickpea:{n:'鹰嘴豆(干)',   g:30,  m:CHICK},
+  potato:  {n:'土豆(生)',     g:100, m:POT},
+  corn:    {n:'玉米粒(鲜)',   g:100, m:CORN}
 };
 
 let CUR = null, CUR_W = 0, SPRINT_LIST = null;
