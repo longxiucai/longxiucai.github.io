@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="22LK0bRGp4QRTE85wvsFBT">
 <title>谭成义碳水渐降 · 减脂计划计算器</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" onerror="this.onerror=null;(function(){var s=document.createElement('script');s.src='https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js';document.head.appendChild(s);})()"></script>
 <style>
   :root{
     --bg:#0f1420; --card:#1a2130; --card2:#212a3d; --line:#2e3950;
@@ -67,6 +68,7 @@
   .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 12px}
   .flow .step{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px}
   .flow .arr{color:var(--sub);font-size:16px}
+  .flow-hint{font-size:12px;color:var(--sub);margin:2px 0 8px}
   .branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
   .branch{background:var(--card2);border-radius:10px;padding:12px;font-size:13px;border:1px solid var(--line)}
   .branch b{display:block;margin-bottom:5px}
@@ -78,7 +80,139 @@
   .meal .amt{margin-top:6px;font-weight:600;color:var(--orange);font-size:13.5px;line-height:1.8}
   .meal .mac{color:var(--sub);font-size:12px;margin-top:4px;font-family:ui-monospace,Menlo,monospace}
   #mealSum{margin-top:12px}
+  .fatnote{margin-top:12px;background:var(--card2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-size:12.5px;color:var(--sub);line-height:1.75}
+  .fatnote b{color:var(--txt)}
+  .addon-row{display:flex;align-items:center;gap:6px}
+  .addon-row select{flex:1;min-width:0}
+  .addon-row input{width:72px;flex:none;text-align:center;padding-left:6px;padding-right:6px}
+  .addon-row input:disabled{opacity:.45;cursor:not-allowed}
+  .addon-row .u{color:var(--sub);font-size:12px;flex:none}
+  .meal .amt .cap{color:var(--orange);font-size:12px}
+  @media (max-width:640px){ .addon-cell{grid-column:1/-1} }
+  .fatnote .fbar{display:flex;height:9px;border-radius:6px;overflow:hidden;margin:7px 0 6px;background:var(--line)}
+  .fatnote .fbar i{display:block;height:100%}
+  .fatnote .fbar i:nth-child(1){background:#ffb454}
+  .fatnote .fbar i:nth-child(2){background:#4d9fff}
+  .fatnote .fbar i:nth-child(3){background:#b07cff}
   .hidden{display:none}
+  /* ===== 表格横向滚动容器（宽表在窄屏可滑） ===== */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
+  .table-wrap table{margin-top:0}
+  .table-wrap::-webkit-scrollbar{height:6px}
+  .table-wrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+  /* ===== 手机适配 ===== */
+  @media (max-width:640px){
+    html{-webkit-text-size-adjust:100%}
+    body{padding:14px 12px 24px}
+    .theme-btn{position:static;display:block;width:auto;margin:0 0 12px auto;padding:6px 12px;font-size:12px}
+    h1{font-size:18px;line-height:1.4}
+    .sub{font-size:12px;margin-bottom:14px}
+    .card{padding:14px;border-radius:12px;margin-bottom:12px}
+    .card h2{font-size:15px;margin-bottom:12px}
+    .tabs{gap:6px;margin-bottom:12px}
+    .tab{min-width:0;flex:1 1 100%;padding:9px 10px;font-size:13px;border-radius:9px}
+    .grid{grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:9px}
+    .stats{grid-template-columns:repeat(2,1fr);gap:9px}
+    .stat{padding:10px 8px}
+    .stat .v{font-size:20px}
+    .stat .k{font-size:11px}
+    input,select{font-size:16px;padding:9px 10px}   /* 16px 防 iOS 聚焦放大 */
+    button{width:100%;padding:12px;margin-top:10px}
+    .chart-box{height:220px}
+    /* 流程：竖排，箭头改成朝下 */
+    .flow{flex-direction:column;align-items:stretch;gap:6px}
+    .flow .step{text-align:center}
+    .flow .arr{display:none}
+    .flow .step + .step::before{content:"↓";display:block;color:var(--sub);font-size:14px;margin:-2px 0 2px;text-align:center}
+    .branches{grid-template-columns:1fr}
+    table{font-size:12px}
+    th{padding:7px 5px;font-size:11.5px}
+    td{padding:8px 5px}
+    .table-wrap table{min-width:520px}
+    #mealSum{min-width:0;width:100%}
+    .meal{padding:10px;font-size:12.5px}
+    .meal .amt{font-size:13px}
+    .rule{font-size:11.5px;line-height:1.85;padding:10px 12px}
+    .disclaim{font-size:11px;margin:18px 0 6px}
+  }
+  @media (max-width:380px){
+    body{padding:12px 10px 20px}
+    h1{font-size:16px}
+    .grid{grid-template-columns:1fr 1fr}
+    .stat .v{font-size:18px}
+  }
+
+  /* ===== 计划周期条 ===== */
+  .period-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .period-main{flex:1;min-width:200px}
+  .period-title{font-size:15px;font-weight:700;line-height:1.5}
+  .period-sub{font-size:12.5px;color:var(--sub);margin-top:5px;line-height:1.8}
+  .period-sub b{color:var(--txt)}
+  .btn-inline{margin-top:0;padding:10px 18px;font-size:14px;white-space:nowrap}
+  /* 导出专用头部（平时隐藏） */
+  .shot-only{display:none}
+  .shot-head{padding:2px 0 14px;border-bottom:1px solid var(--line);margin-bottom:16px}
+  .shot-head .sh-t{font-size:20px;font-weight:700}
+  .shot-head .sh-s{font-size:12.5px;color:var(--sub);margin-top:6px;line-height:1.7}
+
+  /* ===== 导出图片时的重置（把手机布局还原成宽版） ===== */
+  html.exporting body{max-width:940px!important;padding:24px!important}
+  html.exporting .no-shot,html.exporting .theme-btn,html.exporting button{display:none!important}
+  html.exporting .shot-only{display:block!important}
+  html.exporting .stats{grid-template-columns:repeat(4,1fr)!important}
+  html.exporting .grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
+  html.exporting .flow{flex-direction:row!important;flex-wrap:wrap!important}
+  html.exporting .flow .arr{display:inline-block!important}
+  html.exporting .flow .step + .step::before{content:none!important}
+  html.exporting .branches{grid-template-columns:repeat(3,1fr)!important}
+  html.exporting .chart-box{height:300px!important}
+  html.exporting .table-wrap{overflow:visible!important}
+  html.exporting .table-wrap table{min-width:0!important;width:100%!important}
+  html.exporting #mealSum{min-width:0!important}
+  html.exporting .card{break-inside:avoid}
+  /* 导出的图按桌面字号，避免手机上导出字太小 */
+  html.exporting .stat .v{font-size:24px!important}
+  html.exporting .stat .k{font-size:12px!important}
+  html.exporting .meal{font-size:13px!important}
+  html.exporting .meal .amt{font-size:13.5px!important}
+  html.exporting .rule{font-size:12px!important;padding:12px 14px!important}
+  html.exporting table{font-size:13px!important}
+  html.exporting th,html.exporting td{padding:8px 6px!important}
+  html.exporting .period-title{font-size:15px!important}
+  html.exporting .period-sub{font-size:12.5px!important}
+  /* ===== 提示条 ===== */
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:1002;
+    background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;
+    padding:11px 18px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;
+    transition:opacity .2s;pointer-events:none;max-width:88vw;text-align:center}
+  .toast.show{opacity:1}
+  /* ===== 图片预览 / 下载弹层 ===== */
+  .shot-mask{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:none;
+    padding:24px 16px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .shot-mask.show{display:block}
+  .shot-box{max-width:880px;margin:0 auto;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  .shot-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .shot-head b{font-size:15px}
+  .shot-meta{color:var(--sub);font-size:12px;margin-top:2px;word-break:break-all}
+  .shot-close{background:transparent;border:1px solid var(--line);color:var(--sub);border-radius:8px;
+    padding:6px 12px;font-size:13px;cursor:pointer;flex:none}
+  .shot-close:hover{color:var(--txt);border-color:var(--sub)}
+  .shot-img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#fff}
+  .shot-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .shot-acts .btn-link{flex:1;min-width:150px;text-align:center;text-decoration:none;display:inline-block;
+    padding:11px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;
+    background:linear-gradient(135deg,#ff8a3d,#ff5d5d);color:#fff;border:none}
+  .shot-acts .btn-link.alt{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  .shot-tip{margin-top:11px;color:var(--sub);font-size:12px;line-height:1.7;
+    border-left:3px solid var(--blue);padding-left:10px}
+  @media (max-width:640px){
+    .shot-mask{padding:12px 10px}
+    .shot-box{padding:12px;border-radius:12px}
+    .shot-acts .btn-link{min-width:0}
+  }
 </style>
 </head>
 <body data-page-node-id="ccR4gXnePBq8B293o1cn0W">
@@ -125,12 +259,31 @@
         <option value="1.9|8-9" data-page-node-id="Gfn2VMOludHXhL9HIjlNc8">每周 8~9 小时（约5次）</option>
       </select>
     </div>
+    <div>
+      <label>起始日期</label>
+      <input type="date" id="startDate" onchange="calc()">
+    </div>
   </div>
   <button onclick="calc()" data-page-node-id="kFlzX56zSaWxqeZHcpIHqT">生成计划</button>
   <button class="ghost" onclick="resetForm()" data-page-node-id="sH8THX79naz9EoVpGvcpii">重置</button>
 </div>
 
 <div id="result" style="display:none" data-page-node-id="zueMoI6Ot1A8BHQuTTbNnG">
+
+  <div class="shot-head shot-only">
+    <div class="sh-t">🥩 谭成义碳水渐降 · 减脂计划</div>
+    <div class="sh-s" id="shotInfo"></div>
+  </div>
+
+  <div class="card" id="periodCard">
+    <div class="period-row">
+      <div class="period-main">
+        <div class="period-title" id="periodTitle">计划周期</div>
+        <div class="period-sub" id="periodSub"></div>
+      </div>
+      <button class="ghost btn-inline no-shot" onclick="saveImage(this)">📷 保存为图片</button>
+    </div>
+  </div>
 
   <div class="card" data-page-node-id="q2kYtxhINFHfQvMUO0R1Qa">
     <h2 data-page-node-id="g0dQxb69N3BVzuIN18Fuky">② 代谢参考 <span class="tag" data-page-node-id="dReUyIXntlNA6PzefHlcCu">Mifflin-St Jeor</span></h2>
@@ -161,8 +314,9 @@
       <div class="flow" data-page-node-id="2zCJtVems7ovbeD6H3ibLU">
         <div class="step" data-page-node-id="fHOiX6fgPzw1GemNooi3CC">按分档算起始目标</div><div class="arr" data-page-node-id="4QhbMdsFonzZRm0MCP22KE">→</div>
         <div class="step" data-page-node-id="hYJyYPIl0amNpnQHArQeCj">稳定执行 7~10 天<br data-page-node-id="EBBOcBapdUskNdLssJgMlu"><span style="color:var(--sub);font-size:11px" data-page-node-id="h9xpmOt6sT0DDfKrrKsJAo">不要两三天就改</span></div><div class="arr" data-page-node-id="OMbZl5JvReRVZ5WUBPapkU">→</div>
-        <div class="step" data-page-node-id="6sYFLScDfaNtBV1UzK3ErY">记录晨重，10 天拍对比图</div><div class="arr" data-page-node-id="bLjrG5vl5Fmrd1Hh6ZslrM">→</div>
+        <div class="step" data-page-node-id="6sYFLScDfaNtBV1UzK3ErY">记录晨重，10 天拍对比图</div>
       </div>
+      <div class="flow-hint">↓ 第 10 天看晨重变化，从下面三条里选一条</div>
       <div class="branches" data-page-node-id="AFmEolZNCe0CR2JmV3g0xJ">
         <div class="branch stay" data-page-node-id="cDWn8YzsE5golPlQDyMO24"><b data-page-node-id="8s9eiXRDVclySWoU2NcjVT">⬇️ 保持不动</b>下调碳水</div>
         <div class="branch down" data-page-node-id="VezbLysEbuZ2As6lF1KGcv"><b data-page-node-id="TNQC3Hd9UyoAhSfEpEHFus">📉 掉得过慢</b>下调碳水</div>
@@ -189,7 +343,7 @@
     <div class="card" data-page-node-id="zuMicq0yqIvoUL2sAltFMA">
       <h2 data-page-node-id="ndPnRMdTQSDZFPH9IFUtd3">③ 40 天固定阶段表 <span class="tag" data-page-node-id="taIpTHRCGPSWDG8iUAnkmx">固定阶段递进 + 3 个高碳日，每天按 体重×系数 计算</span></h2>
       <table id="sprintTable" data-page-node-id="XwKlYmnwuju2GD1D01lIhQ">
-        <thead data-page-node-id="byS8QOcsDQNFvzXqZcuBOD"><tr data-page-node-id="hZXYqCsHI5JbsoBdxzpkzv"><th data-page-node-id="Dkd9HfcBirer6AnXQ6xoM9">阶段</th><th data-page-node-id="m1IseaVeDGlzRGNpFQQ7Eo">碳水×体重</th><th data-page-node-id="N1AryfjkCpIAXVwHJ7SmLy">蛋白质×体重</th><th data-page-node-id="PlSnWsf7OSOshfO9cKVK2G">脂肪×体重</th><th data-page-node-id="K8HqXzjNLuIi5FOKmPJseg">碳水 g</th><th data-page-node-id="31P1nipjaaVmrBZhnlvnPB">蛋白质 g</th><th data-page-node-id="ID3YBg7qjEHiSIP1KHtYCS">脂肪 g</th><th data-page-node-id="yngjiBOPCndYVAv32gzWHO">大卡</th></tr></thead>
+        <thead data-page-node-id="byS8QOcsDQNFvzXqZcuBOD"><tr data-page-node-id="hZXYqCsHI5JbsoBdxzpkzv"><th data-page-node-id="Dkd9HfcBirer6AnXQ6xoM9">阶段</th><th>日期</th><th data-page-node-id="m1IseaVeDGlzRGNpFQQ7Eo">碳水×体重</th><th data-page-node-id="N1AryfjkCpIAXVwHJ7SmLy">蛋白质×体重</th><th data-page-node-id="PlSnWsf7OSOshfO9cKVK2G">脂肪×体重</th><th data-page-node-id="K8HqXzjNLuIi5FOKmPJseg">碳水 g</th><th data-page-node-id="31P1nipjaaVmrBZhnlvnPB">蛋白质 g</th><th data-page-node-id="ID3YBg7qjEHiSIP1KHtYCS">脂肪 g</th><th data-page-node-id="yngjiBOPCndYVAv32gzWHO">大卡</th></tr></thead>
         <tbody data-page-node-id="bQa3HhG4v4XvAOqb4WBoUc"></tbody>
       </table>
       <div class="rule" data-page-node-id="b775t0kklm8LMNet5wz85n">红色行为<b data-page-node-id="RHYhMR0kAWiv6EJAgjPAFo">固定高碳日</b>，它不是"放纵日"，只是阶段表中的营养日变化；实际食物仍需按克数记录。前 11 天建立执行基线 → 第 12 天第一次高碳 → 阶段逐步降碳同时提高蛋白 → 第 24 / 36 天再次安排高碳。</div>
@@ -215,7 +369,7 @@
     <div class="card" data-page-node-id="EB1TL5fbX1Een0Xb2n6Fi1">
       <h2 data-page-node-id="l4vN7qO8F0B1Joc6F2Ud30">④ 8 周碳水渐降计划 <span class="tag" data-page-node-id="hj9mDYeDr3shRXREUvtWiL">每周 -0.25 g/kg，到下限后维持</span></h2>
       <table id="planTable" data-page-node-id="YCGl5BHoBs8I4KtXYSUJHP">
-        <thead data-page-node-id="wVmzVewgzOD64993aeaJqa"><tr data-page-node-id="Gwz5Hj2y3DY7DvJSwQS9CD"><th data-page-node-id="xIoLRar9TRqPclGCNdvagO">周</th><th data-page-node-id="fG0Jv0fVYRvAHHnJRTeH7s">碳水系数</th><th data-page-node-id="jjOoe3uVIWkBltMQseEjTo">碳水 g</th><th data-page-node-id="B4jYOXN0ZeyKmKZoCn6Pdn">总热量</th><th data-page-node-id="HP7YEr2cL5fvhAcJq6fHP2">缺口 vs TDEE</th><th data-page-node-id="9rHMWk4nVVS4M3f05S2dMv">状态</th></tr></thead>
+        <thead data-page-node-id="wVmzVewgzOD64993aeaJqa"><tr data-page-node-id="Gwz5Hj2y3DY7DvJSwQS9CD"><th data-page-node-id="xIoLRar9TRqPclGCNdvagO">周</th><th>周期</th><th data-page-node-id="fG0Jv0fVYRvAHHnJRTeH7s">碳水系数</th><th data-page-node-id="jjOoe3uVIWkBltMQseEjTo">碳水 g</th><th data-page-node-id="B4jYOXN0ZeyKmKZoCn6Pdn">总热量</th><th data-page-node-id="HP7YEr2cL5fvhAcJq6fHP2">缺口 vs TDEE</th><th data-page-node-id="9rHMWk4nVVS4M3f05S2dMv">状态</th></tr></thead>
         <tbody data-page-node-id="zWtWkBtKJ3GCDl8DBNoXIH"></tbody>
       </table>
       <div class="chart-box" data-page-node-id="HpiNLSNpJhvV6BCr7uUPVF"><canvas id="chart" data-page-node-id="vFHqaJPzU2Acoxum5jSG1B"></canvas></div>
@@ -225,25 +379,32 @@
   <!-- ===== 动态食谱（按当前目标反解） ===== -->
   <div class="card" id="recipeCard" data-page-node-id="5iKnfKge0D1ZoNUGamJ0VI">
     <h2 data-page-node-id="jlTDMbHzgU8naH901xUvcy">🍽️ 一日食谱（按你的目标反解） <span class="tag" id="mealTag" data-page-node-id="s6IRI3BTLhg9H8NyesMgXz">-</span></h2>
-    <div class="grid" style="margin-bottom:14px" data-page-node-id="C7v3MAxnaGbqyhYT6edbJn">
+    <div class="grid no-shot" style="margin-bottom:14px" data-page-node-id="C7v3MAxnaGbqyhYT6edbJn">
       <div id="phaseWrap" data-page-node-id="Jhqik75DWXjJi3hY6kEERM"><label data-page-node-id="N9q2xu0a8x8bXu63y7X26o">查看阶段</label><select id="fPhase" onchange="renderRecipe()" data-page-node-id="3DVOC8Amdj6eygmb4QuWXl"></select></div>
       <div data-page-node-id="HlaHgH5jhotf1bZWj7saRr"><label data-page-node-id="YazwLE69OxlzABSEvSU0uM">早餐主食</label><select id="fB" onchange="renderRecipe()" data-page-node-id="akLctpzlo49coq0PLmxSTR"></select></div>
       <div data-page-node-id="bddDnblBR2AUEuIqiF1q1x"><label data-page-node-id="hvmpyE7iepej3hgrrlAHgH">午餐主食</label><select id="fL" onchange="renderRecipe()" data-page-node-id="3YmBFeMM4uBCSW8Qnvcp6c"></select></div>
       <div data-page-node-id="sUiZginkPEAO3S8oYzcAWl"><label data-page-node-id="7hCpZEM0hpEdj4YONtTZnb">午餐肉类</label><select id="fLm" onchange="renderRecipe()" data-page-node-id="BsTiejQfBPPw6euqUW5Mvd"></select></div>
       <div data-page-node-id="1U7L7MW1dDBhACXsQ6V0TP"><label data-page-node-id="u9uAjFPzEC9bTdPzBZP2rf">晚餐主食</label><select id="fS" onchange="renderRecipe()" data-page-node-id="oXVlhBMFozhxouEaHaNIqC"></select></div>
       <div><label>晚餐肉类</label><select id="fDm" onchange="renderRecipe()"></select></div>
-      <div><label>晚餐加餐/零食</label><select id="fN" onchange="renderRecipe()"></select></div>
+      <div class="addon-cell"><label>晚餐加餐/零食（克数可改）</label>
+        <div class="addon-row">
+          <select id="fN" onchange="onAddonChange()"></select>
+          <input type="number" id="fNg" min="0" max="200" step="5" value="0" oninput="renderRecipe()" title="想吃的克数">
+          <span class="u">g</span>
+        </div>
+      </div>
     </div>
     <div class="meal" data-page-node-id="uwR4jNsACbarqZY5wnty5P"><b data-page-node-id="i25V5Rc2OhwSmnH09gMA1x">🌅 早餐</b><div class="amt" id="mBreak" data-page-node-id="NcckNeJdoLG14phx20hnG1"></div><div class="mac" id="mBmac" data-page-node-id="nM1Nqud5RKEa4Q6COiv1VX"></div>
-      <div class="swap" data-page-node-id="eABsD8Wn0yncbYQzJWhfID">燕麦作早餐主食；鸡蛋供蛋白和脂肪；南瓜籽、蓝莓补充食物多样性</div></div>
+      <div class="swap" id="mBswap" data-page-node-id="eABsD8Wn0yncbYQzJWhfID">燕麦作早餐主食；全蛋供蛋白与脂肪；南瓜籽、蓝莓补充食物多样性</div></div>
     <div class="meal" data-page-node-id="jlp6QGNS2l8AtJ3FhQhlTA"><b data-page-node-id="K6R46DqGAbWCFMIb6kCAUR">☀️ 午餐</b><div class="amt" id="mLunch" data-page-node-id="kyd9oEPGijGb4H8Giynwlp"></div><div class="mac" id="mLmac" data-page-node-id="B3NtQbMbK3tyaf2MBXHKjb"></div>
-      <div class="swap" data-page-node-id="A0V3pFFpsPryNraw6Xlv2n">蔬菜可选：西兰花、羽衣甘蓝、莴笋、菠菜、菌菇类等</div></div>
+      <div class="swap" id="mLswap" data-page-node-id="A0V3pFFpsPryNraw6Xlv2n">蔬菜可选：西兰花、羽衣甘蓝、莴笋、菠菜、菌菇类等</div></div>
     <div class="meal" data-page-node-id="OGlmMPHgJMt6FyAyvKa4Wq"><b data-page-node-id="EVQejRoi9Lt9o4BsfWGBFt">🌙 晚餐</b><div class="amt" id="mDinner" data-page-node-id="axC62S4IlM95wI0EI9Cll0"></div><div class="mac" id="mDmac" data-page-node-id="cU61bgGlDtnhHsFOlB4ssc"></div>
-      <div class="swap" data-page-node-id="WxmHex3uvuPMIfBDG9J0Bn">主食可选：红薯、紫薯、土豆、贝贝南瓜，也可选生白米/生糙米（按生重称）；加餐可选坚果/鹰嘴豆/土豆/玉米粒，吃零食会自动从晚餐主食里扣碳水</div></div>
+      <div class="swap" id="mDswap" data-page-node-id="WxmHex3uvuPMIfBDG9J0Bn">主食与加餐都可以换，吃零食会自动从晚餐主食里扣碳水</div></div>
     <table id="mealSum" data-page-node-id="RfVwNFdQf3wf8j6UDld3mB">
       <thead data-page-node-id="EwT5M7D0JPnBkIDQO6RWLA"><tr data-page-node-id="f4w1Uk1oDLOtdbVjOstPss"><th data-page-node-id="DuD0GGcLOqFgNwCOsPSUtY">项目</th><th data-page-node-id="fICx8lBfD2G9jBDZjktS8J">目标</th><th data-page-node-id="BIdpKSWp3tfVZitvA9Ms0w">食谱实际</th><th data-page-node-id="gYY9pmywRMnm3I8gQKwvcy">偏差</th></tr></thead>
       <tbody data-page-node-id="f19GEyhS05rfjscT4zRPyU"></tbody>
     </table>
+    <div class="fatnote" id="fatNote" data-page-node-id="n0te0fat0dist00"></div>
     <div class="warn" id="mealWarn" style="display:none" data-page-node-id="N4grA48VWZr45bl1rvxeVF"></div>
     <div class="rule" data-page-node-id="H4ZDHCGovXk0ft8fOO3pGo">克数均为<b data-page-node-id="EP73zuh4qeHg6rcv7BkiiD">生重</b>；油按烹调油计。目标碳水过低时主食会算到 0g，工具会提示。<br>
       <b>零食碳水换算</b>（都算在主食额度里）：生土豆 100g ≈ 碳水 17g ≈ 生米 22g；甜玉米粒（鲜）100g ≈ 碳水 19g ≈ 生米 24g；鹰嘴豆（干）30g ≈ 碳水 18g ≈ 生米 23g。吃了就像"少吃相应克数的生米"。</div>
@@ -303,6 +464,68 @@ function onGenderChange(){
   calc();
 }
 
+/* ================= 日期工具 ================= */
+const WEEK_CN = ['日','一','二','三','四','五','六'];
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmtFull(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function fmtMD(d){ return `${d.getMonth()+1}/${d.getDate()}`; }
+function fmtW(d){ return '周' + WEEK_CN[d.getDay()]; }
+function parseDate(s){
+  if(!s) return new Date();
+  const p = String(s).split('-').map(Number);
+  return new Date(p[0], (p[1]||1)-1, p[2]||1);
+}
+function addDays(d, n){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() + n);
+  return x;
+}
+function getStart(){
+  const el = $('startDate');
+  return parseDate(el && el.value ? el.value : fmtFull(new Date()));
+}
+function dayRange(d0, n){ return n <= 1 ? `${fmtMD(d0)} ${fmtW(d0)}` : `${fmtMD(d0)}~${fmtMD(addDays(d0, n-1))}`; }
+
+/* ================= 计划周期条 ================= */
+function renderPeriod(g, age, h, w, hourBand){
+  const s = getStart();
+  const totalDays = MODE === 'sprint' ? 40 : (MODE === 'classic' ? 56 : 84);
+  const end = addDays(s, totalDays - 1);
+  const head = MODE === 'sprint' ? '🔥 40 天冲刺'
+             : MODE === 'classic' ? '⚡ 8 周碳水渐降'
+             : '📅 三个月动态版';
+  $('periodTitle').innerHTML =
+    `${head}：<b>${fmtFull(s)}（${fmtW(s)}）</b> → <b>${fmtFull(end)}（${fmtW(end)}）</b> ｜ 共 ${totalDays} 天`;
+
+  const subs = [];
+  if(MODE === 'dynamic'){
+    const d10 = addDays(s, 9);
+    subs.push(`首次校准：<b>${fmtFull(d10)}（${fmtW(d10)}，第 10 天）</b>称晨重、拍对比图 → 之后每 7~10 天复评一次`);
+    subs.push(`复评结论按下方三条分支处理：掉太快加碳水、掉得过慢或保持不动则下调碳水`);
+  }else if(MODE === 'sprint'){
+    let off = 0; const hcs = [];
+    sprintPhases(g).forEach(ph=>{
+      if(ph.hc){ const d = addDays(s, off); hcs.push(`<b>${fmtMD(d)}（第 ${off+1} 天 ${fmtW(d)}）</b>`); }
+      off += ph.days;
+    });
+    subs.push(`3 个高碳日：${hcs.join(' ｜ ')}`);
+    subs.push(`前 11 天建立执行基线 → 第 12 天首次高碳 → 之后按阶段表逐段推进`);
+  }else{
+    subs.push(`每周换一次系数：第 1 周 ${dayRange(s,7)} → 第 8 周 ${dayRange(addDays(s,49),7)}`);
+    subs.push(`第 8 周结束后，用新体重重新套一遍系数，进入下一轮`);
+  }
+  $('periodSub').innerHTML = subs.join('<br>');
+
+  const si = $('shotInfo');
+  if(si){
+    const now = new Date();
+    si.innerHTML = `${g==='male'?'男':'女'} ${age} 岁 / ${h}cm / ${w}kg` +
+      (hourBand && hourBand !== 'none' ? ` · 每周运动 ${hourBand.replace('-','~')} 小时` : '') +
+      ` · 周期 ${fmtFull(s)} ~ ${fmtFull(end)}（${totalDays} 天）` +
+      `<br>生成时间 ${fmtFull(now)} ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  }
+}
+
 function setMode(m){
   MODE = m;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===m));
@@ -323,7 +546,6 @@ const DYN = {
   }
 };
 const DYN_DESC = {'2-3':'约2次','4-5':'约3次','6-7':'约4次','8-9':'约5次'};
-
 /* ================= 冲刺40天固定版阶段表 ================= */
 function sprintPhases(g){
   const fm = g==='male';
@@ -355,6 +577,12 @@ const FOODS = {
   shrimp:     {n:'虾仁',            m:[0, 18, 1]},
   tofu:       {n:'老豆腐',          m:[3, 12, 7]}
 };
+/* 早餐主食的称重/替换提示（跟着下拉走） */
+const B_NOTE = {
+  oat:       '按干重称，别用即食麦片替代',
+  bread:     '按包装标示核对碳水，含糖款碳水更高',
+  brownrice: '生糙米需提前浸泡，按生重称'
+};
 const VEG  = {c:5,  p:1.5, f:0.3};   // 每100g 蔬菜
 const BERRY= {c:14, p:0.7, f:0.3};   // 每100g 蓝莓
 const SEED = {c:12, p:30,  f:49};    // 每100g 南瓜籽
@@ -363,13 +591,14 @@ const CHICK= {c:61, p:20,  f:6};     // 每100g 鹰嘴豆（干）
 const CORN = {c:19, p:3.3, f:1.2};   // 每100g 甜玉米粒（鲜）
 const POT  = {c:17, p:2,   f:0.2};   // 每100g 土豆
 const EGG  = {c:1.1, p:6.3, f:5.3};  // 每个全蛋≈50g
-/* 晚餐加餐/零食：默认克数 + 每100g营养；fatty=高脂类，脂肪紧张时优先减 */
+/* 晚餐加餐/零食：g = 默认建议克数（可被输入框覆盖），m = 每100g 营养 */
 const ADDONS = {
-  nut:     {n:'混合坚果',      g:20, m:NUT,   fatty:true},
-  seed:    {n:'南瓜籽',        g:20, m:SEED,  fatty:true},
-  chickpea:{n:'鹰嘴豆（干）',  g:30, m:CHICK, fatty:false},
-  potato:  {n:'土豆（生）',    g:100, m:POT,  fatty:false},
-  corn:    {n:'甜玉米粒（鲜）', g:100, m:CORN, fatty:false}
+  none:    {n:'不加餐',        g:0,   m:{c:0,p:0,f:0}},
+  nut:     {n:'混合坚果',      g:20,  m:NUT},
+  seed:    {n:'南瓜籽',        g:20,  m:SEED},
+  chickpea:{n:'鹰嘴豆（干）',  g:30,  m:CHICK},
+  potato:  {n:'土豆（生）',    g:100, m:POT},
+  corn:    {n:'甜玉米粒（鲜）', g:100, m:CORN}
 };
 
 let CUR = null, CUR_W = 0, SPRINT_LIST = null;
@@ -382,53 +611,101 @@ function buildRecipe(C, P, F, o){
   const warn = [];
   const vegG = 250, vegC = vegG/100*VEG.c, vegP = vegG/100*VEG.p, vegF = vegG/100*VEG.f;
 
-  /* --- 早餐：主食按碳水解，鸡蛋按蛋白解（脂肪由蛋+籽决定） --- */
-  const bSt = FOODS[o.b], berryG = 100, seedG = F < 45 ? 5 : 15;   // 脂肪目标很紧时自动减南瓜籽
-  const fxC = berryG/100*BERRY.c + seedG/100*SEED.c;
-  const fxP = berryG/100*BERRY.p + seedG/100*SEED.p;
-  const fxF = berryG/100*BERRY.f + seedG/100*SEED.f;
-  let oatG = r5((C*0.26 - fxC) / (bSt.m[0]/100));
-  if(oatG <= 0 && C*0.26 < fxC) warn.push('目标碳水偏低，早餐主食已算到 0g（蓝莓+南瓜籽本身就占碳水）。');
-  const oatC = oatG*bSt.m[0]/100, oatP = oatG*bSt.m[1]/100, oatF = oatG*bSt.m[2]/100;
-  let eggN = Math.max(1, Math.round(((P*0.28 - fxP - oatP)/EGG.p)*2)/2);
-  const bC = oatC + fxC, bP = oatP + fxP + eggN*EGG.p, bF = oatF + fxF + eggN*EGG.f;
+  /* ---- 脂肪三段额度：早 28% / 午 36% / 晚 = 剩余 ----
+     关键改动：不再让早餐先吃、午晚只剩残渣；午晚餐优先保证做菜用的烹调油 */
+  const capB = F*0.42;                      // 早餐脂肪上限（材料里早餐本来就占四成左右）
+  const capL = F*0.32;                      // 午餐脂肪额度
+  const OIL_MIN = F >= 45 ? 6 : 4;          // 午/晚餐最低烹调油（做菜至少一勺）
 
-  /* --- 午餐：主食按碳水解，肉按蛋白解，缺口脂肪用烹调油补 --- */
+  /* ---- 早餐：主食解碳水；蛋按蛋白需求取整，南瓜籽用剩余额度 ---- */
+  const bSt = FOODS[o.b], berryG = 100;
+  const berryC = berryG/100*BERRY.c, berryP = berryG/100*BERRY.p, berryF = berryG/100*BERRY.f;
+
+  const mkB = (sg, en) => {
+    const sC = sg/100*SEED.c, sP = sg/100*SEED.p, sF = sg/100*SEED.f;
+    const og = r5((C*0.26 - berryC - sC) / (bSt.m[0]/100));
+    const oC = og*bSt.m[0]/100, oP = og*bSt.m[1]/100, oF = og*bSt.m[2]/100;
+    return { sg, eggN: en, oatG: og, oatP: oP,
+             bC: oC + berryC + sC,
+             bP: oP + berryP + sP + en*EGG.p,
+             bF: oF + berryF + sF + en*EGG.f };
+  };
+
+  const bare0 = mkB(0, 1);                            // 先估一版（蛋按 1 个），拿到主食脂肪
+  const fixedNoEgg = bare0.bF - EGG.f;                // 蛋以外的早餐脂肪
+  const wantEgg = Math.max(1, Math.round((P*0.28 - berryP - bare0.oatP) / EGG.p));
+  const maxEgg  = Math.max(1, Math.floor((capB - fixedNoEgg)/EGG.f + 1e-6));
+  const eggN    = Math.max(1, Math.min(wantEgg, maxEgg, 3));   // 上限 3 个（材料里的固定早餐结构）
+
+  let seedG = Math.floor((capB - fixedNoEgg - eggN*EGG.f) / (SEED.f/100) / 5) * 5;
+  seedG = Math.max(0, Math.min(15, seedG));
+  if(F < 45) seedG = Math.min(seedG, 5);              // 低脂期南瓜籽最多 5g
+
+  const bk = mkB(seedG, eggN);
+  const oatG = bk.oatG, bC = bk.bC, bP = bk.bP, bF = bk.bF;
+  if(eggN < wantEgg){
+    warn.push(wantEgg > 3
+      ? `早餐蛋数按材料固定为 3 个（按蛋白需求要 ${wantEgg} 个），多出来的蛋白由午/晚餐肉类补。`
+      : `早餐脂肪额度约 ${Math.round(capB)}g，放不下 ${wantEgg} 个蛋，全天按 ${eggN} 个给，蛋白由午/晚餐肉类补。`);
+  }
+  if(oatG <= 0) warn.push('目标碳水偏低，早餐主食已算到 0g（蓝莓、南瓜籽本身也带碳水）。');
+
+  const restP = Math.max(0, P - bP);        // 早餐之后的蛋白缺口
+
+  /* ---- 午餐：主食解碳水、肉解蛋白，油补到午餐额度（不低于一勺） ---- */
   const lSt = FOODS[o.l], lMt = FOODS[o.lm];
   let riceG = r5((C*0.40 - vegC) / (lSt.m[0]/100));
   if(riceG <= 0) warn.push('午餐主食算到 0g：碳水目标太低，建议提高碳水档位或减蔬菜量。');
   const rC = riceG*lSt.m[0]/100, rP = riceG*lSt.m[1]/100, rF = riceG*lSt.m[2]/100;
-  let lMeatG = r10((P*0.36 - vegP - rP) / (lMt.m[1]/100));
+  let lMeatG = r10((restP*0.5 - vegP - rP) / (lMt.m[1]/100));
   const lmF = lMeatG*lMt.m[2]/100;
-  const fatPool = Math.max(0, F - bF);            // 剩余脂肪给午/晚
-  let lOil = Math.max(0, Math.round(fatPool*0.45 - vegF - rF - lmF));
+  let lOil = Math.round(capL - vegF - rF - lmF);
+  if(lOil < OIL_MIN) lOil = OIL_MIN;
   const lC = rC + vegC + lMeatG*lMt.m[0]/100, lP = rP + vegP + lMeatG*lMt.m[1]/100;
   const lF = rF + vegF + lmF + lOil;
 
-  /* --- 晚餐：薯类按碳水解，肉按蛋白解，油补脂肪（坚果固定，脂肪太紧则减半） --- */
+  /* ---- 晚餐：先保烹调油，剩余额度才给加餐（坚果/鹰嘴豆/土豆/玉米） ---- */
   const dSt = FOODS[o.s], dMt = FOODS[o.dm];
-  const ad = ADDONS[o.n] || ADDONS.nut;
-  // 脂肪目标很紧时只压高脂类加餐（坚果/籽）；土豆、玉米等高碳水零食保留
-  let nutsG = (F < 45 && ad.fatty) ? 0 : ad.g;
-  let dC, dP, dF, dOil, dMeatG, potatoG;
-  for(let attempt=0; attempt<4; attempt++){
-    const nC = nutsG/100*ad.m.c, nP = nutsG/100*ad.m.p, nF = nutsG/100*ad.m.f;
-    potatoG = r10((C*0.34 - vegC - nC) / (dSt.m[0]/100));
-    const pC = potatoG*dSt.m[0]/100, pP = potatoG*dSt.m[1]/100, pF = potatoG*dSt.m[2]/100;
-    dMeatG = r10((P*0.36 - vegP - nP - pP) / (dMt.m[1]/100));
-    const mF = dMeatG*dMt.m[2]/100;
-    dOil = Math.round(Math.max(0, F - bF - lF) - vegF - nF - pF - mF);
-    dC = pC + vegC + nC + dMeatG*dMt.m[0]/100;
-    dP = pP + vegP + nP + dMeatG*dMt.m[1]/100;
-    dF = pF + vegF + nF + mF + Math.max(0,dOil);
-    if(dOil >= 0 || nutsG === 0 || !ad.fatty) break;
-    nutsG = nutsG > 20 ? 15 : (nutsG > 10 ? 10 : 0);   // 脂肪已超 → 逐步减少高脂加餐
-  }
-  if(dOil < 0){ dOil = 0; warn.push('晚餐脂肪已达上限：当前碳水档位下脂肪偏高，加餐已减到最低，油为 0。'); }
-  if(potatoG <= 0) warn.push('晚餐碳水配额已被加餐/零食吃满，晚餐主食算到 0g：建议把零食挪到训练前后，或减少加餐量。');
+  const ad = ADDONS[o.n] || ADDONS.none;
+  const capD = Math.max(F - bF - lF, OIL_MIN + 6);
+  // 用户想要的克数（输入框可改）；有加餐时烹调油只保底 3g，让加餐优先吃到
+  const wantedG = Math.max(0, Math.min(200, Math.round((o.ng != null ? o.ng : ad.g) / 5) * 5));
+  const nOilMin = wantedG > 0 ? 3 : OIL_MIN;
 
-  return { oatG, eggN, seedG, berryG, riceG, lMeatG, lOil, potatoG, dMeatG, dOil, nutsG,
-           addonName: ad.n,
+  const calcD = (g) => {
+    const nC = g/100*ad.m.c, nP = g/100*ad.m.p, nF = g/100*ad.m.f;
+    const pg = r10((C*0.34 - vegC - nC) / (dSt.m[0]/100));
+    const pC = pg*dSt.m[0]/100, pP = pg*dSt.m[1]/100, pF = pg*dSt.m[2]/100;
+    const mg = r10((restP*0.5 - vegP - nP - pP) / (dMt.m[1]/100));
+    const mF = mg*dMt.m[2]/100;
+    return { g, nC, nP, nF, potatoG: pg, pC, pP, pF, dMeatG: mg, mF,
+             fixedF: vegF + nF + pF + mF };
+  };
+
+  let dd = calcD(wantedG);
+  while(dd.g > 0 && dd.fixedF > capD - nOilMin){
+    const g = dd.g - 5;
+    dd = calcD(g > 0 ? g : 0);
+    if(dd.g <= 0) break;
+  }
+  const nutsG = dd.g;
+  let dOil = Math.round(capD - dd.fixedF);
+  if(dOil < nOilMin) dOil = nOilMin;
+  if(wantedG > 0 && nutsG < wantedG){
+    const gap = Math.max(1, Math.round((wantedG - nutsG) * ad.m.f / 100));
+    warn.push(nutsG === 0
+      ? `晚餐脂肪额度装不下 ${ad.n}，已降到 0g：想吃就把午餐烹调油减约 ${gap}g。`
+      : `${ad.n} 只给到 ${nutsG}g（你要 ${wantedG}g）：脂肪额度少约 ${gap}g，可从午餐烹调油里减，或把加餐挪到训练后。`);
+  }
+  const dC = dd.pC + vegC + dd.nC + dd.dMeatG*dMt.m[0]/100;
+  const dP = dd.pP + vegP + dd.nP + dd.dMeatG*dMt.m[1]/100;
+  const dF = dd.fixedF + dOil;
+  if(dd.potatoG <= 0) warn.push('晚餐碳水配额已被加餐/零食吃满，晚餐主食算到 0g：建议把零食挪到训练前后，或减少加餐量。');
+
+  if(dd.potatoG > 0 && dd.potatoG < 30) warn.push('晚餐主食只剩 ' + dd.potatoG + 'g：零食把碳水额度占掉了，建议把零食挪到训练前后吃完，晚餐主食留足。');
+
+  return { oatG, eggN, seedG, berryG, riceG, lMeatG, lOil, potatoG: dd.potatoG, dMeatG: dd.dMeatG, dOil, nutsG,
+           wantedG, addonName: ad.n,
            lSt, lMt, dSt, dMt, bSt,
            b:{c:bC,p:bP,f:bF}, l:{c:lC,p:lP,f:lF}, d:{c:dC,p:dP,f:dF}, warn };
 }
@@ -453,20 +730,37 @@ function renderRecipe(){
            tag: `80kg基准 ${ph.name}`, name: ph.name};
   }
 
-  const o = {b:$('fB').value, l:$('fL').value, lm:$('fLm').value, s:$('fS').value, dm:$('fDm').value, n:$('fN').value};
+  const o = {b:$('fB').value, l:$('fL').value, lm:$('fLm').value, s:$('fS').value,
+             dm:$('fDm').value, n:$('fN').value, ng:+$('fNg').value || 0};
   const r = buildRecipe(CUR.c, CUR.p, CUR.f, o);
   const C = CUR.c, P = CUR.p, F = CUR.f;
 
   $('mealTag').textContent = `目标：碳水 ${C}g / 蛋白 ${P}g / 脂肪 ${F}g`;
-  $('mBreak').textContent = `${r.bSt.n} ${r.oatG}g ｜ 全蛋 ${r.eggN} 个 ｜ 南瓜籽 ${r.seedG}g ｜ 蓝莓 ${r.berryG}g`;
+  const seedTxt = r.seedG > 0 ? ` ｜ 南瓜籽 ${r.seedG}g` : '';
+  $('mBreak').textContent = `${r.bSt.n} ${r.oatG}g ｜ 全蛋 ${r.eggN} 个${seedTxt} ｜ 蓝莓 ${r.berryG}g`;
   $('mLunch').textContent = `${r.lSt.n} ${r.riceG}g ｜ ${r.lMt.n} ${r.lMeatG}g ｜ 烹调油 ${r.lOil}g ｜ 蔬菜 ${vegTxt()}g`;
-  const adTxt = r.nutsG > 0 ? ` ｜ ${r.addonName} ${r.nutsG}g` : '';
-  $('mDinner').textContent = `${r.dSt.n} ${r.potatoG}g ｜ ${r.dMt.n} ${r.dMeatG}g ｜ 烹调油 ${r.dOil}g${adTxt} ｜ 蔬菜 ${vegTxt()}g`;
+  const adTxt = r.nutsG > 0
+    ? ` ｜ ${r.addonName} ${r.nutsG}g${r.wantedG > r.nutsG ? `<span class="cap">（你要 ${r.wantedG}g，额度只够这么多）</span>` : ''}`
+    : '';
+  $('mDinner').innerHTML = `${r.dSt.n} ${r.potatoG}g ｜ ${r.dMt.n} ${r.dMeatG}g ｜ 烹调油 ${r.dOil}g${adTxt} ｜ 蔬菜 ${vegTxt()}g`;
 
   const mac = m => `碳水 ${Math.round(m.c)}g ｜ 蛋白 ${Math.round(m.p)}g ｜ 脂肪 ${Math.round(m.f)}g ｜ ${Math.round(m.c*4+m.p*4+m.f*9)} kcal`;
   $('mBmac').textContent = mac(r.b);
   $('mLmac').textContent = mac(r.l);
   $('mDmac').textContent = mac(r.d);
+
+  /* 三顿的说明文字跟着所选食材走 */
+  $('mBswap').textContent = r.seedG > 0
+    ? `${r.bSt.n}作早餐主食（${B_NOTE[o.b] || '按生重称'}）；全蛋供蛋白与脂肪；南瓜籽、蓝莓补充食物多样性与微量营养。`
+    : `${r.bSt.n}作早餐主食（${B_NOTE[o.b] || '按生重称'}）；早餐脂肪额度已被 ${r.eggN} 个全蛋占满，所以南瓜籽这次是 0g——想吃就把它加回来，同时把午餐/晚餐烹调油各减 3g。`;
+  $('mLswap').textContent =
+    `当前：${r.lSt.n} + ${r.lMt.n}；蔬菜默认 250g（约 12g 碳水已计入），可选西兰花、羽衣甘蓝、莴笋、菠菜、菌菇类。同类内可替换，换完要重新核对营养。`;
+  const dBase = `主食可换红薯/紫薯/土豆/贝贝南瓜或生白米/生糙米（均按生重）。零食里的碳水会从晚餐主食里扣。`;
+  $('mDswap').textContent = r.nutsG > 0
+    ? `当前：${r.dSt.n} + ${r.dMt.n} + ${r.addonName} ${r.nutsG}g；${dBase}`
+    : (o.n === 'none'
+        ? `当前：${r.dSt.n} + ${r.dMt.n}；没有额外加餐。${dBase}`
+        : `当前：${r.dSt.n} + ${r.dMt.n}；${r.addonName} 脂肪额度不够已降到 0g，想吃就减午餐烹调油。${dBase}`);
 
   const tot = {c:r.b.c+r.l.c+r.d.c, p:r.b.p+r.l.p+r.d.p, f:r.b.f+r.l.f+r.d.f};
   const tk = tot.c*4+tot.p*4+tot.f*9, gk = C*4+P*4+F*9;
@@ -477,6 +771,18 @@ function renderRecipe(){
   $('mealSum').querySelector('tbody').innerHTML =
     row('碳水', C, tot.c, 'g') + row('蛋白质', P, tot.p, 'g') + row('脂肪', F, tot.f, 'g') +
     row('热量', gk, tk, ' kcal');
+
+  /* ---- 脂肪到底分到哪了（避免“早餐吃光、午晚没油”的困惑） ---- */
+  const bFv = Math.round(r.b.f), lFv = Math.round(r.l.f), dFv = Math.round(r.d.f);
+  const sumF = (bFv + lFv + dFv) || 1;
+  const pct = x => Math.round(x/sumF*100);
+  $('fatNote').innerHTML =
+    `<b>脂肪分配</b>：早餐 ${bFv}g（${pct(bFv)}%）· 午餐 ${lFv}g（${pct(lFv)}%）· 晚餐 ${dFv}g（${pct(dFv)}%）`
+    + `<div class="fbar"><i style="width:${pct(bFv)}%"></i><i style="width:${pct(lFv)}%"></i><i style="width:${pct(dFv)}%"></i></div>`
+    + (r.seedG > 0
+        ? `早餐脂肪来自 ${r.eggN} 个全蛋（每个约 5g）和南瓜籽 ${r.seedG}g；`
+        : `早餐脂肪全部来自 ${r.eggN} 个全蛋（每个约 5g），南瓜籽这次为 0g；`)
+    + `午餐、晚餐按“先保住做菜用的油，剩下的额度才给坚果类加餐”来分，所以不会出现某顿一滴油都没有。`;
 
   const mw = $('mealWarn');
   const msgs = [...new Set(r.warn)];
@@ -535,12 +841,18 @@ function calc(){
     const phases = sprintPhases(g);
     SPRINT_LIST = phases; CUR_W = w;
     CUR = {c:Math.round(w*phases[0].c), p:Math.round(w*phases[0].p), f:Math.round(w*phases[0].f)};
-    $('sprintTable').querySelector('tbody').innerHTML = phases.map(ph=>{
-      const cg=Math.round(w*ph.c), pg=Math.round(w*ph.p), fg=Math.round(w*ph.f);
-      const kc = cg*4+pg*4+fg*9;
-      if(ph.hc || ph === phases[0]) firstKcal = Math.max(firstKcal, ph===phases[0]?kc:firstKcal);
-      return `<tr class="${ph.hc?'hc':''}"><td>${ph.name}</td><td>${ph.c}</td><td>${ph.p}</td><td>${ph.f}</td><td>${cg}</td><td>${pg}</td><td>${fg}</td><td>${kc}</td></tr>`;
-    }).join('');
+    $('sprintTable').querySelector('tbody').innerHTML = (()=>{
+      const s = getStart();
+      let off = 0;
+      return phases.map(ph=>{
+        const cg=Math.round(w*ph.c), pg=Math.round(w*ph.p), fg=Math.round(w*ph.f);
+        const kc = cg*4+pg*4+fg*9;
+        const dateTxt = dayRange(addDays(s, off), ph.days);
+        off += ph.days;
+        if(ph.hc || ph === phases[0]) firstKcal = Math.max(firstKcal, ph===phases[0]?kc:firstKcal);
+        return `<tr class="${ph.hc?'hc':''}"><td>${ph.name}</td><td>${dateTxt}</td><td>${ph.c}</td><td>${ph.p}</td><td>${ph.f}</td><td>${cg}</td><td>${pg}</td><td>${fg}</td><td>${kc}</td></tr>`;
+      }).join('');
+    })();
     firstKcal = Math.round(w*phases[0].c)*4 + Math.round(w*phases[0].p)*4 + Math.round(w*phases[0].f)*9;
     $('vKcal').textContent = firstKcal;
     // 40天逐日数据 + 图
@@ -584,11 +896,12 @@ function calc(){
     for(let i=0;i<WEEKS;i++) rows.push({week:i+1, mul:Math.max(carbFloor, +(carbMul-i*STEP).toFixed(2))});
     $('planTable').querySelector('tbody').innerHTML = rows.map(r=>{
       const cg=Math.round(w*r.mul), kc=cg*4+protG*4+fatG*9, d=tdee-kc, hold=r.mul<=carbFloor;
+      const wkRange = dayRange(addDays(getStart(), (r.week-1)*7), 7);
       const status = d<0?'<span style="color:var(--orange)">需加运动</span>'
         : (g==='female'&&kc<1200)?'<span style="color:var(--red)">破 1200 红线</span>'
         : (kc<bmr)?'<span style="color:var(--red)">低于基础代谢</span>'
         : `<span style="color:var(--green)">缺口 ${d}</span>`;
-      return `<tr class="${hold?'hold':''}"><td>第 ${r.week} 周${hold?'（维持）':''}</td><td>×${r.mul}</td><td>${cg}</td><td>${kc}</td><td>${d>=0?'-'+d:'+'+Math.abs(d)}</td><td>${status}</td></tr>`;
+      return `<tr class="${hold?'hold':''}"><td>第 ${r.week} 周${hold?'（维持）':''}</td><td>${wkRange}</td><td>×${r.mul}</td><td>${cg}</td><td>${kc}</td><td>${d>=0?'-'+d:'+'+Math.abs(d)}</td><td>${status}</td></tr>`;
     }).join('');
     if(kcal0 < bmr) warns.push(`⚠️ 首日摄入（${kcal0}）低于基础代谢（${bmr}）。`);
     if(g==='female' && kcal0<1200) warns.push('🚫 红线：女生别把全天热量压到 1200 大卡以下！');
@@ -609,8 +922,9 @@ function calc(){
   ob.style.display = oks.length?'block':'none'; ob.innerHTML = oks.join('<br>');
 
   renderRecipe();
+  renderPeriod(g, age, h, w, hourBand);
   $('result').style.display='block';
-  try{ localStorage.setItem('tanPlan2', JSON.stringify({g,age,h,w,act:act,hourBand,mode:MODE})); }catch(e){}
+  try{ localStorage.setItem('tanPlan2', JSON.stringify({g,age,h,w,act:act,hourBand,mode:MODE,start:$('startDate').value})); }catch(e){}
 }
 
 function drawSprintChart(days, carbs, kcals, hc, tdee, bmr){
@@ -660,12 +974,111 @@ function fallbackChart(){
   });
 }
 
+/* ================= 保存为图片 ================= */
+function toast(msg){
+  let t = document.getElementById('toast');
+  if(!t){ t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+/* 释放上一次的预览地址，避免内存泄漏 */
+function releaseShotUrl(){
+  if(window._shotUrl){ try{ URL.revokeObjectURL(window._shotUrl); }catch(e){} window._shotUrl = null; }
+}
+
+function closeShot(){
+  const m = $('shotMask');
+  if(m) m.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+/* 把 canvas 转 blob → 给出可下载 / 可预览的链接 */
+function showShot(canvas, name){
+  releaseShotUrl();
+  // canvas → blob（比 dataURL 更省内存，且能直接在新标签打开）
+  const toBlob = () => new Promise(res => canvas.toBlob(b => res(b), 'image/png'));
+  return toBlob().then(blob => {
+    let url;
+    if(blob){
+      url = URL.createObjectURL(blob);
+      window._shotUrl = url;
+    }else{
+      url = canvas.toDataURL('image/png');    // 极端情况兜底
+    }
+    const img = $('shotImg');
+    img.src = url;
+    const dl = $('shotDl');
+    dl.href = url; dl.download = name;
+    const open = $('shotOpen');
+    open.href = url;
+    // 手机端 blob 在新标签打开可能被拦，改为同一地址（长按保存兜底）
+    open.style.display = blob ? '' : 'none';
+    $('shotMeta').textContent = name;
+    $('shotSize').textContent = `${canvas.width} × ${canvas.height}`;
+    $('shotMask').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    return {url, blob};
+  });
+}
+
+async function saveImage(btn){
+  if(typeof html2canvas === 'undefined'){
+    alert('截图库没加载成功（可能没联网）。\n可以联网刷新后重试，或按 Ctrl/Cmd + P 打印成 PDF。');
+    return;
+  }
+  const root = document.documentElement;
+  const oldTxt = btn ? btn.textContent : '';
+  if(btn){ btn.textContent = '生成中…'; btn.disabled = true; }
+  root.classList.add('exporting');          // 临时还原成宽版布局
+  if(window._c1) window._c1.resize();
+  if(window._c2) window._c2.resize();
+  await new Promise(r => setTimeout(r, 450));   // 等图表按新宽度重绘
+  let canvas = null, nm = '';
+  try{
+    canvas = await html2canvas($('result'), {
+      backgroundColor: cssv('--bg') || '#0f1420',
+      scale: Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
+      useCORS: true,
+      logging: false,
+      windowWidth: 940,
+      ignoreElements: el => el.classList && el.classList.contains('no-shot')
+    });
+    const d = new Date();
+    nm = `减脂计划_${MODE}_${fmtFull(d)}_${pad2(d.getHours())}${pad2(d.getMinutes())}.png`;
+  }catch(err){
+    alert('导出失败：' + ((err && err.message) || err) + '\n可以改用 Ctrl/Cmd + P 打印成 PDF。');
+  }finally{
+    root.classList.remove('exporting');      // 先还原布局，再弹预览（否则关闭按钮会被导出样式隐藏）
+    if(window._c1) window._c1.resize();
+    if(window._c2) window._c2.resize();
+    if(btn){ btn.textContent = oldTxt || '📷 保存为图片'; btn.disabled = false; }
+  }
+  if(canvas){
+    await showShot(canvas, nm);
+    toast('✅ 图片已生成，点“下载 PNG”或长按图片保存');
+  }
+}
+
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeShot(); });
+
 function resetForm(){
   const d = DEFAULTS[$('gender').value];
   $('age').value = d.age; $('height').value = d.h; $('weight').value = d.w;
   $('train').value='1.375|2-3';
+  $('startDate').value = fmtFull(new Date());
   $('result').style.display='none';
   try{ localStorage.removeItem('tanPlan2'); }catch(e){}
+}
+
+/* 换加餐类型时，把克数填成该类型的建议值；选“不加餐”则禁用输入 */
+function onAddonChange(){
+  const ad = ADDONS[$('fN').value] || ADDONS.none;
+  $('fNg').value = ad.g;
+  $('fNg').disabled = ad.g === 0;
+  renderRecipe();
 }
 
 /* ---- 食物下拉初始化 ---- */
@@ -676,19 +1089,56 @@ function initSelects(){
   $('fLm').innerHTML = opts(['chicken','beef','pork','fish','shrimp','tofu'], 'chicken');
   $('fS').innerHTML  = opts(['sweetpotato','purple','potato','pumpkin','rice','brownrice'], 'sweetpotato');
   $('fDm').innerHTML = opts(['beef','chicken','pork','fish','shrimp','tofu'], 'beef');
-  $('fN').innerHTML  = Object.keys(ADDONS).map(k=>`<option value="${k}"${k==='nut'?' selected':''}>${ADDONS[k].n}（默认${ADDONS[k].g}g）</option>`).join('');
+  $('fN').innerHTML  = Object.keys(ADDONS).map(k=>`<option value="${k}"${k==='none'?' selected':''}>${ADDONS[k].n}</option>`).join('');
+  $('fNg').value = 0; $('fNg').disabled = true;
   $('phaseWrap').style.display = 'none';
 }
+/* ---- 宽表格包一层横向滚动容器（手机可左右滑） ---- */
+function wrapTables(){
+  ['sprintTable','planTable'].forEach(id=>{
+    const t = $(id);
+    if(!t || (t.parentElement && t.parentElement.classList.contains('table-wrap'))) return;
+    const d = document.createElement('div');
+    d.className = 'table-wrap';
+    t.parentNode.insertBefore(d, t);
+    d.appendChild(t);
+  });
+}
+wrapTables();
 initSelects();
 
+$('startDate').value = fmtFull(new Date());
 try{
   const s = JSON.parse(localStorage.getItem('tanPlan2')||'null');
   if(s){
     $('gender').value=s.g; $('age').value=s.age; $('height').value=s.h; $('weight').value=s.w;
     $('train').value=s.act+'|'+s.hourBand;
+    if(s.start) $('startDate').value = s.start;
     if(s.mode) setMode(s.mode);
   }
 }catch(e){}
 </script>
+
+<!-- 图片预览 / 下载弹层 -->
+<div class="shot-mask" id="shotMask" onclick="if(event.target===this)closeShot()">
+  <div class="shot-box">
+    <div class="shot-head">
+      <div>
+        <b>计划图片已生成</b>
+        <div class="shot-meta" id="shotMeta"></div>
+      </div>
+      <button class="shot-close" onclick="closeShot()">关闭</button>
+    </div>
+    <img class="shot-img" id="shotImg" alt="减脂计划">
+    <div class="shot-acts">
+      <a class="btn-link" id="shotDl" download="plan.png" href="#">⬇ 下载 PNG</a>
+      <a class="btn-link alt" id="shotOpen" href="#" target="_blank" rel="noopener">在新标签打开</a>
+    </div>
+    <div class="shot-tip">
+      手机上（尤其 iOS Safari）如果点了“下载”没反应，直接<b>长按上面的图片</b> → 保存到相册即可。<br>
+      图片像素 <span id="shotSize"></span>，可直接发微信/相册。
+    </div>
+  </div>
+</div>
 </body>
 </html>
