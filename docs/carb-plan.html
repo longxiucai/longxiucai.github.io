@@ -10,7 +10,24 @@
     --bg:#0f1420; --card:#1a2130; --card2:#212a3d; --line:#2e3950;
     --txt:#e8edf6; --sub:#8b97ad;
     --red:#ff5d5d; --orange:#ffb454; --green:#3ddc84; --blue:#4d9fff; --purple:#b07cff;
+    --shadow:0 1px 2px rgba(0,0,0,.35);
   }
+  /* ===== 浅色主题 ===== */
+  html[data-theme="light"]{
+    --bg:#f4f6fa; --card:#ffffff; --card2:#eef2f8; --line:#dbe2ee;
+    --txt:#17202e; --sub:#67728a;
+    --red:#d93a3a; --orange:#c47a10; --green:#158a4c; --blue:#2f7fe0; --purple:#7645cc;
+    --shadow:0 1px 3px rgba(23,32,46,.08);
+  }
+  html[data-theme="light"] body{background:#f4f6fa}
+  html[data-theme="light"] .card{box-shadow:var(--shadow)}
+  html[data-theme="light"] input,html[data-theme="light"] select{background:#fff;border-color:#cfd8e6}
+  html[data-theme="light"] .tab.active{color:#fff}
+  html[data-theme="light"] tr.hc td{background:rgba(217,58,58,.06)}
+  .theme-btn{position:fixed;top:14px;right:14px;z-index:99;background:var(--card);color:var(--txt);
+    border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;
+    cursor:pointer;box-shadow:var(--shadow);margin:0}
+  .theme-btn:hover{filter:none;border-color:var(--blue);color:var(--blue)}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--txt);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:20px;max-width:900px;margin:0 auto}
   h1{font-size:22px;margin-bottom:4px}
@@ -36,7 +53,7 @@
   .c-carb{color:var(--orange)} .c-prot{color:var(--purple)} .c-fat{color:var(--green)} .c-kcal{color:var(--blue)}
   table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
   th{color:var(--sub);font-weight:500;text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
-  td{padding:9px 6px;text-align:right;border-bottom:1px solid rgba(46,57,80,.5)}
+  td{padding:9px 6px;text-align:right;border-bottom:1px solid var(--line)}
   th:first-child,td:first-child{text-align:left}
   tr.hc td{background:rgba(255,93,93,.07);color:var(--red);font-weight:600}
   tr.hc td:first-child{border-left:3px solid var(--red)}
@@ -65,6 +82,9 @@
 </style>
 </head>
 <body data-page-node-id="ccR4gXnePBq8B293o1cn0W">
+
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 深色</button>
+
 
 <h1 data-page-node-id="zqikVwdzf67lgcRBgkGWVt">🥩 谭成义碳水渐降 · 减脂计划计算器</h1>
 <div class="sub" data-page-node-id="a2TC5nSSLASUEfWOxTHyLt">动态三个月版 / 冲刺40天固定版 / 经典3倍版 —— 输入身体数据，自动生成每日营养目标与执行计划</div>
@@ -241,6 +261,36 @@
 <script>
 const $ = id => document.getElementById(id);
 let MODE = 'dynamic';
+
+/* ================= 主题：黑白可调 ================= */
+function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function hexA(hex, a){
+  const h = (hex || '').trim();
+  if(h.startsWith('#') && (h.length === 7 || h.length === 4)){
+    let s = h.slice(1);
+    if(s.length === 3) s = s.split('').map(c => c + c).join('');
+    const n = parseInt(s, 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+  return hex;
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  const b = $('themeBtn');
+  if(b) b.textContent = t === 'light' ? '☀️ 浅色' : '🌙 深色';
+  try{ localStorage.setItem('tanTheme', t); }catch(e){}
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(cur);
+  if($('result') && $('result').style.display !== 'none') calc();  // 重绘图表，套用新配色
+}
+(function initTheme(){
+  let t = null;
+  try{ t = localStorage.getItem('tanTheme'); }catch(e){}
+  if(!t) t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+  applyTheme(t);
+})();
 
 /* 默认身体数据（切换性别自动套用） */
 const DEFAULTS = {
@@ -566,39 +616,41 @@ function calc(){
 function drawSprintChart(days, carbs, kcals, hc, tdee, bmr){
   if(typeof Chart==='undefined') return fallbackChart();
   if(window._c1) window._c1.destroy();
+  const SUB=cssv('--sub'), GRID=cssv('--line'), OR=cssv('--orange'), BL=cssv('--blue'), RD=cssv('--red');
   window._c1 = new Chart($('sprintChart'), {
     type:'line',
     data:{labels:days, datasets:[
-      {label:'碳水 g', data:carbs, borderColor:'#ffb454', backgroundColor:'rgba(255,180,84,.1)', fill:true, tension:.2, pointRadius:hc.map(x=>x?6:0), pointBackgroundColor:hc.map(x=>x?'#ff5d5d':'#ffb454')},
-      {label:'总热量 大卡', data:kcals, borderColor:'#4d9fff', yAxisID:'y1', tension:.2, pointRadius:0},
-      {label:'TDEE', data:days.map(()=>tdee), borderColor:'rgba(139,151,173,.6)', borderDash:[6,6], pointRadius:0, yAxisID:'y1'},
-      {label:'基础代谢', data:days.map(()=>bmr), borderColor:'rgba(255,93,93,.5)', borderDash:[4,6], pointRadius:0, yAxisID:'y1'}
+      {label:'碳水 g', data:carbs, borderColor:OR, backgroundColor:hexA(OR,.12), fill:true, tension:.2, pointRadius:hc.map(x=>x?6:0), pointBackgroundColor:hc.map(x=>x?RD:OR)},
+      {label:'总热量 大卡', data:kcals, borderColor:BL, yAxisID:'y1', tension:.2, pointRadius:0},
+      {label:'TDEE', data:days.map(()=>tdee), borderColor:hexA(SUB,.75), borderDash:[6,6], pointRadius:0, yAxisID:'y1'},
+      {label:'基础代谢', data:days.map(()=>bmr), borderColor:hexA(RD,.55), borderDash:[4,6], pointRadius:0, yAxisID:'y1'}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#8b97ad',boxWidth:14,filter:item=>item.text!=='TDEE'||true}}},
-      scales:{x:{ticks:{color:'#8b97ad',maxTicksLimit:10},grid:{color:'rgba(46,57,80,.5)'}},
-        y:{title:{display:true,text:'碳水 g',color:'#ffb454'},ticks:{color:'#ffb454'},grid:{color:'rgba(46,57,80,.5)'}},
-        y1:{position:'right',title:{display:true,text:'大卡',color:'#4d9fff'},ticks:{color:'#4d9fff'},grid:{drawOnChartArea:false}}}}
+      plugins:{legend:{labels:{color:SUB,boxWidth:14}}},
+      scales:{x:{ticks:{color:SUB,maxTicksLimit:10},grid:{color:GRID}},
+        y:{title:{display:true,text:'碳水 g',color:OR},ticks:{color:OR},grid:{color:GRID}},
+        y1:{position:'right',title:{display:true,text:'大卡',color:BL},ticks:{color:BL},grid:{drawOnChartArea:false}}}}
   });
 }
 
 function drawClassicChart(rows, w, protG, fatG, tdee, bmr){
   if(typeof Chart==='undefined') return fallbackChart();
   if(window._c2) window._c2.destroy();
+  const SUB=cssv('--sub'), GRID=cssv('--line'), OR=cssv('--orange'), BL=cssv('--blue'), RD=cssv('--red');
   const labels = rows.map(r=>'第'+r.week+'周');
   window._c2 = new Chart($('chart'), {
     type:'line',
     data:{labels, datasets:[
-      {label:'碳水 g', data:rows.map(r=>Math.round(w*r.mul)), borderColor:'#ffb454', backgroundColor:'rgba(255,180,84,.12)', fill:true, tension:.35, yAxisID:'y'},
-      {label:'总热量 大卡', data:rows.map(r=>Math.round(w*r.mul)*4+protG*4+fatG*9), borderColor:'#4d9fff', backgroundColor:'rgba(77,159,255,.08)', fill:true, tension:.35, yAxisID:'y1'},
-      {label:'TDEE', data:labels.map(()=>tdee), borderColor:'rgba(139,151,173,.6)', borderDash:[6,6], pointRadius:0, yAxisID:'y1'},
-      {label:'基础代谢', data:labels.map(()=>bmr), borderColor:'rgba(255,93,93,.5)', borderDash:[4,6], pointRadius:0, yAxisID:'y1'}
+      {label:'碳水 g', data:rows.map(r=>Math.round(w*r.mul)), borderColor:OR, backgroundColor:hexA(OR,.14), fill:true, tension:.35, yAxisID:'y'},
+      {label:'总热量 大卡', data:rows.map(r=>Math.round(w*r.mul)*4+protG*4+fatG*9), borderColor:BL, backgroundColor:hexA(BL,.10), fill:true, tension:.35, yAxisID:'y1'},
+      {label:'TDEE', data:labels.map(()=>tdee), borderColor:hexA(SUB,.75), borderDash:[6,6], pointRadius:0, yAxisID:'y1'},
+      {label:'基础代谢', data:labels.map(()=>bmr), borderColor:hexA(RD,.55), borderDash:[4,6], pointRadius:0, yAxisID:'y1'}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#8b97ad',boxWidth:14}}},
-      scales:{x:{ticks:{color:'#8b97ad'},grid:{color:'rgba(46,57,80,.5)'}},
-        y:{title:{display:true,text:'碳水 g',color:'#ffb454'},ticks:{color:'#ffb454'},grid:{color:'rgba(46,57,80,.5)'}},
-        y1:{position:'right',title:{display:true,text:'大卡',color:'#4d9fff'},ticks:{color:'#4d9fff'},grid:{drawOnChartArea:false}}}}
+      plugins:{legend:{labels:{color:SUB,boxWidth:14}}},
+      scales:{x:{ticks:{color:SUB},grid:{color:GRID}},
+        y:{title:{display:true,text:'碳水 g',color:OR},ticks:{color:OR},grid:{color:GRID}},
+        y1:{position:'right',title:{display:true,text:'大卡',color:BL},ticks:{color:BL},grid:{drawOnChartArea:false}}}}
   });
 }
 
