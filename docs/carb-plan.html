@@ -715,7 +715,10 @@ function buildRecipe(C, P, F, o){
   /* ---- 早餐：主食解碳水；蛋按蛋白质需求取整；坚果/种子用剩余脂肪额度；水果占碳水额度 ---- */
   const bSt = FOODS[o.b];
   const fr = B_FRUIT[o.fruit] || B_FRUIT.none;
-  const berryG = Math.max(0, Math.min(300, o.fruitG != null ? +o.fruitG : fr.g));
+  /* 选“不吃”时克数一律按 0，避免输入框里残留的克数被继续计算（出现「不吃 100g」） */
+  const berryG = (!o.fruit || o.fruit === 'none' || !fr.g)
+    ? 0
+    : Math.max(0, Math.min(300, o.fruitG != null ? +o.fruitG : fr.g));
   const berryC = berryG/100*fr.m.c, berryP = berryG/100*fr.m.p, berryF = berryG/100*fr.m.f;
   const sup = B_SUP[o.sup] || B_SUP.none;
   const supM = sup.m;
@@ -848,6 +851,19 @@ function renderRecipe(){
            tag: `80kg基准 ${ph.name}`, name: ph.name};
   }
 
+  /* ---- 水果：选“不吃”就把克数框清空（记住原值，切回蓝莓再还原），
+     否则框里残留 100 会让人以为还在吃 ---- */
+  const fruitSel = $('fBerry').value;
+  const fruitOff = fruitSel === 'none';
+  const berryEl = $('fBerryg');
+  if(fruitOff){
+    if(berryEl.value !== ''){ berryEl.dataset.keep = berryEl.value; berryEl.value = ''; }
+    berryEl.placeholder = '—';
+  }else{
+    if(berryEl.value === '' && berryEl.dataset.keep) berryEl.value = berryEl.dataset.keep;
+    berryEl.placeholder = '';
+  }
+
   const supKey = $('fSeed').value || 'none';
   const supVal = $('fSeedg').value;                       // 空串 = 自动
   const o = {b:$('fB').value, l:$('fL').value, lm:$('fLm').value, s:$('fS').value,
@@ -878,7 +894,7 @@ function renderRecipe(){
 
   // 选“不吃”时锁住克数框；留空时用 placeholder 显示自动算出的克数
   $('fSeedg').disabled = supKey === 'none';
-  $('fBerryg').disabled = $('fBerry').value === 'none';
+  $('fBerryg').disabled = fruitOff;
   $('fSeedg').placeholder = supKey === 'none' ? '—' : `自动 ${r.supG}`;
 
   $('mealTag').textContent = `目标：碳水 ${goalC}g / 蛋白质 ${goalP}g / 脂肪 ${goalF}g`
@@ -905,7 +921,10 @@ function renderRecipe(){
   if(r.fruitG > 0) bExtra.push(`${r.fruitName} ${r.fruitG}g`);
   $('mBswap').textContent = bExtra.length
     ? `${r.bSt.n}作早餐主食（${B_NOTE[o.b] || '按生重称'}）；${r.eggN} 个全蛋供蛋白质与脂肪；${bExtra.join('、')}，用于补充食物多样性与微量营养。`
-    : `${r.bSt.n}作早餐主食（${B_NOTE[o.b] || '按生重称'}）；${r.eggN} 个全蛋供蛋白质与脂肪。坚果种子和水果都没吃，碳水全部压给主食、脂肪靠鸡蛋，所以主食克数会明显比默认多。`;
+    : `${r.bSt.n}作早餐主食（${B_NOTE[o.b] || '按生重称'}）；${r.eggN} 个全蛋供蛋白质与脂肪。`
+      + (supKey === 'none' && fruitOff
+          ? '坚果种子和水果都没吃，碳水和脂肪额度都留给了主食与鸡蛋，所以主食克数会比默认多。'
+          : '这次早餐没排上坚果种子或水果（额度不够，或没选），碳水和脂肪额度都留给了主食与鸡蛋，所以主食克数会比默认多。');
   $('mLswap').textContent =
     `当前：${r.lSt.n} + ${r.lMt.n}；蔬菜默认 250g（约 12g 碳水已计入），可选西兰花、羽衣甘蓝、莴笋、菠菜、菌菇类。同类内可替换，换完要重新核对营养。`;
   const dBase = `主食可换红薯/紫薯/土豆/贝贝南瓜或生白米/生糙米（均按生重）。零食里的碳水会从晚餐主食里扣。`;
@@ -955,6 +974,10 @@ function renderRecipe(){
   if(tot.f > goalF + 5){
     msgs.push(`脂肪实际 ${Math.round(tot.f)}g，比目标多 ${Math.round(tot.f-goalF)}g：三餐各有最低烹调油和鸡蛋，脂肪目标定得太低时压不下去。`);
   }
+  /* 选了坚果种子但按额度自动算出 0g：明确告诉用户不是“没吃”，是排不上 */
+  if(supKey !== 'none' && supVal === '' && r.supG === 0){
+    msgs.push(`早餐脂肪额度剩得不多，${r.supName}按额度自动算到 0g；想吃就在克数框里手填（会挤占主食或烹调油）。`);
+  }
   if(Math.abs(tk-gk) > gk*0.06) msgs.push(`全天实际热量与目标差 ${Math.round(tk-gk)} kcal，可在同餐内微调主食 5~10g 抹平。`);
   mw.style.display = msgs.length ? 'block' : 'none';
   mw.innerHTML = msgs.join('<br>');
@@ -979,7 +1002,7 @@ function paintSnackSum(r, F){
   if(r.fruitG > 0) items.push(`${r.fruitName} ${r.fruitG}g`);
   if(r.nutsG > 0) items.push(`${r.addonName} ${r.nutsG}g`);
   if(!items.length){
-    el.innerHTML = `<b>当前没选任何补充项</b>：早餐、晚餐的额度全部给了主食和烹调油。`;
+    el.innerHTML = `<b>当前没有补充项</b>：没选，或额度不够没排上；早餐、晚餐的额度全部给了主食和烹调油。`;
     return;
   }
   const tc = b.c + d.c, tp = b.p + d.p, tf = b.f + d.f;
@@ -1290,6 +1313,7 @@ function initSelects(){
   $('fSeedg').value = '';                                 // 留空＝按脂肪额度自动
   $('fBerry').innerHTML = Object.keys(B_FRUIT).map(k=>`<option value="${k}"${k==='berry'?' selected':''}>${B_FRUIT[k].n}</option>`).join('');
   $('fBerryg').value = 100;
+  delete $('fBerryg').dataset.keep;
   $('fN').innerHTML  = Object.keys(ADDONS).map(k=>`<option value="${k}"${k==='none'?' selected':''}>${ADDONS[k].n}</option>`).join('');
   $('fNg').value = 0; $('fNg').disabled = true;
   $('phaseWrap').style.display = 'none';
