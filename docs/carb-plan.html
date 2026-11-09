@@ -41,7 +41,9 @@
   .tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
   label{display:block;font-size:12px;color:var(--sub);margin-bottom:5px}
-  input,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:10px 12px;font-size:15px;outline:none}
+  input,select{width:100%;min-width:0;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:10px 12px;font-size:15px;outline:none}
+  .grid > div{min-width:0}   /* 防止日期框的固有宽度把所在列撑得比别的列宽 */
+  .grid input,.grid select{height:42px;padding-top:0;padding-bottom:0}   /* 日期框与其他框高度统一 */
   input:focus,select:focus{border-color:var(--blue)}
   button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
   button:hover{filter:brightness(1.1)}
@@ -197,8 +199,12 @@
   .shot-head .sh-t{font-size:20px;font-weight:700}
   .shot-head .sh-s{font-size:12.5px;color:var(--sub);margin-top:6px;line-height:1.7}
 
-  /* ===== 导出图片时的重置（把手机布局还原成宽版） ===== */
-  html.exporting body{max-width:940px!important;padding:24px!important}
+  /* ===== 导出图片时的重置（把手机布局还原成宽版） =====
+     宽度全部钉死在 #result 上（940 = windowWidth），body 不再参与定宽/留白：
+     html2canvas 的画布尺寸与克隆窗口里的排版宽度可能各取一边，
+     一旦两边不一致就会出现“右侧被裁掉一条（右边没空隙）”或“底部多出一块底色” */
+  html.exporting body{max-width:none!important;padding:0!important;margin:0!important;overflow-x:hidden}
+  html.exporting #result{width:940px!important;padding:24px!important}
   html.exporting .no-shot,html.exporting .theme-btn,html.exporting button{display:none!important}
   html.exporting .shot-only{display:block!important}
   html.exporting .stats{grid-template-columns:repeat(4,1fr)!important}
@@ -212,6 +218,11 @@
   html.exporting .table-wrap table{min-width:0!important;width:100%!important}
   html.exporting #mealSum{min-width:0!important}
   html.exporting .card{break-inside:avoid}
+  /* 导出底色与卡片同色：html2canvas 对长页面的卡片高度计算有偏差，
+     溢出内容会画到卡片外，若透出 --bg 灰色就会出现“底部灰底” */
+  html.exporting body,html.exporting #result{background:var(--card)!important}
+  /* 兜底：主要内容块各自带底色，即使截图库把卡片背景画矮也不透灰 */
+  html.exporting table,html.exporting .fatnote,html.exporting .rule,html.exporting .ok{background:var(--card)!important}
   /* 导出的图按桌面字号，避免手机上导出字太小 */
   html.exporting .stat .v{font-size:24px!important}
   html.exporting .stat .k{font-size:12px!important}
@@ -228,18 +239,29 @@
     padding:11px 18px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;
     transition:opacity .2s;pointer-events:none;max-width:88vw;text-align:center}
   .toast.show{opacity:1}
+  /* ===== 导出遮罩：盖住截图期间页面临时套宽版布局的重排，避免闪一下 ===== */
+  .export-mask{position:fixed;inset:0;z-index:1001;background:var(--bg);display:none;
+    align-items:center;justify-content:center}
+  .export-mask.show{display:flex}
+  .export-mask .ex-spin{width:34px;height:34px;border-radius:50%;margin:0 auto;
+    border:3px solid var(--line);border-top-color:var(--blue);animation:exspin .8s linear infinite}
+  .export-mask p{margin-top:14px;color:var(--sub);font-size:14px;text-align:center}
+  @keyframes exspin{to{transform:rotate(360deg)}}
   /* ===== 图片预览 / 下载弹层 ===== */
   .shot-mask{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:none;
     padding:24px 16px;overflow:auto;-webkit-overflow-scrolling:touch}
   .shot-mask.show{display:block}
   .shot-box{max-width:880px;margin:0 auto;background:var(--card);border:1px solid var(--line);
     border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-  .shot-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .shot-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .shot-head > div:first-child{flex:1;min-width:0}   /* 防止长尺寸文字把关闭按钮挤出屏幕 */
   .shot-head b{font-size:15px}
   .shot-meta{color:var(--sub);font-size:12px;margin-top:2px;word-break:break-all}
   .shot-close{background:transparent;border:1px solid var(--line);color:var(--sub);border-radius:8px;
     padding:6px 12px;font-size:13px;cursor:pointer;flex:none}
   .shot-close:hover{color:var(--txt);border-color:var(--sub)}
+  .shot-imgwrap{max-height:74vh;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
+  @media (min-width:641px){.shot-imgwrap{max-height:none}}
   .shot-img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#fff}
   .shot-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
   .shot-acts .btn-link{flex:1;min-width:150px;text-align:center;text-decoration:none;display:inline-block;
@@ -1251,6 +1273,13 @@ async function saveImage(btn){
   const root = document.documentElement;
   const oldTxt = btn ? btn.textContent : '';
   if(btn){ btn.textContent = '生成中…'; btn.disabled = true; }
+  // 全屏遮罩：截图期间页面要临时套 940px 宽版布局再还原，
+  // 重排过程不能让用户看见（否则页面边框会“消失一下”）
+  const mask = document.createElement('div');
+  mask.className = 'export-mask';
+  mask.innerHTML = '<div><div class="ex-spin"></div><p>正在生成图片…</p></div>';
+  document.body.appendChild(mask);
+  mask.classList.add('show');
   root.classList.add('exporting');          // 临时还原成宽版布局
   if(window._c1) window._c1.resize();
   if(window._c2) window._c2.resize();
@@ -1258,7 +1287,7 @@ async function saveImage(btn){
   let canvas = null, nm = '';
   try{
     canvas = await html2canvas($('result'), {
-      backgroundColor: cssv('--bg') || '#0f1420',
+      backgroundColor: cssv('--card') || '#ffffff',   // 与卡片同色，避免卡片外区域透出灰底
       scale: Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
       useCORS: true,
       logging: false,
@@ -1276,8 +1305,11 @@ async function saveImage(btn){
     if(btn){ btn.textContent = oldTxt || '📷 保存为图片'; btn.disabled = false; }
   }
   if(canvas){
-    await showShot(canvas, nm);
+    await showShot(canvas, nm);            // 预览弹窗先盖上去（在遮罩之上层已就位）
+    mask.remove();                         // 再撤导出遮罩，页面重排全程不可见
     toast('✅ 图片已生成，点“下载 PNG”或长按图片保存');
+  }else{
+    mask.remove();                         // 失败也要撤遮罩，别把页面锁死
   }
 }
 
@@ -1354,7 +1386,7 @@ try{
       </div>
       <button class="shot-close" onclick="closeShot()" data-page-node-id="1u44NEwcOJ1pIL7U18tOjL">关闭</button>
     </div>
-    <img class="shot-img" id="shotImg" alt="减脂计划" data-page-node-id="zoIDZTI8dsJbJbCBsbBxsI">
+    <div class="shot-imgwrap"><img class="shot-img" id="shotImg" alt="减脂计划" data-page-node-id="zoIDZTI8dsJbJbCBsbBxsI"></div>
     <div class="shot-acts" data-page-node-id="2WPNkN3KG26hL03kF517sh">
       <a class="btn-link" id="shotDl" download="plan.png" href="#" data-page-node-id="KCHfFfVC4Hxp06V8cj0aSJ">⬇ 下载 PNG</a>
       <a class="btn-link alt" id="shotOpen" href="#" target="_blank" rel="noopener" data-page-node-id="qhSSvyPbBgPd7LKTeNMIiO">在新标签打开</a>
