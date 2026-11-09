@@ -44,6 +44,10 @@
   input,select{width:100%;min-width:0;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:10px 12px;font-size:15px;outline:none}
   .grid > div{min-width:0}   /* 防止日期框的固有宽度把所在列撑得比别的列宽 */
   .grid input,.grid select{height:42px;padding-top:0;padding-bottom:0}   /* 日期框与其他框高度统一 */
+  /* 日期控件是浏览器原生控件，内部渲染各平台不一致（iOS 文字不居中、安卓内边距偏大），单独归一化 */
+  input[type="date"]{-webkit-appearance:none;appearance:none;display:block;height:42px;padding:0 10px}
+  input[type="date"]::-webkit-date-and-time-value{min-height:40px;text-align:left}   /* iOS 垂直居中 */
+  input[type="date"]::-webkit-calendar-picker-indicator{margin:0;flex:none}          /* 去掉原生指示器的额外边距 */
   input:focus,select:focus{border-color:var(--blue)}
   button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
   button:hover{filter:brightness(1.1)}
@@ -330,7 +334,7 @@
   <button class="ghost" onclick="resetForm()" data-page-node-id="sH8THX79naz9EoVpGvcpii">重置</button>
 </div>
 
-<div id="result" style="display: block;" data-page-node-id="zueMoI6Ot1A8BHQuTTbNnG">
+<div id="result" style="display: none;" data-page-node-id="zueMoI6Ot1A8BHQuTTbNnG">
 
   <div class="shot-head shot-only" data-page-node-id="dqNXGgek0CDlK1kYlCYuWw">
     <div class="sh-t" data-page-node-id="9XNZoEzQO2kBJoTmaknQzr">🥩 谭成义碳水渐降 · 减脂计划</div>
